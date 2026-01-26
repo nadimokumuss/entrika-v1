@@ -1,0 +1,167 @@
+# CLAUDE.md - Entrika Projesi için Claude Talimatları
+
+## Sync Sistemi
+
+### sync-start
+Kullanıcı "sync-start" dediğinde:
+1. `git pull origin main` ile en güncel kodu çek
+2. Bu dosyayı (`CLAUDE.md`) oku
+3. `project-details.md` dosyasını oku
+4. Nerede kaldığımızı ve sonraki adımları kullanıcıya özetle
+
+### sync-end
+Kullanıcı "sync-end" dediğinde:
+1. Yapılan değişiklikleri `project-details.md` dosyasına yaz
+2. Alınan kararları ve güncellemeleri `CLAUDE.md` dosyasına ekle
+3. Tüm değişiklikleri git'e ekle: `git add -A`
+4. Anlamlı bir commit mesajı ile commit oluştur
+5. GitHub'a pushla: `git push origin main`
+6. Kullanıcıya özet ver
+
+---
+
+## Proje Özeti
+
+**Entrika** - "Tanışmadan Önce Tanı" sloganıyla dating ve sosyal istihbarat uygulaması.
+
+### Temel Konsept
+- Kullanıcılar birbirini değerlendirebiliyor (topluluk puanı)
+- Tinder benzeri eşleşme sistemi AMA eşleşmeden önce karşı tarafın topluluk puanını görebiliyorsun
+- Anonim paylaşımlar (itiraf, ifşa, red flag, yılanlık, dolandırıcılık, tavsiye)
+- Davetiye sistemi (zincir sorumluluk)
+
+### Hedef Kitle
+- Hem kadınlar hem erkekler
+- Dating öncesi güvenlik arayanlar
+- Topluluk istihbaratı isteyenler
+
+---
+
+## Teknik Bilgiler
+
+### Tech Stack
+- **Framework:** React Native (Expo SDK 53)
+- **Router:** Expo Router (file-based routing)
+- **Language:** TypeScript
+- **Styling:** React Native StyleSheet (NativeWind kaldırıldı - Node.js 24 uyumsuzluğu)
+- **Backend:** Supabase (henüz mock modda)
+- **Icons:** Lucide React Native
+
+### Renk Paleti (Light Mode - Vibrant & Fun)
+```typescript
+colors = {
+  background: "#FFF7ED",  // Cream/Peach
+  card: "#FFFFFF",
+  primary: "#F97316",     // Orange
+  accent: "#EC4899",      // Pink
+  danger: "#EF4444",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  text: "#1F2937",
+  textLight: "#6B7280",
+  textMuted: "#9CA3AF",
+  border: "#E5E7EB",
+}
+```
+
+### Klasör Yapısı
+```
+entrika/
+├── app/
+│   ├── (auth)/          # Auth ekranları
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx    # Gatekeeper (davetiye kodu)
+│   │   ├── login.tsx    # Giriş
+│   │   └── register.tsx # Kayıt (cinsiyet + avatar)
+│   ├── (tabs)/          # Ana tab ekranları
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx    # Feed (Akış)
+│   │   ├── match.tsx    # Eşleşme (Tinder swipe)
+│   │   ├── explore.tsx  # Keşfet (shadow profil arama)
+│   │   └── profile.tsx  # Profil
+│   ├── _layout.tsx      # Root layout
+│   └── new-post.tsx     # Yeni paylaşım modal
+├── constants/
+│   └── theme.ts         # Renk ve spacing sabitleri
+├── contexts/
+│   └── AuthContext.tsx  # Auth state yönetimi
+├── data/
+│   └── mockData.ts      # Mock veriler
+├── lib/
+│   └── supabase.ts      # Supabase client
+└── supabase/
+    └── schema.sql       # Veritabanı şeması
+```
+
+---
+
+## Mevcut Durum
+
+### Tamamlanan Özellikler
+- [x] Gatekeeper ekranı (davetiye kodu doğrulama)
+- [x] Kayıt ekranı (cinsiyet seçimi, cinsiyete göre avatar, email, username, şifre)
+- [x] Giriş ekranı
+- [x] Feed (anonim paylaşımlar, spoiler sistemi, reaksiyonlar)
+- [x] Match tab (Tinder swipe kartları, topluluk puanı gösterimi)
+- [x] Explore tab (shadow profil arama)
+- [x] Profile sayfası
+- [x] Yeni paylaşım modal
+- [x] Supabase entegrasyonu (mock modda)
+- [x] Auth context ve navigation guard
+
+### Yapılacaklar (Öncelik Sırasına Göre)
+1. [ ] Supabase'i aktif et (production mode)
+2. [ ] Mesajlaşma sistemi (eşleşmeler arası)
+3. [ ] Profil değerlendirme/yorum ekleme
+4. [ ] Push bildirimleri
+5. [ ] Gerçek fotoğraf yükleme
+6. [ ] Dating profil oluşturma/düzenleme ekranı
+7. [ ] Ayarlar sayfası
+8. [ ] Şifremi unuttum akışı
+
+---
+
+## Önemli Kararlar ve Notlar
+
+### Alınan Kararlar
+1. **Kadın-erkek ayrımı kaldırıldı** - Uygulama her iki cinsiyete de hitap edecek
+2. **Light mode tercih edildi** - Warm/vibrant renkler (turuncu/pembe)
+3. **NativeWind kaldırıldı** - Node.js 24 ile ESM uyumsuzluğu nedeniyle StyleSheet kullanılıyor
+4. **Mock mode aktif** - Supabase bağlanana kadar test için mock data kullanılıyor
+
+### Test Kodları (Mock Mode)
+- `ENTRIKA2024`
+- `HOSGELDIN`
+- `DAVET123`
+
+### Dikkat Edilecekler
+- Expo Go ile test edilebilir (development build gerekmez)
+- Port 8081 meşgulse `--port 8082` kullan
+- Supabase'i aktif etmek için `MOCK_MODE = false` yap (3 dosyada)
+
+---
+
+## Geliştirme Komutları
+
+```bash
+# Projeyi başlat
+cd "C:\Users\reiss\Desktop\Entrika v1\entrika"
+npx expo start
+
+# Farklı port ile başlat
+npx expo start --port 8082
+
+# Tunnel modunda başlat (telefon testi için)
+npx expo start --tunnel
+
+# Paket ekle
+npm install <paket-adı>
+```
+
+---
+
+## İletişim Notları
+
+- Kullanıcı Türkçe konuşuyor, cevaplar Türkçe olmalı
+- Kısa ve öz cevaplar tercih ediliyor
+- Emoji kullanma (kullanıcı istemezse)
