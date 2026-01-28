@@ -49,9 +49,6 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock modda çalışmak için (Supabase bağlı değilken)
-  const MOCK_MODE = true;
-
   const avatarOptions = gender === "female" ? FEMALE_AVATARS : gender === "male" ? MALE_AVATARS : [];
 
   useEffect(() => {
@@ -96,30 +93,26 @@ export default function RegisterScreen() {
     setError("");
 
     try {
-      if (MOCK_MODE) {
-        // Mock mode - Supabase olmadan test için
-        console.log({ gender, email, username, password, selectedAvatar, inviteCode });
-        await AsyncStorage.removeItem("pendingInviteCode");
-        router.replace("/(tabs)");
-      } else {
-        // Production mode - Supabase ile
-        const { error: signUpError } = await signUp(
-          email,
-          password,
-          username,
-          gender,
-          selectedAvatar,
-          inviteCode
-        );
+      console.log("[REGISTER] signUp cagriliyor:", { email, username, gender, inviteCode });
+      const { error: signUpError } = await signUp(
+        email,
+        password,
+        username,
+        gender,
+        selectedAvatar,
+        inviteCode
+      );
 
-        if (signUpError) {
-          setError(signUpError.message);
-        } else {
-          await AsyncStorage.removeItem("pendingInviteCode");
-          router.replace("/(tabs)");
-        }
+      console.log("[REGISTER] signUp sonucu:", signUpError ? signUpError.message : "basarili");
+
+      if (signUpError) {
+        setError(signUpError.message);
+      } else {
+        await AsyncStorage.removeItem("pendingInviteCode");
+        // Navigation will be handled by RootLayoutNav when isAuthenticated changes
       }
     } catch (err: any) {
+      console.error("[REGISTER] CATCH hatasi:", err);
       setError(err.message || "Bir hata oluştu");
     } finally {
       setIsLoading(false);

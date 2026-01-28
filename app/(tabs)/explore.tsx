@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,23 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, AlertTriangle } from "lucide-react-native";
-import { MOCK_SHADOW_PROFILES, type ShadowProfile } from "@/data/mockData";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
 
-function ShadowProfileCard({ profile }: { profile: ShadowProfile }) {
+interface ShadowProfileView {
+  id: string;
+  target_name: string;
+  city: string | null;
+  avg_score: number;
+  total_reviews: number;
+  tags: string[];
+}
+
+function ShadowProfileCard({ profile }: { profile: ShadowProfileView }) {
   const getScoreColor = (score: number) => {
     if (score <= 2) return colors.danger;
     if (score <= 4) return colors.warning;
@@ -20,7 +30,7 @@ function ShadowProfileCard({ profile }: { profile: ShadowProfile }) {
     return colors.success;
   };
 
-  const scoreColor = getScoreColor(profile.avgScore);
+  const scoreColor = getScoreColor(profile.avg_score);
 
   return (
     <TouchableOpacity style={styles.profileCard} activeOpacity={0.7}>
@@ -28,34 +38,38 @@ function ShadowProfileCard({ profile }: { profile: ShadowProfile }) {
         {/* Sol - Bilgiler */}
         <View style={styles.profileInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.profileName}>{profile.targetName}</Text>
-            {profile.avgScore <= 2 && (
+            <Text style={styles.profileName}>{profile.target_name}</Text>
+            {profile.avg_score <= 2 && (
               <AlertTriangle size={16} color={colors.danger} style={styles.warningIcon} />
             )}
           </View>
 
-          <View style={styles.locationRow}>
-            <MapPin size={14} color={colors.textMuted} />
-            <Text style={styles.locationText}>{profile.city}</Text>
-          </View>
+          {profile.city && (
+            <View style={styles.locationRow}>
+              <MapPin size={14} color={colors.textMuted} />
+              <Text style={styles.locationText}>{profile.city}</Text>
+            </View>
+          )}
 
           {/* Etiketler */}
-          <View style={styles.tagsContainer}>
-            {profile.tags.map((tag, index) => (
-              <View key={index} style={styles.tagChip}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
+          {profile.tags.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {profile.tags.map((tag, index) => (
+                <View key={index} style={styles.tagChip}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
-          <Text style={styles.reviewCount}>{profile.totalReviews} değerlendirme</Text>
+          <Text style={styles.reviewCount}>{profile.total_reviews} degerlendirme</Text>
         </View>
 
-        {/* Sağ - Puan */}
+        {/* Sag - Puan */}
         <View style={styles.scoreContainer}>
           <View style={[styles.scoreCircle, { backgroundColor: `${scoreColor}15` }]}>
             <Text style={[styles.scoreText, { color: scoreColor }]}>
-              {profile.avgScore.toFixed(1)}
+              {profile.avg_score.toFixed(1)}
             </Text>
           </View>
           <Text style={styles.scoreLabel}>puan</Text>
@@ -67,28 +81,118 @@ function ShadowProfileCard({ profile }: { profile: ShadowProfile }) {
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [profiles, setProfiles] = useState<ShadowProfileView[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProfiles = MOCK_SHADOW_PROFILES.filter(
-    (profile) =>
-      profile.targetName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
+  const fetchProfiles = useCallback(async (query?: string) => {
+    try {
+      // Fetch shadow profiles with their reviews aggregated
+      let shadowQuery = supabase
+        .from("shadow_profiles")
+        .select("id, target_name, city, identifier_hash");
+
+      if (query && query.trim()) {
+        // Search by name or city using ilike
+        shadowQuery = shadowQuery.or(
+          `target_name.ilike.%${query.trim()}%,city.ilike.%${query.trim()}%`
+        );
+      }
+
+      const { data: shadowData, error: shadowError } = await shadowQuery
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (shadowError) throw shadowError;
+      if (!shadowData || shadowData.length === 0) {
+        setProfiles([]);
+        return;
+      }
+
+      const profileIds = shadowData.map((sp) => sp.id);
+
+      // Fetch reviews for all shadow profiles
+      const { data: reviewsData } = await supabase
+        .from("shadow_reviews")
+        .select("shadow_profile_id, score, tags")
+        .in("shadow_profile_id", profileIds);
+
+      // Aggregate reviews per profile
+      const reviewsMap: Record<string, { scores: number[]; tags: string[] }> = {};
+      (reviewsData || []).forEach((r) => {
+        if (!reviewsMap[r.shadow_profile_id]) {
+          reviewsMap[r.shadow_profile_id] = { scores: [], tags: [] };
+        }
+        reviewsMap[r.shadow_profile_id].scores.push(r.score);
+        if (r.tags) {
+          r.tags.forEach((tag: string) => {
+            if (!reviewsMap[r.shadow_profile_id].tags.includes(tag)) {
+              reviewsMap[r.shadow_profile_id].tags.push(tag);
+            }
+          });
+        }
+      });
+
+      const result: ShadowProfileView[] = shadowData.map((sp) => {
+        const reviews = reviewsMap[sp.id] || { scores: [], tags: [] };
+        const avgScore =
+          reviews.scores.length > 0
+            ? reviews.scores.reduce((a, b) => a + b, 0) / reviews.scores.length
+            : 5.0;
+
+        return {
+          id: sp.id,
+          target_name: sp.target_name,
+          city: sp.city,
+          avg_score: avgScore,
+          total_reviews: reviews.scores.length,
+          tags: reviews.tags,
+        };
+      });
+
+      // If searching by tag, filter client-side
+      if (query && query.trim()) {
+        const q = query.trim().toLowerCase();
+        const filtered = result.filter(
+          (p) =>
+            p.target_name.toLowerCase().includes(q) ||
+            (p.city && p.city.toLowerCase().includes(q)) ||
+            p.tags.some((t) => t.toLowerCase().includes(q))
+        );
+        setProfiles(filtered);
+      } else {
+        setProfiles(result);
+      }
+    } catch (error) {
+      console.error("Error fetching shadow profiles:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(true);
+      fetchProfiles(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchProfiles]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Keşfet</Text>
+        <Text style={styles.headerTitle}>Kesfet</Text>
 
         {/* Arama */}
         <View style={styles.searchContainer}>
           <Search size={20} color={colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="İsim, şehir veya etiket ara..."
+            placeholder="Isim, sehir veya etiket ara..."
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -96,30 +200,33 @@ export default function ExploreScreen() {
         </View>
       </View>
 
-      {/* Sonuçlar */}
+      {/* Sonuclar */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Uyarı Banner */}
+        {/* Uyari Banner */}
         <View style={styles.warningBanner}>
           <Text style={styles.warningBannerText}>
-            Profiller kullanıcı yorumlarına dayanır.{"\n"}
-            Bilgiler doğrulanmamış olabilir.
+            {"Profiller kullanici yorumlarina dayanir.\nBilgiler dogrulanmamis olabilir."}
           </Text>
         </View>
 
-        {filteredProfiles.length > 0 ? (
-          filteredProfiles.map((profile) => (
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : profiles.length > 0 ? (
+          profiles.map((profile) => (
             <ShadowProfileCard key={profile.id} profile={profile} />
           ))
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>
               {searchQuery
-                ? "Aradığınız kriterlere uygun profil bulunamadı."
-                : "Henüz profil oluşturulmamış."}
+                ? "Aradiginiz kriterlere uygun profil bulunamadi."
+                : "Henuz profil olusturulmamis."}
             </Text>
           </View>
         )}
@@ -185,6 +292,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     textAlign: "center",
     lineHeight: 20,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 48,
   },
   profileCard: {
     backgroundColor: colors.card,

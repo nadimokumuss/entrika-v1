@@ -44,7 +44,7 @@ Kullanıcı "sync-end" dediğinde:
 - **Router:** Expo Router (file-based routing)
 - **Language:** TypeScript
 - **Styling:** React Native StyleSheet (NativeWind kaldırıldı - Node.js 24 uyumsuzluğu)
-- **Backend:** Supabase (henüz mock modda)
+- **Backend:** Supabase (production aktif, MOCK_MODE = false)
 - **Icons:** Lucide React Native
 
 ### Renk Paleti (Light Mode - Vibrant & Fun)
@@ -75,22 +75,26 @@ entrika/
 │   │   └── register.tsx # Kayıt (cinsiyet + avatar)
 │   ├── (tabs)/          # Ana tab ekranları
 │   │   ├── _layout.tsx
-│   │   ├── index.tsx    # Feed (Akış)
-│   │   ├── match.tsx    # Eşleşme (Tinder swipe)
-│   │   ├── explore.tsx  # Keşfet (shadow profil arama)
-│   │   └── profile.tsx  # Profil
+│   │   ├── index.tsx    # Feed (Supabase)
+│   │   ├── match.tsx    # Eşleşme (Supabase)
+│   │   ├── explore.tsx  # Keşfet (Supabase)
+│   │   └── profile.tsx  # Profil (Supabase)
 │   ├── _layout.tsx      # Root layout
-│   └── new-post.tsx     # Yeni paylaşım modal
+│   └── new-post.tsx     # Yeni paylaşım (Supabase insert)
 ├── constants/
-│   └── theme.ts         # Renk ve spacing sabitleri
+│   ├── theme.ts         # Renk ve spacing sabitleri
+│   └── categories.ts   # Kategori ve reaksiyon sabitleri
 ├── contexts/
-│   └── AuthContext.tsx  # Auth state yönetimi
+│   └── AuthContext.tsx  # Auth state yönetimi (production)
 ├── data/
-│   └── mockData.ts      # Mock veriler
+│   └── mockData.ts      # Re-export (geriye uyumluluk)
 ├── lib/
 │   └── supabase.ts      # Supabase client
 └── supabase/
-    └── schema.sql       # Veritabanı şeması
+    ├── schema.sql              # Orijinal şema
+    ├── schema-v2.sql           # Güncel tam şema
+    ├── profile-trigger.sql     # Profil auto-create trigger
+    └── setup-missing-tables.sql # Eksik tablo kurulumu
 ```
 
 ---
@@ -101,23 +105,25 @@ entrika/
 - [x] Gatekeeper ekranı (davetiye kodu doğrulama)
 - [x] Kayıt ekranı (cinsiyet seçimi, cinsiyete göre avatar, email, username, şifre)
 - [x] Giriş ekranı
-- [x] Feed (anonim paylaşımlar, spoiler sistemi, reaksiyonlar)
-- [x] Match tab (Tinder swipe kartları, topluluk puanı gösterimi)
-- [x] Explore tab (shadow profil arama)
-- [x] Profile sayfası
-- [x] Yeni paylaşım modal
-- [x] Supabase entegrasyonu (mock modda)
+- [x] Feed (Supabase: posts + reactions + comments)
+- [x] Match tab (Supabase: dating_profiles + swipes)
+- [x] Explore tab (Supabase: shadow_profiles + shadow_reviews)
+- [x] Profile sayfası (Supabase: profil + postlar + referanslar + cikis yap)
+- [x] Yeni paylaşım (Supabase insert)
+- [x] Supabase production aktif (MOCK_MODE = false)
 - [x] Auth context ve navigation guard
+- [x] Otomatik profil oluşturma trigger (handle_new_user)
+- [x] Otomatik match oluşturma trigger (check_and_create_match)
+- [x] useFocusEffect ile tab geçişlerinde veri yenileme
 
 ### Yapılacaklar (Öncelik Sırasına Göre)
-1. [ ] Supabase'i aktif et (production mode)
-2. [ ] Mesajlaşma sistemi (eşleşmeler arası)
+1. [ ] Mesajlaşma sistemi (eşleşmeler arası)
+2. [ ] Dating profil oluşturma/düzenleme ekranı
 3. [ ] Profil değerlendirme/yorum ekleme
 4. [ ] Push bildirimleri
 5. [ ] Gerçek fotoğraf yükleme
-6. [ ] Dating profil oluşturma/düzenleme ekranı
-7. [ ] Ayarlar sayfası
-8. [ ] Şifremi unuttum akışı
+6. [ ] Ayarlar sayfası
+7. [ ] Şifremi unuttum akışı
 
 ---
 
@@ -127,17 +133,22 @@ entrika/
 1. **Kadın-erkek ayrımı kaldırıldı** - Uygulama her iki cinsiyete de hitap edecek
 2. **Light mode tercih edildi** - Warm/vibrant renkler (turuncu/pembe)
 3. **NativeWind kaldırıldı** - Node.js 24 ile ESM uyumsuzluğu nedeniyle StyleSheet kullanılıyor
-4. **Mock mode aktif** - Supabase bağlanana kadar test için mock data kullanılıyor
+4. **Supabase production aktif** - MOCK_MODE = false, tum ekranlar gercek veri kullaniyor
+5. **Mock data temizlendi** - data/mockData.ts sadece re-export, asil sabitler constants/categories.ts'de
+6. **E-posta dogrulama kapatildi** - Supabase Authentication > Providers > Email > Confirm email = OFF
 
-### Test Kodları (Mock Mode)
+### Test Davetiye Kodları (Supabase)
 - `ENTRIKA2024`
 - `HOSGELDIN`
 - `DAVET123`
+- `BETA2024`
+- `TOPLULUK`
 
 ### Dikkat Edilecekler
 - Expo Go ile test edilebilir (development build gerekmez)
 - Port 8081 meşgulse `--port 8082` kullan
-- Supabase'i aktif etmek için `MOCK_MODE = false` yap (3 dosyada)
+- Supabase Dashboard: Authentication > Providers > Email > Confirm email = OFF olmali
+- Yeni tablo eklenirse `supabase/setup-missing-tables.sql` guncellenmeli
 
 ---
 

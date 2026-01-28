@@ -150,11 +150,21 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - Cinsiyet seçimi ve avatar sistemi eklendi
 - GitHub'a ilk push yapıldı
 
+### 2026-01-28 - Supabase Aktivasyonu
+- Tum 5 ekran Supabase'e baglanildi (Feed, New Post, Explore, Profile, Match)
+- 10 eksik tablo icin SQL olusturuldu ve Supabase'de calistirildi
+- Mock data kaldirildi, constants/categories.ts'e tasindi
+- Auth akisi duzeltildi (e-posta dogrulama kapatildi, session yonetimi)
+- Profil sayfasina cikis yap butonu eklendi
+- useFocusEffect ile tab gecislerinde otomatik veri yenileme eklendi
+- signUp fonksiyonuna detayli hata loglama eklendi
+- Test edildi: kayit, giris, post olusturma, profil goruntuleme calisiyor
+
 ### Sonraki Oturum İçin Notlar
-- Supabase projesini oluşturup bağlamak
-- MOCK_MODE'u kapatmak
 - Dating profil oluşturma ekranı eklemek
 - Mesajlaşma sistemini başlatmak
+- Shadow profil olusturma/degerlendirme ekrani
+- Detayli debug loglarini (SIGNUP) temizlemek
 
 ---
 

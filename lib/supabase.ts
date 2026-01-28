@@ -1,11 +1,12 @@
-import "react-native-url-polyfill/dist/auto";
+import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 // Supabase URL ve Anon Key - bunları kendi Supabase projenizden alın
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "YOUR_SUPABASE_URL";
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+// Mock modda geçerli bir placeholder URL kullanıyoruz
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
 
 // SecureStore adapter for Supabase auth
 const ExpoSecureStoreAdapter = {

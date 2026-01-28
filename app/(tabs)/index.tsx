@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,29 +7,74 @@ import {
   Image,
   Pressable,
   StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { Sparkles, MessageCircle } from "lucide-react-native";
 import {
-  MOCK_POSTS,
   CATEGORIES,
   REACTIONS,
-  type Post,
+  type PostCategory,
   type ReactionType,
 } from "@/data/mockData";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
-function PostCard({ post }: { post: Post }) {
+interface FeedPost {
+  id: string;
+  content: string;
+  category: PostCategory;
+  is_anonymous: boolean;
+  is_spoiler: boolean;
+  image_url: string | null;
+  author_id: string;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string;
+  };
+  reactions: { type: ReactionType; count: number }[];
+  commentCount: number;
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Az once";
+  if (diffMins < 60) return `${diffMins} dk once`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} saat once`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} gun once`;
+  return date.toLocaleDateString("tr-TR");
+}
+
+function PostCard({ post }: { post: FeedPost }) {
   const [revealed, setRevealed] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const { user } = useAuth();
   const category = CATEGORIES[post.category];
 
   const handleLongPress = () => {
     setShowReactions(true);
   };
 
-  const handleReaction = (type: ReactionType) => {
+  const handleReaction = async (type: ReactionType) => {
     setShowReactions(false);
+    if (!user) return;
+    try {
+      await supabase.from("post_reactions").upsert(
+        { post_id: post.id, user_id: user.id, reaction_type: type },
+        { onConflict: "post_id,user_id" }
+      );
+    } catch (e) {
+      console.error("Reaction error:", e);
+    }
   };
 
   return (
@@ -45,18 +90,18 @@ function PostCard({ post }: { post: Post }) {
             {category.emoji} {category.label}
           </Text>
         </View>
-        <Text style={styles.timeText}>{post.createdAt}</Text>
+        <Text style={styles.timeText}>{formatTimeAgo(post.created_at)}</Text>
       </View>
 
-      {/* İçerik */}
+      {/* Icerik */}
       <View style={styles.postContent}>
         <View style={styles.postTextContainer}>
-          {post.isSpoiler && !revealed ? (
+          {post.is_spoiler && !revealed ? (
             <TouchableOpacity onPress={() => setRevealed(true)} activeOpacity={0.8}>
               <View style={styles.spoilerBox}>
                 <Text style={styles.spoilerText}>
-                  🔒 Hassas içerik{"\n"}
-                  <Text style={styles.spoilerSubtext}>Görmek için dokun</Text>
+                  {"🔒 Hassas icerik\n"}
+                  <Text style={styles.spoilerSubtext}>Gormek icin dokun</Text>
                 </Text>
               </View>
             </TouchableOpacity>
@@ -65,18 +110,18 @@ function PostCard({ post }: { post: Post }) {
           )}
         </View>
 
-        {post.imageUrl && (
+        {post.image_url && (
           <View style={styles.thumbnailContainer}>
-            <Image source={{ uri: post.imageUrl }} style={styles.thumbnail} />
+            <Image source={{ uri: post.image_url }} style={styles.thumbnail} />
           </View>
         )}
       </View>
 
       {/* Author */}
-      {!post.isAnonymous && (
+      {!post.is_anonymous && post.profiles && (
         <View style={styles.authorRow}>
-          <Image source={{ uri: post.authorAvatar }} style={styles.authorAvatar} />
-          <Text style={styles.authorName}>@{post.authorName}</Text>
+          <Image source={{ uri: post.profiles.avatar_url }} style={styles.authorAvatar} />
+          <Text style={styles.authorName}>@{post.profiles.username}</Text>
         </View>
       )}
 
@@ -96,7 +141,7 @@ function PostCard({ post }: { post: Post }) {
         </View>
       </View>
 
-      {/* Reaksiyon Seçici */}
+      {/* Reaksiyon Secici */}
       {showReactions && (
         <View style={styles.reactionPickerOverlay}>
           <Pressable
@@ -122,13 +167,117 @@ function PostCard({ post }: { post: Post }) {
 }
 
 export default function FeedScreen() {
+  const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      // Fetch posts with author profile
+      const { data: postsData, error: postsError } = await supabase
+        .from("posts")
+        .select("*, profiles(username, avatar_url)")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (postsError) throw postsError;
+      if (!postsData) {
+        setPosts([]);
+        return;
+      }
+
+      // Fetch reaction counts for all posts
+      const postIds = postsData.map((p) => p.id);
+
+      const { data: reactionsData } = await supabase
+        .from("post_reactions")
+        .select("post_id, reaction_type")
+        .in("post_id", postIds);
+
+      // Fetch comment counts
+      const { data: commentsData } = await supabase
+        .from("comments")
+        .select("post_id")
+        .in("post_id", postIds);
+
+      // Aggregate reactions per post
+      const reactionsMap: Record<string, Record<string, number>> = {};
+      (reactionsData || []).forEach((r) => {
+        if (!reactionsMap[r.post_id]) reactionsMap[r.post_id] = {};
+        reactionsMap[r.post_id][r.reaction_type] =
+          (reactionsMap[r.post_id][r.reaction_type] || 0) + 1;
+      });
+
+      // Count comments per post
+      const commentsMap: Record<string, number> = {};
+      (commentsData || []).forEach((c) => {
+        commentsMap[c.post_id] = (commentsMap[c.post_id] || 0) + 1;
+      });
+
+      const feedPosts: FeedPost[] = postsData.map((p) => {
+        const postReactions = reactionsMap[p.id] || {};
+        const reactions = Object.entries(postReactions)
+          .map(([type, count]) => ({ type: type as ReactionType, count }))
+          .sort((a, b) => b.count - a.count);
+
+        return {
+          id: p.id,
+          content: p.content,
+          category: p.category as PostCategory,
+          is_anonymous: p.is_anonymous,
+          is_spoiler: p.is_spoiler,
+          image_url: p.image_url,
+          author_id: p.author_id,
+          created_at: p.created_at,
+          profiles: p.profiles as any,
+          reactions,
+          commentCount: commentsMap[p.id] || 0,
+        };
+      });
+
+      setPosts(feedPosts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [fetchPosts])
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchPosts();
+  }, [fetchPosts]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Sparkles size={24} color={colors.primary} />
+            <Text style={styles.headerTitle}>ENTRIKA</Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Sparkles size={24} color={colors.primary} />
-          <Text style={styles.headerTitle}>ENTRİKA</Text>
+          <Text style={styles.headerTitle}>ENTRIKA</Text>
         </View>
       </View>
 
@@ -137,10 +286,20 @@ export default function FeedScreen() {
         style={styles.feed}
         contentContainerStyle={styles.feedContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
       >
-        {MOCK_POSTS.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+        {posts.length > 0 ? (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>Henuz paylasim yok</Text>
+            <Text style={styles.emptyStateText}>
+              Ilk paylasimi sen yap!
+            </Text>
+          </View>
+        )}
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
@@ -180,6 +339,25 @@ const styles = StyleSheet.create({
   },
   feedContent: {
     paddingBottom: spacing.xl,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 64,
+  },
+  emptyStateTitle: {
+    color: colors.text,
+    fontSize: fontSize.lg,
+    fontWeight: "600",
+    marginBottom: spacing.sm,
+  },
+  emptyStateText: {
+    color: colors.textMuted,
+    fontSize: fontSize.md,
   },
   bottomSpacer: {
     height: 80,

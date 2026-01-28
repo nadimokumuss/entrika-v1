@@ -22,9 +22,6 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock modda çalışmak için (Supabase bağlı değilken)
-  const MOCK_MODE = true;
-
   const handleLogin = async () => {
     if (!email.trim() || !email.includes("@")) {
       setError("Geçerli bir e-posta adresi gerekli");
@@ -39,20 +36,12 @@ export default function LoginScreen() {
     setError("");
 
     try {
-      if (MOCK_MODE) {
-        // Mock mode - test için herhangi bir email/şifre kabul et
-        console.log({ email, password });
-        router.replace("/(tabs)");
-      } else {
-        // Production mode - Supabase ile
-        const { error: signInError } = await signIn(email, password);
+      const { error: signInError } = await signIn(email, password);
 
-        if (signInError) {
-          setError("E-posta veya şifre hatalı");
-        } else {
-          router.replace("/(tabs)");
-        }
+      if (signInError) {
+        setError("E-posta veya şifre hatalı");
       }
+      // Navigation will be handled by RootLayoutNav when isAuthenticated changes
     } catch (err: any) {
       setError(err.message || "Bir hata oluştu");
     } finally {

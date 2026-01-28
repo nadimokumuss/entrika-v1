@@ -16,7 +16,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { session, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -25,14 +25,14 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (!session && !inAuthGroup) {
+    if (!isAuthenticated && !inAuthGroup) {
       // Kullanıcı giriş yapmamış ve auth ekranında değil -> auth'a yönlendir
       router.replace("/(auth)");
-    } else if (session && inAuthGroup) {
+    } else if (isAuthenticated && inAuthGroup) {
       // Kullanıcı giriş yapmış ve hala auth ekranında -> ana sayfaya yönlendir
       router.replace("/(tabs)");
     }
-  }, [session, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments]);
 
   return (
     <>

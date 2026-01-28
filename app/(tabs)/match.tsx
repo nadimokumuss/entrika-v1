@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   PanResponder,
   Dimensions,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,11 +23,30 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react-native";
-import { MOCK_DATING_PROFILES, type DatingProfile } from "@/data/mockData";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+
+interface DatingProfileView {
+  id: string;
+  user_id: string;
+  name: string;
+  age: number | null;
+  city: string | null;
+  bio: string | null;
+  photos: string[];
+  interests: string[];
+  job: string | null;
+  education: string | null;
+  communityScore: number;
+  reviewCount: number;
+  verifiedProfile: boolean;
+  tags: string[];
+  lastActive: string;
+}
 
 function ProfileCard({
   profile,
@@ -37,7 +57,7 @@ function ProfileCard({
   onSwipeRight,
   ...rest
 }: {
-  profile: DatingProfile;
+  profile: DatingProfileView;
   isFirst: boolean;
   swipe: Animated.ValueXY;
   tiltSign: Animated.Value;
@@ -92,10 +112,16 @@ function ProfileCard({
     <View style={styles.card}>
       {/* Photo */}
       <View style={styles.photoContainer}>
-        <Image
-          source={{ uri: profile.photos[currentPhotoIndex] }}
-          style={styles.photo}
-        />
+        {profile.photos.length > 0 ? (
+          <Image
+            source={{ uri: profile.photos[currentPhotoIndex] }}
+            style={styles.photo}
+          />
+        ) : (
+          <View style={[styles.photo, { alignItems: "center", justifyContent: "center" }]}>
+            <Text style={{ color: colors.textMuted, fontSize: fontSize.lg }}>Fotograf yok</Text>
+          </View>
+        )}
 
         {/* Photo Navigation */}
         <View style={styles.photoNavigation}>
@@ -120,17 +146,19 @@ function ProfileCard({
         </View>
 
         {/* Photo Indicators */}
-        <View style={styles.photoIndicators}>
-          {profile.photos.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.photoIndicator,
-                index === currentPhotoIndex && styles.photoIndicatorActive,
-              ]}
-            />
-          ))}
-        </View>
+        {profile.photos.length > 1 && (
+          <View style={styles.photoIndicators}>
+            {profile.photos.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.photoIndicator,
+                  index === currentPhotoIndex && styles.photoIndicatorActive,
+                ]}
+              />
+            ))}
+          </View>
+        )}
 
         {/* Gradient Overlay */}
         <LinearGradient
@@ -142,10 +170,10 @@ function ProfileCard({
         {isFirst && (
           <>
             <Animated.View style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
-              <Text style={styles.likeStampText}>BEĞENDİM</Text>
+              <Text style={styles.likeStampText}>BEGENDIM</Text>
             </Animated.View>
             <Animated.View style={[styles.stamp, styles.nopeStamp, { opacity: nopeOpacity }]}>
-              <Text style={styles.nopeStampText}>GEÇ</Text>
+              <Text style={styles.nopeStampText}>GEC</Text>
             </Animated.View>
           </>
         )}
@@ -154,18 +182,22 @@ function ProfileCard({
         <View style={styles.photoInfo}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>
-              {profile.name}, {profile.age}
+              {profile.name}{profile.age ? `, ${profile.age}` : ""}
             </Text>
             {profile.verifiedProfile && (
               <Shield size={20} color={colors.primary} style={styles.verifiedIcon} />
             )}
           </View>
           <View style={styles.locationRow}>
-            <MapPin size={14} color={colors.white} />
-            <Text style={styles.location}>{profile.city}</Text>
+            {profile.city && (
+              <>
+                <MapPin size={14} color={colors.white} />
+                <Text style={styles.location}>{profile.city}</Text>
+              </>
+            )}
             {profile.job && (
               <>
-                <Text style={styles.locationDivider}>•</Text>
+                {profile.city && <Text style={styles.locationDivider}>•</Text>}
                 <Briefcase size={14} color={colors.white} />
                 <Text style={styles.location}>{profile.job}</Text>
               </>
@@ -179,7 +211,7 @@ function ProfileCard({
         {/* Community Score */}
         <View style={styles.scoreSection}>
           <View style={styles.scoreHeader}>
-            <Text style={styles.scoreTitle}>Topluluk Puanı</Text>
+            <Text style={styles.scoreTitle}>Topluluk Puani</Text>
             {profile.communityScore < 4 && (
               <View style={styles.warningBadge}>
                 <AlertTriangle size={12} color={colors.danger} />
@@ -195,47 +227,51 @@ function ProfileCard({
               <Text style={[styles.scoreMax, { color: scoreColor }]}>/10</Text>
             </View>
             <Text style={styles.reviewCount}>
-              {profile.reviewCount} değerlendirme
+              {profile.reviewCount} degerlendirme
             </Text>
           </View>
 
           {/* Tags */}
-          <View style={styles.tagsContainer}>
-            {profile.tags.map((tag, index) => {
-              const isNegative = ["Manipülatif", "Agresif", "Dikkat!", "Aldatıcı", "Yalancı", "Belirsiz", "Geç cevap"].includes(tag);
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.tag,
-                    { backgroundColor: isNegative ? `${colors.danger}15` : `${colors.success}15` },
-                  ]}
-                >
-                  <Text
+          {profile.tags.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {profile.tags.map((tag, index) => {
+                const isNegative = ["Manipulatif", "Agresif", "Dikkat!", "Aldatici", "Yalanci", "Belirsiz", "Gec cevap"].includes(tag);
+                return (
+                  <View
+                    key={index}
                     style={[
-                      styles.tagText,
-                      { color: isNegative ? colors.danger : colors.success },
+                      styles.tag,
+                      { backgroundColor: isNegative ? `${colors.danger}15` : `${colors.success}15` },
                     ]}
                   >
-                    {tag}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+                    <Text
+                      style={[
+                        styles.tagText,
+                        { color: isNegative ? colors.danger : colors.success },
+                      ]}
+                    >
+                      {tag}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         {/* Bio */}
-        <Text style={styles.bio}>{profile.bio}</Text>
+        {profile.bio && <Text style={styles.bio}>{profile.bio}</Text>}
 
         {/* Interests */}
-        <View style={styles.interestsContainer}>
-          {profile.interests.map((interest, index) => (
-            <View key={index} style={styles.interestChip}>
-              <Text style={styles.interestText}>{interest}</Text>
-            </View>
-          ))}
-        </View>
+        {profile.interests.length > 0 && (
+          <View style={styles.interestsContainer}>
+            {profile.interests.map((interest, index) => (
+              <View key={index} style={styles.interestChip}>
+                <Text style={styles.interestText}>{interest}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -252,9 +288,79 @@ function ProfileCard({
 }
 
 export default function MatchScreen() {
-  const [profiles, setProfiles] = useState(MOCK_DATING_PROFILES);
+  const { user } = useAuth();
+  const [profiles, setProfiles] = useState<DatingProfileView[]>([]);
+  const [loading, setLoading] = useState(true);
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
+
+  const fetchProfiles = useCallback(async () => {
+    if (!user) return;
+    try {
+      // Get already swiped user IDs
+      const { data: swipedData } = await supabase
+        .from("swipes")
+        .select("swiped_id")
+        .eq("swiper_id", user.id);
+
+      const swipedIds = (swipedData || []).map((s) => s.swiped_id);
+      // Also exclude own profile
+      swipedIds.push(user.id);
+
+      // Fetch active dating profiles, excluding already swiped ones
+      let query = supabase
+        .from("dating_profiles")
+        .select("*, profiles(username, avatar_url, reputation_score, is_verified)")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (swipedIds.length > 0) {
+        query = query.not("user_id", "in", `(${swipedIds.join(",")})`);
+      }
+
+      const { data: datingData, error: datingError } = await query;
+
+      if (datingError) throw datingError;
+      if (!datingData || datingData.length === 0) {
+        setProfiles([]);
+        return;
+      }
+
+      // Fetch shadow review scores for these users (via their shadow profiles)
+      // For now, use reputation_score from profiles as community score
+      const result: DatingProfileView[] = datingData.map((dp: any) => {
+        const profileInfo = dp.profiles;
+        return {
+          id: dp.id,
+          user_id: dp.user_id,
+          name: profileInfo?.username || "Kullanici",
+          age: dp.age,
+          city: dp.city,
+          bio: dp.bio,
+          photos: dp.photos || [],
+          interests: dp.interests || [],
+          job: dp.job,
+          education: dp.education,
+          communityScore: profileInfo?.reputation_score || 5.0,
+          reviewCount: 0,
+          verifiedProfile: profileInfo?.is_verified || false,
+          tags: [],
+          lastActive: dp.updated_at || dp.created_at,
+        };
+      });
+
+      setProfiles(result);
+    } catch (error) {
+      console.error("Error fetching dating profiles:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -268,13 +374,13 @@ export default function MatchScreen() {
 
         if (isActionActive) {
           const direction = dx > 0 ? 1 : -1;
+          const isLike = direction > 0;
           Animated.timing(swipe, {
             toValue: { x: direction * SCREEN_WIDTH * 1.5, y: dy },
             duration: 300,
             useNativeDriver: true,
           }).start(() => {
-            setProfiles((prev) => prev.slice(1));
-            swipe.setValue({ x: 0, y: 0 });
+            handleSwipeComplete(isLike, false);
           });
         } else {
           Animated.spring(swipe, {
@@ -287,14 +393,33 @@ export default function MatchScreen() {
     })
   ).current;
 
+  const handleSwipeComplete = async (isLike: boolean, isSuperLike: boolean) => {
+    if (!user || profiles.length === 0) return;
+    const currentProfile = profiles[0];
+
+    // Save swipe to Supabase
+    try {
+      await supabase.from("swipes").insert({
+        swiper_id: user.id,
+        swiped_id: currentProfile.user_id,
+        is_like: isLike,
+        is_super_like: isSuperLike,
+      });
+    } catch (error) {
+      console.error("Error saving swipe:", error);
+    }
+
+    setProfiles((prev) => prev.slice(1));
+    swipe.setValue({ x: 0, y: 0 });
+  };
+
   const handleSwipeLeft = () => {
     Animated.timing(swipe, {
       toValue: { x: -SCREEN_WIDTH * 1.5, y: 0 },
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      setProfiles((prev) => prev.slice(1));
-      swipe.setValue({ x: 0, y: 0 });
+      handleSwipeComplete(false, false);
     });
   };
 
@@ -304,8 +429,7 @@ export default function MatchScreen() {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      setProfiles((prev) => prev.slice(1));
-      swipe.setValue({ x: 0, y: 0 });
+      handleSwipeComplete(true, false);
     });
   };
 
@@ -315,17 +439,30 @@ export default function MatchScreen() {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      setProfiles((prev) => prev.slice(1));
-      swipe.setValue({ x: 0, y: 0 });
+      handleSwipeComplete(true, true);
     });
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Eslesmeler</Text>
+          <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Eşleşmeler</Text>
-        <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
+        <Text style={styles.headerTitle}>Eslesmeler</Text>
+        <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
       </View>
 
       {/* Cards */}
@@ -352,9 +489,9 @@ export default function MatchScreen() {
         ) : (
           <View style={styles.emptyState}>
             <Heart size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Profil kalmadı!</Text>
+            <Text style={styles.emptyTitle}>Profil kalmadi!</Text>
             <Text style={styles.emptySubtitle}>
-              Yeni profiller için daha sonra tekrar kontrol et.
+              Yeni profiller icin daha sonra tekrar kontrol et.
             </Text>
           </View>
         )}
@@ -410,6 +547,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: fontSize.sm,
     marginTop: spacing.xs,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardsContainer: {
     flex: 1,

@@ -9,29 +9,50 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { X, Image as ImageIcon, Send } from "lucide-react-native";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function NewPostScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [content, setContent] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!content.trim() || !selectedCategory) return;
+  const handleSubmit = async () => {
+    if (!content.trim() || !selectedCategory || !user) return;
+    setSubmitting(true);
 
-    console.log({
-      content,
-      category: selectedCategory,
-      isAnonymous,
-    });
+    try {
+      const isSpoiler =
+        selectedCategory === "ifsa" ||
+        selectedCategory === "red_flag" ||
+        selectedCategory === "dolandiricilik";
 
-    router.back();
+      const { error } = await supabase.from("posts").insert({
+        content: content.trim(),
+        category: selectedCategory,
+        is_anonymous: isAnonymous,
+        is_spoiler: isSpoiler,
+        author_id: user.id,
+      });
+
+      if (error) throw error;
+      router.back();
+    } catch (error: any) {
+      Alert.alert("Hata", error.message || "Paylasim olusturulamadi. Tekrar deneyin.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const isValid = content.trim().length > 0 && selectedCategory !== null;
@@ -48,24 +69,30 @@ export default function NewPostScreen() {
             <X size={24} color={colors.text} />
           </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>Yeni Paylaşım</Text>
+          <Text style={styles.headerTitle}>Yeni Paylasim</Text>
 
           <TouchableOpacity
             onPress={handleSubmit}
-            disabled={!isValid}
-            style={[styles.submitButton, isValid && styles.submitButtonActive]}
+            disabled={!isValid || submitting}
+            style={[styles.submitButton, isValid && !submitting && styles.submitButtonActive]}
           >
-            <Send size={16} color={isValid ? colors.white : colors.textMuted} />
-            <Text style={[styles.submitButtonText, isValid && styles.submitButtonTextActive]}>
-              Paylaş
-            </Text>
+            {submitting ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <>
+                <Send size={16} color={isValid ? colors.white : colors.textMuted} />
+                <Text style={[styles.submitButtonText, isValid && styles.submitButtonTextActive]}>
+                  Paylas
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
-          {/* Kategori Seçimi */}
+          {/* Kategori Secimi */}
           <View style={styles.categorySection}>
-            <Text style={styles.sectionLabel}>Kategori Seç *</Text>
+            <Text style={styles.sectionLabel}>Kategori Sec *</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -104,23 +131,23 @@ export default function NewPostScreen() {
             </ScrollView>
           </View>
 
-          {/* Uyarı */}
+          {/* Uyari */}
           {(selectedCategory === "ifsa" ||
             selectedCategory === "red_flag" ||
             selectedCategory === "dolandiricilik") && (
             <View style={styles.warningBox}>
               <Text style={styles.warningText}>
-                Bu kategori hassas içerik olarak işaretlenecek ve spoiler filtresiyle
-                kapatılacaktır.
+                Bu kategori hassas icerik olarak isaretlenecek ve spoiler filtresiyle
+                kapatilacaktir.
               </Text>
             </View>
           )}
 
-          {/* İçerik */}
+          {/* Icerik */}
           <View style={styles.contentSection}>
             <TextInput
               style={styles.contentInput}
-              placeholder="Deneyimini paylaş..."
+              placeholder="Deneyimini paylas..."
               placeholderTextColor={colors.textMuted}
               value={content}
               onChangeText={setContent}
@@ -135,8 +162,8 @@ export default function NewPostScreen() {
           {/* Anonim Mod */}
           <View style={styles.anonRow}>
             <View>
-              <Text style={styles.anonLabel}>Anonim Paylaş</Text>
-              <Text style={styles.anonDescription}>Kullanıcı adın gizlenecek</Text>
+              <Text style={styles.anonLabel}>Anonim Paylas</Text>
+              <Text style={styles.anonDescription}>Kullanici adin gizlenecek</Text>
             </View>
             <Switch
               value={isAnonymous}
@@ -149,7 +176,7 @@ export default function NewPostScreen() {
           {/* Medya Ekleme */}
           <TouchableOpacity style={styles.mediaButton}>
             <ImageIcon size={20} color={colors.primary} />
-            <Text style={styles.mediaButtonText}>Fotoğraf Ekle</Text>
+            <Text style={styles.mediaButtonText}>Fotograf Ekle</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

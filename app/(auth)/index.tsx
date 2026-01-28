@@ -22,10 +22,6 @@ export default function GatekeeperScreen() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock modda çalışmak için (Supabase bağlı değilken)
-  const MOCK_MODE = true;
-  const mockValidCodes = ["ENTRIKA2024", "HOSGELDIN", "DAVET123"];
-
   const handleSubmit = async () => {
     const code = inviteCode.trim().toUpperCase();
 
@@ -38,26 +34,15 @@ export default function GatekeeperScreen() {
     setError("");
 
     try {
-      if (MOCK_MODE) {
-        // Mock mode - Supabase olmadan test için
-        if (mockValidCodes.includes(code)) {
-          await AsyncStorage.setItem("pendingInviteCode", code);
-          router.push("/(auth)/register");
-        } else {
-          setError("Geçersiz davetiye kodu");
-        }
-      } else {
-        // Production mode - Supabase ile
-        const { valid, error: validateError } = await validateInviteCode(code);
+      const { valid, error: validateError } = await validateInviteCode(code);
 
-        if (validateError) {
-          setError("Bir hata oluştu. Lütfen tekrar deneyin.");
-        } else if (valid) {
-          await AsyncStorage.setItem("pendingInviteCode", code);
-          router.push("/(auth)/register");
-        } else {
-          setError("Geçersiz veya kullanılmış davetiye kodu");
-        }
+      if (validateError) {
+        setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      } else if (valid) {
+        await AsyncStorage.setItem("pendingInviteCode", code);
+        router.push("/(auth)/register");
+      } else {
+        setError("Geçersiz davetiye kodu");
       }
     } catch (err) {
       setError("Bir hata oluştu");
