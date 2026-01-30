@@ -79,8 +79,13 @@ entrika/
 │   │   ├── match.tsx    # Eşleşme (Supabase)
 │   │   ├── explore.tsx  # Keşfet (Supabase)
 │   │   └── profile.tsx  # Profil (Supabase)
+│   ├── chat/
+│   │   └── [matchId].tsx # Chat ekrani (Supabase realtime)
 │   ├── _layout.tsx      # Root layout
-│   └── new-post.tsx     # Yeni paylaşım (Supabase insert)
+│   ├── new-post.tsx     # Yeni paylaşım (Supabase insert)
+│   ├── edit-dating-profile.tsx # Dating profil duzenleme
+│   ├── conversations.tsx # Sohbet listesi
+│   └── review-user.tsx  # Kullanici degerlendirme formu (modal)
 ├── constants/
 │   ├── theme.ts         # Renk ve spacing sabitleri
 │   └── categories.ts   # Kategori ve reaksiyon sabitleri
@@ -88,13 +93,17 @@ entrika/
 │   └── AuthContext.tsx  # Auth state yönetimi (production)
 ├── data/
 │   └── mockData.ts      # Re-export (geriye uyumluluk)
+├── components/
+│   └── MessageBubble.tsx # Mesaj baloncugu bileşeni
 ├── lib/
-│   └── supabase.ts      # Supabase client
+│   ├── supabase.ts      # Supabase client + type definitions
+│   └── messaging.ts     # Mesajlasma yardimci fonksiyonlari
 └── supabase/
     ├── schema.sql              # Orijinal şema
     ├── schema-v2.sql           # Güncel tam şema
     ├── profile-trigger.sql     # Profil auto-create trigger
-    └── setup-missing-tables.sql # Eksik tablo kurulumu
+    ├── setup-missing-tables.sql # Eksik tablo kurulumu
+    └── user-reviews.sql        # Kullanici degerlendirme tablosu
 ```
 
 ---
@@ -117,13 +126,14 @@ entrika/
 - [x] useFocusEffect ile tab geçişlerinde veri yenileme
 
 ### Yapılacaklar (Öncelik Sırasına Göre)
-1. [ ] Mesajlaşma sistemi (eşleşmeler arası)
-2. [ ] Dating profil oluşturma/düzenleme ekranı
-3. [ ] Profil değerlendirme/yorum ekleme
+1. [x] Mesajlaşma sistemi (eşleşmeler arası)
+2. [x] Dating profil oluşturma/düzenleme ekranı
+3. [x] Profil değerlendirme/yorum ekleme
 4. [ ] Push bildirimleri
 5. [ ] Gerçek fotoğraf yükleme
 6. [ ] Ayarlar sayfası
 7. [ ] Şifremi unuttum akışı
+8. [ ] reputation_score otomatik guncelleme (user_reviews trigger)
 
 ---
 
@@ -149,6 +159,7 @@ entrika/
 - Port 8081 meşgulse `--port 8082` kullan
 - Supabase Dashboard: Authentication > Providers > Email > Confirm email = OFF olmali
 - Yeni tablo eklenirse `supabase/setup-missing-tables.sql` guncellenmeli
+- `supabase/user-reviews.sql` Supabase SQL Editor'de calistirilmali (user_reviews tablosu)
 
 ---
 

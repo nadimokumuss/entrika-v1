@@ -22,10 +22,17 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchTotalUnreadCount,
+  subscribeToAllMessages,
+} from "@/lib/messaging";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
@@ -289,8 +296,10 @@ function ProfileCard({
 
 export default function MatchScreen() {
   const { user } = useAuth();
+  const router = useRouter();
   const [profiles, setProfiles] = useState<DatingProfileView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
 
@@ -361,6 +370,29 @@ export default function MatchScreen() {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
+
+  // Fetch unread count on focus
+  const loadUnreadCount = useCallback(async () => {
+    if (!user) return;
+    const count = await fetchTotalUnreadCount(user.id);
+    setUnreadCount(count);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount])
+  );
+
+  // Realtime badge update
+  useEffect(() => {
+    const channel = subscribeToAllMessages(() => {
+      loadUnreadCount();
+    });
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [loadUnreadCount]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -447,8 +479,23 @@ export default function MatchScreen() {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Eslesmeler</Text>
-          <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+          <View>
+            <Text style={styles.headerTitle}>Eslesmeler</Text>
+            <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={() => router.push("/conversations")}
+          >
+            <MessageCircle size={24} color={colors.primary} />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -461,8 +508,23 @@ export default function MatchScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Eslesmeler</Text>
-        <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+        <View>
+          <Text style={styles.headerTitle}>Eslesmeler</Text>
+          <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.messageButton}
+          onPress={() => router.push("/conversations")}
+        >
+          <MessageCircle size={24} color={colors.primary} />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Cards */}
@@ -532,11 +594,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
     backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  messageButton: {
+    padding: spacing.sm,
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: colors.accent,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
+  },
+  badgeText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: "bold",
   },
   headerTitle: {
     color: colors.text,

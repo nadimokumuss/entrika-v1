@@ -11,13 +11,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Users, LogOut } from "lucide-react-native";
+import { Settings, Share2, Users, LogOut, Heart, Star } from "lucide-react-native";
+import { useRouter } from "expo-router";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
-import { supabase } from "@/lib/supabase";
+import { supabase, UserReview } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
 
-type TabType = "paylaşımlar" | "referanslar";
+type TabType = "paylaşımlar" | "referanslar" | "degerlendirmeler";
+
+interface ReviewWithReviewer extends UserReview {
+  reviewer?: { username: string } | null;
+}
+
+const POSITIVE_TAGS = ["Nazik", "Guvenilir", "Eglenceli", "Samimi", "Ilgili", "Saygili", "Durst"];
+
 
 interface UserPost {
   id: string;
@@ -41,11 +49,13 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { profile, user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("paylaşımlar");
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [referralCount, setReferralCount] = useState(0);
+  const [reviews, setReviews] = useState<ReviewWithReviewer[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = useCallback(async () => {
@@ -82,6 +92,15 @@ export default function ProfileScreen() {
         .eq("is_used", true);
 
       setReferralCount(inviteData?.length || 0);
+
+      // Fetch reviews received by this user
+      const { data: reviewsData } = await supabase
+        .from("user_reviews")
+        .select("*, reviewer:profiles!user_reviews_reviewer_id_fkey(username)")
+        .eq("target_user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setReviews((reviewsData as ReviewWithReviewer[]) || []);
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
@@ -200,6 +219,15 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>Referans</Text>
             </View>
           </View>
+
+          {/* Dating Profili Butonu */}
+          <TouchableOpacity
+            style={styles.datingProfileButton}
+            onPress={() => router.push("/edit-dating-profile")}
+          >
+            <Heart size={18} color={colors.accent} />
+            <Text style={styles.datingProfileButtonText}>Dating Profilini Duzenle</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Sekmeler */}
@@ -228,6 +256,19 @@ export default function ProfileScreen() {
               ]}
             >
               Referanslarim
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "degerlendirmeler" && styles.tabActive]}
+            onPress={() => setActiveTab("degerlendirmeler")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "degerlendirmeler" && styles.tabTextActive,
+              ]}
+            >
+              Degerlendirmeler
             </Text>
           </TouchableOpacity>
         </View>
@@ -261,7 +302,7 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             )
-          ) : (
+          ) : activeTab === "referanslar" ? (
             <View style={styles.emptyState}>
               <Users size={48} color={colors.border} />
               <Text style={styles.emptyStateText}>
@@ -270,6 +311,68 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.shareButton}>
                 <Text style={styles.shareButtonText}>Davetiye Paylas</Text>
               </TouchableOpacity>
+            </View>
+          ) : loading ? (
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : reviews.length > 0 ? (
+            reviews.map((review) => (
+              <View key={review.id} style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                  <View style={[styles.reviewScoreBadge, {
+                    backgroundColor: review.score >= 7 ? colors.success
+                      : review.score >= 4 ? "#EAB308"
+                      : colors.danger,
+                  }]}>
+                    <Text style={styles.reviewScoreText}>{review.score}/10</Text>
+                  </View>
+                  <Text style={styles.reviewAuthor}>
+                    {review.is_anonymous
+                      ? "Anonim Kullanici"
+                      : review.reviewer?.username
+                        ? `@${review.reviewer.username}`
+                        : "Bilinmeyen"}
+                  </Text>
+                  <Text style={styles.reviewDate}>{formatTimeAgo(review.created_at)}</Text>
+                </View>
+                {review.tags.length > 0 && (
+                  <View style={styles.reviewTagsRow}>
+                    {review.tags.map((tag) => (
+                      <View
+                        key={tag}
+                        style={[
+                          styles.reviewTag,
+                          POSITIVE_TAGS.includes(tag)
+                            ? styles.reviewTagPositive
+                            : styles.reviewTagNegative,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.reviewTagText,
+                            POSITIVE_TAGS.includes(tag)
+                              ? styles.reviewTagTextPositive
+                              : styles.reviewTagTextNegative,
+                          ]}
+                        >
+                          {tag}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {review.content && (
+                  <Text style={styles.reviewContent}>{review.content}</Text>
+                )}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Star size={48} color={colors.border} />
+              <Text style={styles.emptyStateText}>
+                Henuz degerlendirme almadin.
+              </Text>
             </View>
           )}
         </View>
@@ -389,6 +492,22 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: colors.border,
   },
+  datingProfileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: `${colors.accent}15`,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: `${colors.accent}30`,
+  },
+  datingProfileButtonText: {
+    color: colors.accent,
+    fontWeight: "600",
+    marginLeft: spacing.sm,
+  },
   tabsContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -465,6 +584,71 @@ const styles = StyleSheet.create({
   shareButtonText: {
     color: colors.primary,
     fontWeight: "600",
+  },
+  reviewCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  reviewScoreBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  reviewScoreText: {
+    color: colors.white,
+    fontWeight: "bold",
+    fontSize: fontSize.xs,
+  },
+  reviewAuthor: {
+    flex: 1,
+    color: colors.textLight,
+    fontSize: fontSize.sm,
+    marginLeft: spacing.sm,
+  },
+  reviewDate: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
+  },
+  reviewTagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  reviewTag: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  reviewTagPositive: {
+    backgroundColor: `${colors.success}20`,
+  },
+  reviewTagNegative: {
+    backgroundColor: `${colors.danger}20`,
+  },
+  reviewTagText: {
+    fontSize: fontSize.xs,
+    fontWeight: "500",
+  },
+  reviewTagTextPositive: {
+    color: colors.success,
+  },
+  reviewTagTextNegative: {
+    color: colors.danger,
+  },
+  reviewContent: {
+    color: colors.textLight,
+    fontSize: fontSize.sm,
+    lineHeight: 20,
+    marginTop: spacing.sm,
   },
   bottomSpacer: {
     height: 80,

@@ -101,6 +101,8 @@ export interface DatingProfile {
   job: string | null;
   education: string | null;
   city: string;
+  age: number | null;
+  looking_for: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -110,9 +112,25 @@ export interface Match {
   id: string;
   user1_id: string;
   user2_id: string;
-  user1_liked: boolean;
-  user2_liked: boolean;
-  is_match: boolean;
   created_at: string;
-  matched_at: string | null;
+}
+
+export interface Message {
+  id: string;
+  match_id: string;
+  sender_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface UserReview {
+  id: string;
+  target_user_id: string;
+  reviewer_id: string;
+  score: number;
+  content: string | null;
+  tags: string[];
+  is_anonymous: boolean;
+  created_at: string;
 }

@@ -135,6 +135,11 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 #### messages
 - id, match_id, sender_id, content, is_read
 
+#### user_reviews
+- id, target_user_id (FK profiles), reviewer_id (FK profiles), score (1-10), content, tags[], is_anonymous
+- UNIQUE(target_user_id, reviewer_id)
+- RLS: herkes okuyabilir, sadece reviewer insert/update yapabilir
+
 #### reports
 - id, reporter_id, reported_user_id, reported_post_id, reason, status
 
@@ -160,11 +165,24 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - signUp fonksiyonuna detayli hata loglama eklendi
 - Test edildi: kayit, giris, post olusturma, profil goruntuleme calisiyor
 
-### Sonraki Oturum İçin Notlar
-- Dating profil oluşturma ekranı eklemek
-- Mesajlaşma sistemini başlatmak
-- Shadow profil olusturma/degerlendirme ekrani
-- Detayli debug loglarini (SIGNUP) temizlemek
+### 2026-01-30 - Mesajlasma + Dating Profil + Kullanici Degerlendirme
+- Mesajlasma sistemi eklendi (conversations.tsx, chat/[matchId].tsx, MessageBubble, lib/messaging.ts)
+- Dating profil duzenleme ekrani eklendi (edit-dating-profile.tsx)
+- Match ekrani guncellendi (app/(tabs)/match.tsx)
+- Kullanici degerlendirme sistemi eklendi:
+  - user_reviews tablosu (supabase/user-reviews.sql)
+  - UserReview interface (lib/supabase.ts)
+  - Degerlendirme formu (app/review-user.tsx) - 1-10 puan, etiketler, yorum, anonim toggle
+  - Chat header'a yildiz butonu ile degerlendirme erisimi
+  - Profil'e "Degerlendirmeler" sekmesi - alinan yorumlari gosterir
+
+### Sonraki Oturum Icin Notlar
+- user_reviews tablosunu Supabase SQL Editor'de calistirmak (supabase/user-reviews.sql)
+- Push bildirimleri
+- Gercek fotograf yukleme
+- Ayarlar sayfasi
+- Sifremi unuttum akisi
+- reputation_score otomatik guncelleme (DB trigger)
 
 ---
 
