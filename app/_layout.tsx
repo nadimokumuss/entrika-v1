@@ -2,8 +2,8 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import { Platform } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -135,6 +135,12 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
+  // Web'de hydration mismatch'i onlemek icin client mount'u bekle
+  const [isClient, setIsClient] = useState(Platform.OS !== 'web');
+  useEffect(() => {
+    if (Platform.OS === 'web') setIsClient(true);
+  }, []);
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -144,6 +150,12 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Native: font yuklenene kadar bekle
+  // Web: client mount olana kadar bekle (hydration icin bos div render et)
+  if (!isClient) {
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  }
 
   if (!loaded && Platform.OS !== 'web') {
     return null;
