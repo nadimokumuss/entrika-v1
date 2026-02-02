@@ -21,18 +21,20 @@ export async function pickImage(
     source = "gallery",
   } = options;
 
-  // Request permissions
-  if (source === "camera") {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Izin Gerekli", "Kamera erisimi icin izin vermeniz gerekiyor.");
-      return null;
-    }
-  } else {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Izin Gerekli", "Galeri erisimi icin izin vermeniz gerekiyor.");
-      return null;
+  // Request permissions (skip on web - permissions work differently)
+  if (Platform.OS !== "web") {
+    if (source === "camera") {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Izin Gerekli", "Kamera erisimi icin izin vermeniz gerekiyor.");
+        return null;
+      }
+    } else {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Izin Gerekli", "Galeri erisimi icin izin vermeniz gerekiyor.");
+        return null;
+      }
     }
   }
 

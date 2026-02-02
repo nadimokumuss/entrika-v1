@@ -1,7 +1,11 @@
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
-import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+
+let SecureStore: any = null;
+if (Platform.OS !== 'web') {
+  SecureStore = require('expo-secure-store');
+}
 
 // Supabase URL ve Anon Key - bunları kendi Supabase projenizden alın
 // Mock modda geçerli bir placeholder URL kullanıyoruz
@@ -17,7 +21,7 @@ const ExpoSecureStoreAdapter = {
       }
       return null;
     }
-    return SecureStore.getItemAsync(key);
+    return SecureStore?.getItemAsync(key) ?? null;
   },
   setItem: async (key: string, value: string) => {
     if (Platform.OS === "web") {
@@ -26,7 +30,7 @@ const ExpoSecureStoreAdapter = {
       }
       return;
     }
-    await SecureStore.setItemAsync(key, value);
+    await SecureStore?.setItemAsync(key, value);
   },
   removeItem: async (key: string) => {
     if (Platform.OS === "web") {
@@ -35,7 +39,7 @@ const ExpoSecureStoreAdapter = {
       }
       return;
     }
-    await SecureStore.deleteItemAsync(key);
+    await SecureStore?.deleteItemAsync(key);
   },
 };
 

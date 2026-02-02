@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   View,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -38,7 +39,7 @@ export default function GradientButton({
   style,
 }: GradientButtonProps) {
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
   };
 

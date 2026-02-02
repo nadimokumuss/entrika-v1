@@ -217,7 +217,7 @@ export default function PostDetailScreen() {
 
   const handleSendComment = async () => {
     if (!inputText.trim() || !user || !postId || sending) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const text = inputText.trim();
     setInputText("");
     setSending(true);
@@ -243,12 +243,12 @@ export default function PostDetailScreen() {
   };
 
   const handleLongPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowReactions(true);
   };
 
   const handleReaction = async (type: ReactionType) => {
-    Haptics.selectionAsync();
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
     setShowReactions(false);
     if (!user || !postId) return;
     try {

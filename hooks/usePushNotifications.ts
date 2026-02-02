@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import { type EventSubscription } from "expo-modules-core";
 import { useRouter } from "expo-router";
@@ -17,6 +18,7 @@ export function usePushNotifications() {
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
+    if (Platform.OS === 'web') return;
 
     // Android channel'lari olustur
     setupNotificationChannels();

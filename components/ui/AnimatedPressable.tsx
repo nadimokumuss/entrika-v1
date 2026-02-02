@@ -1,5 +1,5 @@
 import { ReactNode, useCallback } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Platform } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -32,7 +32,7 @@ export default function AnimatedPressable({
 
   const handlePressIn = useCallback(() => {
     scale.value = withSpring(scaleValue, { damping: 15, stiffness: 200 });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [scaleValue]);
 
   const handlePressOut = useCallback(() => {

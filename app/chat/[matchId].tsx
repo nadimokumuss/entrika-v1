@@ -130,7 +130,7 @@ export default function ChatScreen() {
 
   const handleSend = async () => {
     if (!inputText.trim() || !user || !matchId || sending) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const text = inputText.trim();
     setInputText("");
     setSending(true);

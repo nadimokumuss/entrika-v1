@@ -3,6 +3,7 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -15,7 +16,9 @@ export const unstable_settings = {
   initialRouteName: "(auth)",
 };
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -137,12 +140,12 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && Platform.OS !== 'web') {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  if (!loaded) {
+  if (!loaded && Platform.OS !== 'web') {
     return null;
   }
 

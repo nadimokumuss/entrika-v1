@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
@@ -78,12 +79,12 @@ function PostCard({
   const category = CATEGORIES[post.category];
 
   const handleLongPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowReactions(true);
   };
 
   const handleReaction = async (type: ReactionType) => {
-    Haptics.selectionAsync();
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
     setShowReactions(false);
     if (!user) return;
     try {

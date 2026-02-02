@@ -9,6 +9,7 @@ import {
   Dimensions,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -468,7 +469,7 @@ export default function MatchScreen() {
   };
 
   const handleSwipeLeft = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Animated.timing(swipe, {
       toValue: { x: -SCREEN_WIDTH * 1.5, y: 0 },
       duration: 300,
@@ -479,7 +480,7 @@ export default function MatchScreen() {
   };
 
   const handleSwipeRight = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Animated.timing(swipe, {
       toValue: { x: SCREEN_WIDTH * 1.5, y: 0 },
       duration: 300,
@@ -490,7 +491,7 @@ export default function MatchScreen() {
   };
 
   const handleSuperLike = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Animated.timing(swipe, {
       toValue: { x: 0, y: -SCREEN_HEIGHT },
       duration: 300,
