@@ -11,12 +11,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Users, LogOut, Heart, Star } from "lucide-react-native";
+import { Settings, Share2, Users, Heart, Star, Camera } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
 import { supabase, UserReview } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
+import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, deleteImage } from "@/lib/storage";
+import GradientBackground from "@/components/ui/GradientBackground";
 
 type TabType = "paylaşımlar" | "referanslar" | "degerlendirmeler";
 
@@ -50,18 +53,18 @@ function formatTimeAgo(dateStr: string): string {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("paylaşımlar");
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [referralCount, setReferralCount] = useState(0);
   const [reviews, setReviews] = useState<ReviewWithReviewer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const fetchUserData = useCallback(async () => {
     if (!user) return;
     try {
-      // Fetch user's posts (non-anonymous only for display)
       const { data: postsData, error: postsError } = await supabase
         .from("posts")
         .select("id, content, category, created_at, is_anonymous")
@@ -70,10 +73,8 @@ export default function ProfileScreen() {
 
       if (postsError) throw postsError;
 
-      // Total post count (all posts by user)
       setPostCount(postsData?.length || 0);
 
-      // Only show non-anonymous posts in the profile tab
       const visiblePosts = (postsData || [])
         .filter((p) => !p.is_anonymous)
         .map((p) => ({
@@ -84,7 +85,6 @@ export default function ProfileScreen() {
         }));
       setUserPosts(visiblePosts);
 
-      // Count referrals (users invited by this user's invite codes)
       const { data: inviteData } = await supabase
         .from("invite_codes")
         .select("id")
@@ -93,7 +93,6 @@ export default function ProfileScreen() {
 
       setReferralCount(inviteData?.length || 0);
 
-      // Fetch reviews received by this user
       const { data: reviewsData } = await supabase
         .from("user_reviews")
         .select("*, reviewer:profiles!user_reviews_reviewer_id_fkey(username)")
@@ -115,30 +114,47 @@ export default function ProfileScreen() {
     }, [fetchUserData])
   );
 
-  const handleSignOut = () => {
-    Alert.alert(
-      "Cikis Yap",
-      "Cikis yapmak istediginize emin misiniz?",
-      [
-        { text: "Iptal", style: "cancel" },
-        {
-          text: "Cikis Yap",
-          style: "destructive",
-          onPress: async () => {
-            await signOut();
-          },
-        },
-      ]
-    );
+  const handleAvatarPress = () => {
+    if (uploadingAvatar || !user) return;
+    showImageSourcePicker(async (source) => {
+      try {
+        const uri = await pickImage({ source, aspect: [1, 1], quality: 0.8 });
+        if (!uri) return;
+
+        setUploadingAvatar(true);
+
+        if (profile?.avatar_url) {
+          const oldPath = extractPathFromUrl(profile.avatar_url, "avatars");
+          if (oldPath) {
+            await deleteImage("avatars", oldPath).catch(() => {});
+          }
+        }
+
+        const publicUrl = await uploadImage("avatars", user.id, uri);
+
+        await supabase
+          .from("profiles")
+          .update({ avatar_url: publicUrl })
+          .eq("id", user.id);
+
+        await refreshProfile();
+      } catch (error: any) {
+        Alert.alert("Hata", error.message || "Avatar yuklenemedi.");
+      } finally {
+        setUploadingAvatar(false);
+      }
+    });
   };
 
   if (!profile) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
@@ -152,241 +168,262 @@ export default function ProfileScreen() {
   const scoreColor = getScoreColor(profile.reputation_score);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header Actions */}
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Share2 size={22} color={colors.textLight} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconButton, styles.iconButtonMargin]}>
-            <Settings size={22} color={colors.textLight} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconButton, styles.iconButtonMargin]}
-            onPress={handleSignOut}
-          >
-            <LogOut size={22} color={colors.danger} />
-          </TouchableOpacity>
-        </View>
+    <GradientBackground variant="screen">
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Header Actions */}
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Share2 size={22} color={colors.textLight} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.iconButton, styles.iconButtonMargin]}
+              onPress={() => router.push("/settings")}
+            >
+              <Settings size={22} color={colors.textLight} />
+            </TouchableOpacity>
+          </View>
 
-        {/* Profil Bilgileri */}
-        <View style={styles.profileSection}>
-          {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: profile.avatar_url || "https://api.dicebear.com/7.x/lorelei/png?seed=default" }}
-              style={styles.avatar}
-            />
-            <View style={[styles.scoreBadge, { backgroundColor: scoreColor }]}>
-              <Text style={styles.scoreBadgeText}>
-                {profile.reputation_score.toFixed(1)}
+          {/* Profil Bilgileri */}
+          <View style={styles.profileSection}>
+            {/* Avatar with gradient ring */}
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={handleAvatarPress}
+              activeOpacity={0.8}
+              disabled={uploadingAvatar}
+            >
+              <LinearGradient
+                colors={gradients.premiumShimmer}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarRing}
+              >
+                <View style={styles.avatarInner}>
+                  <Image
+                    source={{ uri: profile.avatar_url || "https://api.dicebear.com/7.x/lorelei/png?seed=default" }}
+                    style={styles.avatar}
+                  />
+                </View>
+              </LinearGradient>
+              {uploadingAvatar ? (
+                <View style={styles.avatarOverlay}>
+                  <ActivityIndicator size="small" color={colors.white} />
+                </View>
+              ) : (
+                <View style={styles.cameraIconBadge}>
+                  <Camera size={14} color={colors.white} />
+                </View>
+              )}
+              <View style={[styles.scoreBadge, { backgroundColor: scoreColor }]}>
+                <Text style={styles.scoreBadgeText}>
+                  {profile.reputation_score.toFixed(1)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Kullanici Adi */}
+            <Text style={styles.username}>@{profile.username}</Text>
+
+            {/* Itibar Aciklamasi */}
+            <View style={styles.reputationRow}>
+              <View style={[styles.reputationDot, { backgroundColor: scoreColor }]} />
+              <Text style={[styles.reputationText, { color: scoreColor }]}>
+                {profile.reputation_score >= 8
+                  ? "Guvenilir Uye"
+                  : profile.reputation_score >= 6
+                  ? "Iyi Itibar"
+                  : profile.reputation_score >= 4
+                  ? "Orta Itibar"
+                  : "Dusuk Itibar"}
               </Text>
             </View>
+
+            {/* Istatistikler */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{profile.invite_quota}</Text>
+                <Text style={styles.statLabel}>Davetiye</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{loading ? "-" : postCount}</Text>
+                <Text style={styles.statLabel}>Paylasim</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{loading ? "-" : referralCount}</Text>
+                <Text style={styles.statLabel}>Referans</Text>
+              </View>
+            </View>
+
+            {/* Dating Profili Butonu */}
+            <TouchableOpacity
+              style={styles.datingProfileButton}
+              onPress={() => router.push("/edit-dating-profile")}
+            >
+              <Heart size={18} color={colors.accent} />
+              <Text style={styles.datingProfileButtonText}>Dating Profilini Duzenle</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Kullanici Adi */}
-          <Text style={styles.username}>@{profile.username}</Text>
-
-          {/* Itibar Aciklamasi */}
-          <View style={styles.reputationRow}>
-            <View style={[styles.reputationDot, { backgroundColor: scoreColor }]} />
-            <Text style={[styles.reputationText, { color: scoreColor }]}>
-              {profile.reputation_score >= 8
-                ? "Guvenilir Uye"
-                : profile.reputation_score >= 6
-                ? "Iyi Itibar"
-                : profile.reputation_score >= 4
-                ? "Orta Itibar"
-                : "Dusuk Itibar"}
-            </Text>
+          {/* Sekmeler */}
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "paylaşımlar" && styles.tabActive]}
+              onPress={() => setActiveTab("paylaşımlar")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "paylaşımlar" && styles.tabTextActive,
+                ]}
+              >
+                Paylasimlarim
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "referanslar" && styles.tabActive]}
+              onPress={() => setActiveTab("referanslar")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "referanslar" && styles.tabTextActive,
+                ]}
+              >
+                Referanslarim
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "degerlendirmeler" && styles.tabActive]}
+              onPress={() => setActiveTab("degerlendirmeler")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "degerlendirmeler" && styles.tabTextActive,
+                ]}
+              >
+                Degerlendirmeler
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Istatistikler */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile.invite_quota}</Text>
-              <Text style={styles.statLabel}>Davetiye</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{loading ? "-" : postCount}</Text>
-              <Text style={styles.statLabel}>Paylasim</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{loading ? "-" : referralCount}</Text>
-              <Text style={styles.statLabel}>Referans</Text>
-            </View>
-          </View>
-
-          {/* Dating Profili Butonu */}
-          <TouchableOpacity
-            style={styles.datingProfileButton}
-            onPress={() => router.push("/edit-dating-profile")}
-          >
-            <Heart size={18} color={colors.accent} />
-            <Text style={styles.datingProfileButtonText}>Dating Profilini Duzenle</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Sekmeler */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "paylaşımlar" && styles.tabActive]}
-            onPress={() => setActiveTab("paylaşımlar")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "paylaşımlar" && styles.tabTextActive,
-              ]}
-            >
-              Paylasimlarim
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "referanslar" && styles.tabActive]}
-            onPress={() => setActiveTab("referanslar")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "referanslar" && styles.tabTextActive,
-              ]}
-            >
-              Referanslarim
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "degerlendirmeler" && styles.tabActive]}
-            onPress={() => setActiveTab("degerlendirmeler")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "degerlendirmeler" && styles.tabTextActive,
-              ]}
-            >
-              Degerlendirmeler
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Icerik */}
-        <View style={styles.contentSection}>
-          {activeTab === "paylaşımlar" ? (
-            loading ? (
+          {/* Icerik */}
+          <View style={styles.contentSection}>
+            {activeTab === "paylaşımlar" ? (
+              loading ? (
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : userPosts.length > 0 ? (
+                userPosts.map((post) => (
+                  <View key={post.id} style={styles.postCard}>
+                    <View style={styles.postCategoryRow}>
+                      <Text style={[styles.postCategoryText, { color: CATEGORIES[post.category]?.color || colors.textMuted }]}>
+                        {CATEGORIES[post.category]?.emoji} {CATEGORIES[post.category]?.label}
+                      </Text>
+                    </View>
+                    <Text style={styles.postContent} numberOfLines={3}>
+                      {post.content}
+                    </Text>
+                    <Text style={styles.postTime}>{formatTimeAgo(post.created_at)}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>Henuz paylasimin yok.</Text>
+                  <Text style={styles.emptyStateSubtext}>
+                    Anonim paylasimlar burada gorunmez.
+                  </Text>
+                </View>
+              )
+            ) : activeTab === "referanslar" ? (
+              <View style={styles.emptyState}>
+                <Users size={48} color={colors.border} />
+                <Text style={styles.emptyStateText}>
+                  {"Davet ettigin kisiler\nburada gorunecek."}
+                </Text>
+                <TouchableOpacity style={styles.shareButton}>
+                  <Text style={styles.shareButtonText}>Davetiye Paylas</Text>
+                </TouchableOpacity>
+              </View>
+            ) : loading ? (
               <View style={styles.loadingContent}>
                 <ActivityIndicator size="small" color={colors.primary} />
               </View>
-            ) : userPosts.length > 0 ? (
-              userPosts.map((post) => (
-                <View key={post.id} style={styles.postCard}>
-                  <View style={styles.postCategoryRow}>
-                    <Text style={[styles.postCategoryText, { color: CATEGORIES[post.category]?.color || colors.textMuted }]}>
-                      {CATEGORIES[post.category]?.emoji} {CATEGORIES[post.category]?.label}
+            ) : reviews.length > 0 ? (
+              reviews.map((review) => (
+                <View key={review.id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <View style={[styles.reviewScoreBadge, {
+                      backgroundColor: review.score >= 7 ? colors.success
+                        : review.score >= 4 ? "#EAB308"
+                        : colors.danger,
+                    }]}>
+                      <Text style={styles.reviewScoreText}>{review.score}/10</Text>
+                    </View>
+                    <Text style={styles.reviewAuthor}>
+                      {review.is_anonymous
+                        ? "Anonim Kullanici"
+                        : review.reviewer?.username
+                          ? `@${review.reviewer.username}`
+                          : "Bilinmeyen"}
                     </Text>
+                    <Text style={styles.reviewDate}>{formatTimeAgo(review.created_at)}</Text>
                   </View>
-                  <Text style={styles.postContent} numberOfLines={3}>
-                    {post.content}
-                  </Text>
-                  <Text style={styles.postTime}>{formatTimeAgo(post.created_at)}</Text>
+                  {review.tags.length > 0 && (
+                    <View style={styles.reviewTagsRow}>
+                      {review.tags.map((tag) => (
+                        <View
+                          key={tag}
+                          style={[
+                            styles.reviewTag,
+                            POSITIVE_TAGS.includes(tag)
+                              ? styles.reviewTagPositive
+                              : styles.reviewTagNegative,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.reviewTagText,
+                              POSITIVE_TAGS.includes(tag)
+                                ? styles.reviewTagTextPositive
+                                : styles.reviewTagTextNegative,
+                            ]}
+                          >
+                            {tag}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  {review.content && (
+                    <Text style={styles.reviewContent}>{review.content}</Text>
+                  )}
                 </View>
               ))
             ) : (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>Henuz paylasimin yok.</Text>
-                <Text style={styles.emptyStateSubtext}>
-                  Anonim paylasimlar burada gorunmez.
+                <Star size={48} color={colors.border} />
+                <Text style={styles.emptyStateText}>
+                  Henuz degerlendirme almadin.
                 </Text>
               </View>
-            )
-          ) : activeTab === "referanslar" ? (
-            <View style={styles.emptyState}>
-              <Users size={48} color={colors.border} />
-              <Text style={styles.emptyStateText}>
-                {"Davet ettigin kisiler\nburada gorunecek."}
-              </Text>
-              <TouchableOpacity style={styles.shareButton}>
-                <Text style={styles.shareButtonText}>Davetiye Paylas</Text>
-              </TouchableOpacity>
-            </View>
-          ) : loading ? (
-            <View style={styles.loadingContent}>
-              <ActivityIndicator size="small" color={colors.primary} />
-            </View>
-          ) : reviews.length > 0 ? (
-            reviews.map((review) => (
-              <View key={review.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <View style={[styles.reviewScoreBadge, {
-                    backgroundColor: review.score >= 7 ? colors.success
-                      : review.score >= 4 ? "#EAB308"
-                      : colors.danger,
-                  }]}>
-                    <Text style={styles.reviewScoreText}>{review.score}/10</Text>
-                  </View>
-                  <Text style={styles.reviewAuthor}>
-                    {review.is_anonymous
-                      ? "Anonim Kullanici"
-                      : review.reviewer?.username
-                        ? `@${review.reviewer.username}`
-                        : "Bilinmeyen"}
-                  </Text>
-                  <Text style={styles.reviewDate}>{formatTimeAgo(review.created_at)}</Text>
-                </View>
-                {review.tags.length > 0 && (
-                  <View style={styles.reviewTagsRow}>
-                    {review.tags.map((tag) => (
-                      <View
-                        key={tag}
-                        style={[
-                          styles.reviewTag,
-                          POSITIVE_TAGS.includes(tag)
-                            ? styles.reviewTagPositive
-                            : styles.reviewTagNegative,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.reviewTagText,
-                            POSITIVE_TAGS.includes(tag)
-                              ? styles.reviewTagTextPositive
-                              : styles.reviewTagTextNegative,
-                          ]}
-                        >
-                          {tag}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                {review.content && (
-                  <Text style={styles.reviewContent}>{review.content}</Text>
-                )}
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Star size={48} color={colors.border} />
-              <Text style={styles.emptyStateText}>
-                Henuz degerlendirme almadin.
-              </Text>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
 
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -420,16 +457,54 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: "relative",
   },
+  avatarRing: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInner: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    overflow: "hidden",
+    backgroundColor: colors.background,
+  },
   avatar: {
     width: 96,
     height: 96,
     borderRadius: 48,
     backgroundColor: colors.borderLight,
   },
+  avatarOverlay: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraIconBadge: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
   scoreBadge: {
     position: "absolute",
-    bottom: -8,
-    right: -8,
+    bottom: -4,
+    right: -4,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -467,12 +542,12 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     marginTop: spacing.xxl,
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     width: "100%",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
   },
   statItem: {
     flex: 1,
@@ -490,7 +565,7 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: colors.border,
+    backgroundColor: glass.border,
   },
   datingProfileButton: {
     flexDirection: "row",
@@ -498,10 +573,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: `${colors.accent}15`,
+    backgroundColor: glass.background,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: `${colors.accent}30`,
+    width: "100%",
   },
   datingProfileButtonText: {
     color: colors.accent,
@@ -511,8 +587,8 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
+    borderBottomColor: glass.border,
+    backgroundColor: glass.background,
   },
   tab: {
     flex: 1,
@@ -535,9 +611,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   postCard: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -575,7 +651,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   shareButton: {
-    backgroundColor: `${colors.primary}15`,
+    backgroundColor: glass.background,
+    borderWidth: 1,
+    borderColor: glass.borderHighlight,
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
@@ -586,9 +664,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   reviewCard: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,

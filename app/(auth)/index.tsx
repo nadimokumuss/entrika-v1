@@ -11,9 +11,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock, Sparkles } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import GradientBackground from "@/components/ui/GradientBackground";
+import GradientButton from "@/components/ui/GradientButton";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function GatekeeperScreen() {
   const router = useRouter();
@@ -37,94 +40,94 @@ export default function GatekeeperScreen() {
       const { valid, error: validateError } = await validateInviteCode(code);
 
       if (validateError) {
-        setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+        setError("Bir hata olustu. Lutfen tekrar deneyin.");
       } else if (valid) {
         await AsyncStorage.setItem("pendingInviteCode", code);
         router.push("/(auth)/register");
       } else {
-        setError("Geçersiz davetiye kodu");
+        setError("Gecersiz davetiye kodu");
       }
     } catch (err) {
-      setError("Bir hata oluştu");
+      setError("Bir hata olustu");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        {/* Logo Alanı */}
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Sparkles size={40} color={colors.primary} />
+    <GradientBackground variant="auth">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <View style={styles.content}>
+          {/* Logo Alani */}
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={gradients.premiumShimmer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoCircle}
+            >
+              <Sparkles size={40} color={colors.white} />
+            </LinearGradient>
+            <Text style={styles.title}>ENTRIKA</Text>
+            <Text style={styles.subtitle}>Tanismadan Once Tani</Text>
           </View>
-          <Text style={styles.title}>ENTRİKA</Text>
-          <Text style={styles.subtitle}>Tanışmadan Önce Tanı</Text>
-        </View>
 
-        {/* Davetiye Kodu Girişi */}
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Lock size={20} color={colors.primary} />
-            <TextInput
-              style={styles.input}
-              placeholder="Davetiye Kodun"
-              placeholderTextColor={colors.textMuted}
-              value={inviteCode}
-              onChangeText={(text) => {
-                setInviteCode(text);
-                setError("");
-              }}
-              autoCapitalize="characters"
-              autoCorrect={false}
+          {/* Davetiye Kodu Girisi */}
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Lock size={20} color={colors.primary} />
+              <TextInput
+                style={styles.input}
+                placeholder="Davetiye Kodun"
+                placeholderTextColor={colors.textMuted}
+                value={inviteCode}
+                onChangeText={(text) => {
+                  setInviteCode(text);
+                  setError("");
+                }}
+                autoCapitalize="characters"
+                autoCorrect={false}
+              />
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <GradientButton
+              onPress={handleSubmit}
+              label="Kapiyi Ac"
+              loading={isLoading}
+              disabled={isLoading}
             />
           </View>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TouchableOpacity
-            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
-            onPress={handleSubmit}
-            activeOpacity={0.8}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.submitButtonText}>Kapıyı Aç</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Alt Bilgi */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Sadece davetliler girebilir.{"\n"}
-            Bir arkadaşından davetiye kodu al.
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => router.push("/(auth)/login")}
-            style={styles.loginLink}
-          >
-            <Text style={styles.loginLinkText}>
-              Zaten hesabın var mı? <Text style={styles.loginLinkBold}>Giriş Yap</Text>
+          {/* Alt Bilgi */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Sadece davetliler girebilir.{"\n"}
+              Bir arkadasindan davetiye kodu al.
             </Text>
-          </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/login")}
+              style={styles.loginLink}
+            >
+              <Text style={styles.loginLinkText}>
+                Zaten hesabin var mi? <Text style={styles.loginLinkBold}>Giris Yap</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -139,7 +142,6 @@ const styles = StyleSheet.create({
   logoCircle: {
     width: 80,
     height: 80,
-    backgroundColor: `${colors.primary}20`,
     borderRadius: 40,
     alignItems: "center",
     justifyContent: "center",
@@ -163,18 +165,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     marginBottom: spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   input: {
     flex: 1,
@@ -186,25 +183,6 @@ const styles = StyleSheet.create({
     color: colors.danger,
     textAlign: "center",
     marginBottom: spacing.lg,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.lg,
-    borderRadius: borderRadius.xl,
-    alignItems: "center",
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
-  submitButtonText: {
-    color: colors.white,
-    fontWeight: "600",
-    fontSize: fontSize.md,
   },
   footer: {
     position: "absolute",

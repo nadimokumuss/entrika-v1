@@ -72,6 +72,7 @@ entrika/
 │   │   ├── _layout.tsx
 │   │   ├── index.tsx    # Gatekeeper (davetiye kodu)
 │   │   ├── login.tsx    # Giriş
+│   │   ├── forgot-password.tsx # Sifremi unuttum
 │   │   └── register.tsx # Kayıt (cinsiyet + avatar)
 │   ├── (tabs)/          # Ana tab ekranları
 │   │   ├── _layout.tsx
@@ -85,6 +86,7 @@ entrika/
 │   ├── new-post.tsx     # Yeni paylaşım (Supabase insert)
 │   ├── edit-dating-profile.tsx # Dating profil duzenleme
 │   ├── conversations.tsx # Sohbet listesi
+│   ├── notifications.tsx # Bildirim ekrani (in-app)
 │   └── review-user.tsx  # Kullanici degerlendirme formu (modal)
 ├── constants/
 │   ├── theme.ts         # Renk ve spacing sabitleri
@@ -103,7 +105,9 @@ entrika/
     ├── schema-v2.sql           # Güncel tam şema
     ├── profile-trigger.sql     # Profil auto-create trigger
     ├── setup-missing-tables.sql # Eksik tablo kurulumu
-    └── user-reviews.sql        # Kullanici degerlendirme tablosu
+    ├── user-reviews.sql        # Kullanici degerlendirme tablosu
+    ├── notifications.sql       # Bildirim tablosu (in-app notifications)
+    └── reputation-trigger.sql  # reputation_score otomatik guncelleme trigger'i
 ```
 
 ---
@@ -129,11 +133,20 @@ entrika/
 1. [x] Mesajlaşma sistemi (eşleşmeler arası)
 2. [x] Dating profil oluşturma/düzenleme ekranı
 3. [x] Profil değerlendirme/yorum ekleme
-4. [ ] Push bildirimleri
-5. [ ] Gerçek fotoğraf yükleme
-6. [ ] Ayarlar sayfası
-7. [ ] Şifremi unuttum akışı
-8. [ ] reputation_score otomatik guncelleme (user_reviews trigger)
+4. [x] Push bildirimleri
+5. [x] Gerçek fotoğraf yükleme
+6. [x] Ayarlar sayfası
+7. [x] Şifremi unuttum akışı
+8. [x] reputation_score otomatik guncelleme (user_reviews trigger)
+9. [x] Bildirim ekrani (in-app notifications + bell badge)
+
+### Siradaki Ozellikler
+1. [ ] Profil duzenleme (username, bio, avatar degistirme)
+2. [ ] Post silme / duzenleme
+3. [ ] Feed'de realtime guncellemeler
+4. [ ] Gelismis filtreleme (match'te yas, lokasyon)
+5. [ ] Davetiye zincir takibi
+6. [ ] Premium ozellikler
 
 ---
 
@@ -160,6 +173,7 @@ entrika/
 - Supabase Dashboard: Authentication > Providers > Email > Confirm email = OFF olmali
 - Yeni tablo eklenirse `supabase/setup-missing-tables.sql` guncellenmeli
 - `supabase/user-reviews.sql` Supabase SQL Editor'de calistirilmali (user_reviews tablosu)
+- `supabase/notifications.sql` Supabase SQL Editor'de calistirildi (notifications tablosu)
 
 ---
 

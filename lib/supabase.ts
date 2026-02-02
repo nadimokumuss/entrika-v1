@@ -12,20 +12,27 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 const ExpoSecureStoreAdapter = {
   getItem: async (key: string) => {
     if (Platform.OS === "web") {
-      return localStorage.getItem(key);
+      if (typeof localStorage !== "undefined") {
+        return localStorage.getItem(key);
+      }
+      return null;
     }
     return SecureStore.getItemAsync(key);
   },
   setItem: async (key: string, value: string) => {
     if (Platform.OS === "web") {
-      localStorage.setItem(key, value);
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(key, value);
+      }
       return;
     }
     await SecureStore.setItemAsync(key, value);
   },
   removeItem: async (key: string) => {
     if (Platform.OS === "web") {
-      localStorage.removeItem(key);
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(key);
+      }
       return;
     }
     await SecureStore.deleteItemAsync(key);
@@ -133,4 +140,33 @@ export interface UserReview {
   tags: string[];
   is_anonymous: boolean;
   created_at: string;
+}
+
+export type ReportType = "post" | "user" | "shadow_profile";
+
+export interface Report {
+  id: string;
+  reporter_id: string;
+  report_type: ReportType;
+  target_id: string;
+  reason: string;
+  details: string | null;
+  created_at: string;
+}
+
+export interface BlockedUser {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+}
+
+export interface Comment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  content: string;
+  is_anonymous: boolean;
+  created_at: string;
+  updated_at: string;
 }

@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { colors } from "@/constants/theme";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -19,6 +21,9 @@ function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Push notification kayit ve listener'lari
+  usePushNotifications();
 
   useEffect(() => {
     if (isLoading) return;
@@ -36,11 +41,11 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#FFF7ED" },
+          contentStyle: { backgroundColor: colors.background },
         }}
       >
         <Stack.Screen name="(auth)" />
@@ -76,6 +81,44 @@ function RootLayoutNav() {
           options={{
             presentation: "modal",
             animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            presentation: "modal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="report-content"
+          options={{
+            presentation: "modal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="notifications"
+          options={{
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="blocked-users"
+          options={{
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="post-detail"
+          options={{
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="user-profile/[userId]"
+          options={{
+            animation: "slide_from_right",
           }}
         />
       </Stack>

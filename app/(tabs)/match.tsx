@@ -23,16 +23,21 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
+  Flag,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import * as Haptics from "expo-haptics";
+import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchTotalUnreadCount,
   subscribeToAllMessages,
 } from "@/lib/messaging";
+import { getBlockedUserIds } from "@/lib/blocking";
+import GradientBackground from "@/components/ui/GradientBackground";
+import AnimatedHeader from "@/components/ui/AnimatedHeader";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
@@ -62,6 +67,7 @@ function ProfileCard({
   tiltSign,
   onSwipeLeft,
   onSwipeRight,
+  onReport,
   ...rest
 }: {
   profile: DatingProfileView;
@@ -70,6 +76,7 @@ function ProfileCard({
   tiltSign: Animated.Value;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
+  onReport: (profile: DatingProfileView) => void;
 }) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -166,6 +173,15 @@ function ProfileCard({
             ))}
           </View>
         )}
+
+        {/* Report Flag */}
+        <TouchableOpacity
+          style={styles.reportFlag}
+          onPress={() => onReport(profile)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Flag size={18} color={colors.white} />
+        </TouchableOpacity>
 
         {/* Gradient Overlay */}
         <LinearGradient
@@ -316,6 +332,12 @@ export default function MatchScreen() {
       // Also exclude own profile
       swipedIds.push(user.id);
 
+      // Exclude blocked users
+      const blockedIds = await getBlockedUserIds(user.id);
+      blockedIds.forEach((id) => {
+        if (!swipedIds.includes(id)) swipedIds.push(id);
+      });
+
       // Fetch active dating profiles, excluding already swiped ones
       let query = supabase
         .from("dating_profiles")
@@ -446,6 +468,7 @@ export default function MatchScreen() {
   };
 
   const handleSwipeLeft = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Animated.timing(swipe, {
       toValue: { x: -SCREEN_WIDTH * 1.5, y: 0 },
       duration: 300,
@@ -456,6 +479,7 @@ export default function MatchScreen() {
   };
 
   const handleSwipeRight = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Animated.timing(swipe, {
       toValue: { x: SCREEN_WIDTH * 1.5, y: 0 },
       duration: 300,
@@ -466,6 +490,7 @@ export default function MatchScreen() {
   };
 
   const handleSuperLike = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Animated.timing(swipe, {
       toValue: { x: 0, y: -SCREEN_HEIGHT },
       duration: 300,
@@ -475,10 +500,53 @@ export default function MatchScreen() {
     });
   };
 
+  const handleReport = (profile: DatingProfileView) => {
+    router.push({
+      pathname: "/report-content",
+      params: {
+        type: "user",
+        targetId: profile.user_id,
+        targetName: profile.name,
+      },
+    });
+  };
+
   if (loading) {
     return (
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <AnimatedHeader style={styles.headerRow}>
+            <View>
+              <Text style={styles.headerTitle}>Eslesmeler</Text>
+              <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.messageButton}
+              onPress={() => router.push("/conversations")}
+            >
+              <MessageCircle size={24} color={colors.primary} />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </AnimatedHeader>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
+  return (
+    <GradientBackground variant="screen">
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
+        {/* Header */}
+        <AnimatedHeader style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>Eslesmeler</Text>
             <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
@@ -496,112 +564,80 @@ export default function MatchScreen() {
               </View>
             )}
           </TouchableOpacity>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
+        </AnimatedHeader>
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Eslesmeler</Text>
-          <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.messageButton}
-          onPress={() => router.push("/conversations")}
-        >
-          <MessageCircle size={24} color={colors.primary} />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {unreadCount > 99 ? "99+" : unreadCount}
+        {/* Cards */}
+        <View style={styles.cardsContainer}>
+          {profiles.length > 0 ? (
+            profiles
+              .slice(0, 2)
+              .reverse()
+              .map((profile, index) => {
+                const isFirst = index === profiles.slice(0, 2).length - 1;
+                return (
+                  <ProfileCard
+                    key={profile.id}
+                    profile={profile}
+                    isFirst={isFirst}
+                    swipe={swipe}
+                    tiltSign={tiltSign}
+                    onSwipeLeft={handleSwipeLeft}
+                    onSwipeRight={handleSwipeRight}
+                    onReport={handleReport}
+                    {...(isFirst ? panResponder.panHandlers : {})}
+                  />
+                );
+              })
+          ) : (
+            <View style={styles.emptyState}>
+              <Heart size={64} color={colors.border} />
+              <Text style={styles.emptyTitle}>Profil kalmadi!</Text>
+              <Text style={styles.emptySubtitle}>
+                Yeni profiller icin daha sonra tekrar kontrol et.
               </Text>
             </View>
           )}
-        </TouchableOpacity>
-      </View>
+        </View>
 
-      {/* Cards */}
-      <View style={styles.cardsContainer}>
-        {profiles.length > 0 ? (
-          profiles
-            .slice(0, 2)
-            .reverse()
-            .map((profile, index) => {
-              const isFirst = index === profiles.slice(0, 2).length - 1;
-              return (
-                <ProfileCard
-                  key={profile.id}
-                  profile={profile}
-                  isFirst={isFirst}
-                  swipe={swipe}
-                  tiltSign={tiltSign}
-                  onSwipeLeft={handleSwipeLeft}
-                  onSwipeRight={handleSwipeRight}
-                  {...(isFirst ? panResponder.panHandlers : {})}
-                />
-              );
-            })
-        ) : (
-          <View style={styles.emptyState}>
-            <Heart size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Profil kalmadi!</Text>
-            <Text style={styles.emptySubtitle}>
-              Yeni profiller icin daha sonra tekrar kontrol et.
-            </Text>
+        {/* Action Buttons */}
+        {profiles.length > 0 && (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.nopeButton]}
+              onPress={handleSwipeLeft}
+            >
+              <X size={28} color={colors.danger} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.superLikeButton]}
+              onPress={handleSuperLike}
+            >
+              <Star size={24} color={colors.primary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.likeButton]}
+              onPress={handleSwipeRight}
+            >
+              <Heart size={28} color={colors.success} />
+            </TouchableOpacity>
           </View>
         )}
-      </View>
-
-      {/* Action Buttons */}
-      {profiles.length > 0 && (
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.nopeButton]}
-            onPress={handleSwipeLeft}
-          >
-            <X size={28} color={colors.danger} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.superLikeButton]}
-            onPress={handleSuperLike}
-          >
-            <Star size={24} color={colors.primary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.likeButton]}
-            onPress={handleSwipeRight}
-          >
-            <Heart size={28} color={colors.success} />
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
-  header: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   messageButton: {
     padding: spacing.sm,
@@ -650,12 +686,14 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH - spacing.md * 2,
   },
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
+    borderWidth: 1,
+    borderColor: glass.border,
     borderRadius: borderRadius.xl,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 5,
   },
@@ -697,6 +735,18 @@ const styles = StyleSheet.create({
   },
   photoIndicatorActive: {
     backgroundColor: colors.white,
+  },
+  reportFlag: {
+    position: "absolute",
+    top: spacing.md + 12,
+    right: spacing.md,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
   },
   gradientOverlay: {
     position: "absolute",
@@ -767,6 +817,7 @@ const styles = StyleSheet.create({
   },
   details: {
     padding: spacing.lg,
+    backgroundColor: glass.background,
   },
   scoreSection: {
     marginBottom: spacing.md,
@@ -888,10 +939,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
+    borderWidth: 1,
+    borderColor: glass.border,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 3,
   },
@@ -909,5 +962,6 @@ const styles = StyleSheet.create({
   likeButton: {
     borderWidth: 2,
     borderColor: colors.success,
+    ...shadows.glow,
   },
 });

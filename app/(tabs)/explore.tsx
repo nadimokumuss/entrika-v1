@@ -10,8 +10,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, AlertTriangle } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
+import GradientBackground from "@/components/ui/GradientBackground";
+import AnimatedHeader from "@/components/ui/AnimatedHeader";
+import GlassCard from "@/components/ui/GlassCard";
 
 interface ShadowProfileView {
   id: string;
@@ -33,7 +36,7 @@ function ShadowProfileCard({ profile }: { profile: ShadowProfileView }) {
   const scoreColor = getScoreColor(profile.avg_score);
 
   return (
-    <TouchableOpacity style={styles.profileCard} activeOpacity={0.7}>
+    <GlassCard style={styles.profileCard}>
       <View style={styles.profileContent}>
         {/* Sol - Bilgiler */}
         <View style={styles.profileInfo}>
@@ -75,7 +78,7 @@ function ShadowProfileCard({ profile }: { profile: ShadowProfileView }) {
           <Text style={styles.scoreLabel}>puan</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </GlassCard>
   );
 }
 
@@ -182,72 +185,67 @@ export default function ExploreScreen() {
   }, [searchQuery, fetchProfiles]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Kesfet</Text>
+    <GradientBackground variant="screen">
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        {/* Header */}
+        <AnimatedHeader>
+          <Text style={styles.headerTitle}>Kesfet</Text>
 
-        {/* Arama */}
-        <View style={styles.searchContainer}>
-          <Search size={20} color={colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Isim, sehir veya etiket ara..."
-            placeholderTextColor={colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
-
-      {/* Sonuclar */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Uyari Banner */}
-        <View style={styles.warningBanner}>
-          <Text style={styles.warningBannerText}>
-            {"Profiller kullanici yorumlarina dayanir.\nBilgiler dogrulanmamis olabilir."}
-          </Text>
-        </View>
-
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+          {/* Arama */}
+          <View style={styles.searchContainer}>
+            <Search size={20} color={colors.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Isim, sehir veya etiket ara..."
+              placeholderTextColor={colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-        ) : profiles.length > 0 ? (
-          profiles.map((profile) => (
-            <ShadowProfileCard key={profile.id} profile={profile} />
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
-              {searchQuery
-                ? "Aradiginiz kriterlere uygun profil bulunamadi."
-                : "Henuz profil olusturulmamis."}
+        </AnimatedHeader>
+
+        {/* Sonuclar */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Uyari Banner */}
+          <View style={styles.warningBanner}>
+            <Text style={styles.warningBannerText}>
+              {"Profiller kullanici yorumlarina dayanir.\nBilgiler dogrulanmamis olabilir."}
             </Text>
           </View>
-        )}
 
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-    </SafeAreaView>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : profiles.length > 0 ? (
+            profiles.map((profile) => (
+              <ShadowProfileCard key={profile.id} profile={profile} />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                {searchQuery
+                  ? "Aradiginiz kriterlere uygun profil bulunamadi."
+                  : "Henuz profil olusturulmamis."}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: "transparent",
   },
   headerTitle: {
     color: colors.text,
@@ -258,9 +256,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -280,9 +278,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   warningBanner: {
-    backgroundColor: `${colors.primary}10`,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: `${colors.primary}30`,
+    borderColor: glass.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -298,17 +296,8 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   profileCard: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   profileContent: {
     flexDirection: "row",

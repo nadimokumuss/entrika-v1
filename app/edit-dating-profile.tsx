@@ -11,13 +11,18 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Image,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { X, Save } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { X, Save, Plus, Trash2 } from "lucide-react-native";
+import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+import GradientBackground from "@/components/ui/GradientBackground";
+import GradientButton from "@/components/ui/GradientButton";
 import { supabase, type DatingProfile } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { pickImage, uploadImage, deleteImage, extractPathFromUrl, showImageSourcePicker } from "@/lib/storage";
 
 const INTERESTS_LIST = [
   "Muzik",
@@ -43,6 +48,14 @@ const LOOKING_FOR_OPTIONS = [
   { value: "both", label: "Her ikisi" },
 ];
 
+const MAX_PHOTOS = 6;
+const PHOTO_COLUMNS = 3;
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const PHOTO_GAP = spacing.sm;
+const PHOTO_PADDING = spacing.lg;
+const PHOTO_WIDTH = (SCREEN_WIDTH - PHOTO_PADDING * 2 - PHOTO_GAP * (PHOTO_COLUMNS - 1)) / PHOTO_COLUMNS;
+const PHOTO_HEIGHT = (PHOTO_WIDTH * 4) / 3;
+
 export default function EditDatingProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -50,6 +63,8 @@ export default function EditDatingProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [existingProfile, setExistingProfile] = useState<DatingProfile | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Form state
   const [age, setAge] = useState("");
@@ -88,6 +103,7 @@ export default function EditDatingProfileScreen() {
         setInterests(data.interests || []);
         setLookingFor(data.looking_for || "both");
         setIsActive(data.is_active ?? true);
+        setPhotos(data.photos || []);
       }
     } catch (error) {
       console.error("Error fetching dating profile:", error);
@@ -104,8 +120,48 @@ export default function EditDatingProfileScreen() {
     );
   };
 
+  const handleAddPhoto = () => {
+    if (uploadingPhoto || !user || photos.length >= MAX_PHOTOS) return;
+    showImageSourcePicker(async (source) => {
+      try {
+        const uri = await pickImage({ source, aspect: [3, 4], quality: 0.8 });
+        if (!uri) return;
+
+        setUploadingPhoto(true);
+        const publicUrl = await uploadImage("dating-photos", user.id, uri);
+        setPhotos((prev) => [...prev, publicUrl]);
+      } catch (error: any) {
+        Alert.alert("Hata", error.message || "Fotograf yuklenemedi.");
+      } finally {
+        setUploadingPhoto(false);
+      }
+    });
+  };
+
+  const handleDeletePhoto = (index: number) => {
+    const url = photos[index];
+    Alert.alert("Fotografu Sil", "Bu fotografu silmek istediginize emin misiniz?", [
+      { text: "Iptal", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const path = extractPathFromUrl(url, "dating-photos");
+            if (path) {
+              await deleteImage("dating-photos", path).catch(() => {});
+            }
+            setPhotos((prev) => prev.filter((_, i) => i !== index));
+          } catch (error: any) {
+            Alert.alert("Hata", error.message || "Fotograf silinemedi.");
+          }
+        },
+      },
+    ]);
+  };
+
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || uploadingPhoto) return;
 
     // Validate age if provided
     if (age.trim() !== "") {
@@ -129,6 +185,7 @@ export default function EditDatingProfileScreen() {
         interests,
         looking_for: lookingFor,
         is_active: isActive,
+        photos,
       };
 
       if (existingProfile) {
@@ -154,200 +211,234 @@ export default function EditDatingProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <X size={24} color={colors.text} />
-          </TouchableOpacity>
-
-          <Text style={styles.headerTitle}>Dating Profili</Text>
-
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={submitting}
-            style={[styles.saveButton, !submitting && styles.saveButtonActive]}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color={colors.white} />
-            ) : (
-              <>
-                <Save size={16} color={colors.white} />
-                <Text style={styles.saveButtonText}>Kaydet</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <GradientBackground variant="screen">
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
         >
-          {/* Yas */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Yas</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Orn: 25"
-              placeholderTextColor={colors.textMuted}
-              value={age}
-              onChangeText={setAge}
-              keyboardType="numeric"
-              maxLength={2}
-            />
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+              <X size={24} color={colors.text} />
+            </TouchableOpacity>
+
+            <Text style={styles.headerTitle}>Dating Profili</Text>
+
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={submitting || uploadingPhoto}
+              style={[styles.saveButton, !submitting && !uploadingPhoto && styles.saveButtonActive]}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <>
+                  <Save size={16} color={colors.white} />
+                  <Text style={styles.saveButtonText}>Kaydet</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
 
-          {/* Sehir */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Sehir</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Orn: Istanbul"
-              placeholderTextColor={colors.textMuted}
-              value={city}
-              onChangeText={setCity}
-            />
-          </View>
-
-          {/* Meslek */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Meslek</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Orn: Yazilim Muhendisi"
-              placeholderTextColor={colors.textMuted}
-              value={job}
-              onChangeText={setJob}
-            />
-          </View>
-
-          {/* Egitim */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Egitim</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Orn: Istanbul Universitesi"
-              placeholderTextColor={colors.textMuted}
-              value={education}
-              onChangeText={setEducation}
-            />
-          </View>
-
-          {/* Bio */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Hakkinda</Text>
-            <TextInput
-              style={[styles.textInput, styles.bioInput]}
-              placeholder="Kendinden bahset..."
-              placeholderTextColor={colors.textMuted}
-              value={bio}
-              onChangeText={setBio}
-              multiline
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Ilgi Alanlari */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Ilgi Alanlari</Text>
-            <View style={styles.chipsContainer}>
-              {INTERESTS_LIST.map((interest) => {
-                const isSelected = interests.includes(interest);
-                return (
-                  <TouchableOpacity
-                    key={interest}
-                    onPress={() => toggleInterest(interest)}
-                    style={[
-                      styles.chip,
-                      isSelected && styles.chipSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        isSelected && styles.chipTextSelected,
-                      ]}
+          <ScrollView
+            style={styles.scrollView}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Fotograflar */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Fotograflar ({photos.length}/{MAX_PHOTOS})</Text>
+              <View style={styles.photoGrid}>
+                {photos.map((url, index) => (
+                  <View key={url} style={styles.photoItem}>
+                    <Image source={{ uri: url }} style={styles.photoImage} />
+                    <TouchableOpacity
+                      style={styles.photoDeleteButton}
+                      onPress={() => handleDeletePhoto(index)}
                     >
-                      {interest}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Looking For */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Aranan Cinsiyet</Text>
-            <View style={styles.lookingForContainer}>
-              {LOOKING_FOR_OPTIONS.map((option) => {
-                const isSelected = lookingFor === option.value;
-                return (
+                      <Trash2 size={14} color={colors.white} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {photos.length < MAX_PHOTOS && (
                   <TouchableOpacity
-                    key={option.value}
-                    onPress={() => setLookingFor(option.value)}
-                    style={[
-                      styles.lookingForButton,
-                      isSelected && styles.lookingForButtonSelected,
-                    ]}
+                    style={styles.photoAddButton}
+                    onPress={handleAddPhoto}
+                    disabled={uploadingPhoto}
                   >
-                    <Text
-                      style={[
-                        styles.lookingForText,
-                        isSelected && styles.lookingForTextSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
+                    {uploadingPhoto ? (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    ) : (
+                      <Plus size={28} color={colors.primary} />
+                    )}
                   </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Is Active */}
-          <View style={styles.fieldContainer}>
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.fieldLabel}>Profil Aktif</Text>
-                <Text style={styles.switchDescription}>
-                  Kapatirsan eslesme ekraninda gorunmezsin
-                </Text>
+                )}
               </View>
-              <Switch
-                value={isActive}
-                onValueChange={setIsActive}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.white}
+            </View>
+
+            {/* Yas */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Yas</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Orn: 25"
+                placeholderTextColor={colors.textMuted}
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+                maxLength={2}
               />
             </View>
-          </View>
 
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {/* Sehir */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Sehir</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Orn: Istanbul"
+                placeholderTextColor={colors.textMuted}
+                value={city}
+                onChangeText={setCity}
+              />
+            </View>
+
+            {/* Meslek */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Meslek</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Orn: Yazilim Muhendisi"
+                placeholderTextColor={colors.textMuted}
+                value={job}
+                onChangeText={setJob}
+              />
+            </View>
+
+            {/* Egitim */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Egitim</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Orn: Istanbul Universitesi"
+                placeholderTextColor={colors.textMuted}
+                value={education}
+                onChangeText={setEducation}
+              />
+            </View>
+
+            {/* Bio */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Hakkinda</Text>
+              <TextInput
+                style={[styles.textInput, styles.bioInput]}
+                placeholder="Kendinden bahset..."
+                placeholderTextColor={colors.textMuted}
+                value={bio}
+                onChangeText={setBio}
+                multiline
+                textAlignVertical="top"
+              />
+            </View>
+
+            {/* Ilgi Alanlari */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Ilgi Alanlari</Text>
+              <View style={styles.chipsContainer}>
+                {INTERESTS_LIST.map((interest) => {
+                  const isSelected = interests.includes(interest);
+                  return (
+                    <TouchableOpacity
+                      key={interest}
+                      onPress={() => toggleInterest(interest)}
+                      style={[
+                        styles.chip,
+                        isSelected && styles.chipSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          isSelected && styles.chipTextSelected,
+                        ]}
+                      >
+                        {interest}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Looking For */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Aranan Cinsiyet</Text>
+              <View style={styles.lookingForContainer}>
+                {LOOKING_FOR_OPTIONS.map((option) => {
+                  const isSelected = lookingFor === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      onPress={() => setLookingFor(option.value)}
+                      style={[
+                        styles.lookingForButton,
+                        isSelected && styles.lookingForButtonSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.lookingForText,
+                          isSelected && styles.lookingForTextSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Is Active */}
+            <View style={styles.fieldContainer}>
+              <View style={styles.switchRow}>
+                <View>
+                  <Text style={styles.fieldLabel}>Profil Aktif</Text>
+                  <Text style={styles.switchDescription}>
+                    Kapatirsan eslesme ekraninda gorunmezsin
+                  </Text>
+                </View>
+                <Switch
+                  value={isActive}
+                  onValueChange={setIsActive}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.white}
+                />
+              </View>
+            </View>
+
+            <View style={styles.bottomSpacer} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -363,9 +454,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: glass.border,
   },
   closeButton: {
     padding: spacing.sm,
@@ -404,10 +495,49 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginBottom: spacing.sm,
   },
+  photoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: PHOTO_GAP,
+  },
+  photoItem: {
+    width: PHOTO_WIDTH,
+    height: PHOTO_HEIGHT,
+    borderRadius: borderRadius.lg,
+    overflow: "hidden",
+    position: "relative",
+  },
+  photoImage: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: colors.borderLight,
+  },
+  photoDeleteButton: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoAddButton: {
+    width: PHOTO_WIDTH,
+    height: PHOTO_HEIGHT,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: glass.border,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: glass.background,
+  },
   textInput: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -427,8 +557,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: glass.border,
+    backgroundColor: glass.background,
   },
   chipSelected: {
     borderColor: colors.primary,
@@ -452,8 +582,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: glass.border,
+    backgroundColor: glass.background,
     alignItems: "center",
   },
   lookingForButtonSelected: {

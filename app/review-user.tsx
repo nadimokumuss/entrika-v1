@@ -13,7 +13,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+import GradientBackground from "@/components/ui/GradientBackground";
+import GradientButton from "@/components/ui/GradientButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
@@ -110,167 +112,170 @@ export default function ReviewUserScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <X size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Degerlendir</Text>
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={saving || score === null}
-          style={[styles.submitButton, (saving || score === null) && styles.submitButtonDisabled]}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color={colors.white} />
-          ) : (
-            <Text style={styles.submitButtonText}>Gonder</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Hedef kullanici */}
-        <Text style={styles.targetUser}>@{username}</Text>
-
-        {/* Puan Secimi */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Puan</Text>
-          <View style={styles.scoreRow}>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
-              <TouchableOpacity
-                key={num}
-                style={[
-                  styles.scoreButton,
-                  score === num && styles.scoreButtonActive,
-                  score === num && num >= 7 && styles.scoreButtonGreen,
-                  score === num && num >= 4 && num < 7 && styles.scoreButtonYellow,
-                  score === num && num < 4 && styles.scoreButtonRed,
-                ]}
-                onPress={() => setScore(num)}
-              >
-                <Text
-                  style={[
-                    styles.scoreButtonText,
-                    score === num && styles.scoreButtonTextActive,
-                  ]}
-                >
-                  {num}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+    <GradientBackground variant="screen">
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+            <X size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Degerlendir</Text>
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={saving || score === null}
+            style={[styles.submitButton, (saving || score === null) && styles.submitButtonDisabled]}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.submitButtonText}>Gonder</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Etiketler - Pozitif */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Etiketler</Text>
-          <Text style={styles.sectionSubtitle}>Pozitif</Text>
-          <View style={styles.tagsRow}>
-            {REVIEW_TAGS.positive.map((tag) => (
-              <TouchableOpacity
-                key={tag}
-                style={[
-                  styles.tagChip,
-                  selectedTags.includes(tag) && styles.tagChipPositiveActive,
-                ]}
-                onPress={() => toggleTag(tag)}
-              >
-                <Text
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Hedef kullanici */}
+          <Text style={styles.targetUser}>@{username}</Text>
+
+          {/* Puan Secimi */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Puan</Text>
+            <View style={styles.scoreRow}>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                <TouchableOpacity
+                  key={num}
                   style={[
-                    styles.tagChipText,
-                    selectedTags.includes(tag) && styles.tagChipTextPositiveActive,
+                    styles.scoreButton,
+                    score === num && styles.scoreButtonActive,
+                    score === num && num >= 7 && styles.scoreButtonGreen,
+                    score === num && num >= 4 && num < 7 && styles.scoreButtonYellow,
+                    score === num && num < 4 && styles.scoreButtonRed,
                   ]}
+                  onPress={() => setScore(num)}
                 >
-                  {tag}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.scoreButtonText,
+                      score === num && styles.scoreButtonTextActive,
+                    ]}
+                  >
+                    {num}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
-          {/* Etiketler - Negatif */}
-          <Text style={[styles.sectionSubtitle, { marginTop: spacing.md }]}>Negatif</Text>
-          <View style={styles.tagsRow}>
-            {REVIEW_TAGS.negative.map((tag) => (
-              <TouchableOpacity
-                key={tag}
-                style={[
-                  styles.tagChip,
-                  selectedTags.includes(tag) && styles.tagChipNegativeActive,
-                ]}
-                onPress={() => toggleTag(tag)}
-              >
-                <Text
+          {/* Etiketler - Pozitif */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Etiketler</Text>
+            <Text style={styles.sectionSubtitle}>Pozitif</Text>
+            <View style={styles.tagsRow}>
+              {REVIEW_TAGS.positive.map((tag) => (
+                <TouchableOpacity
+                  key={tag}
                   style={[
-                    styles.tagChipText,
-                    selectedTags.includes(tag) && styles.tagChipTextNegativeActive,
+                    styles.tagChip,
+                    selectedTags.includes(tag) && styles.tagChipPositiveActive,
                   ]}
+                  onPress={() => toggleTag(tag)}
                 >
-                  {tag}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.tagChipText,
+                      selectedTags.includes(tag) && styles.tagChipTextPositiveActive,
+                    ]}
+                  >
+                    {tag}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Etiketler - Negatif */}
+            <Text style={[styles.sectionSubtitle, { marginTop: spacing.md }]}>Negatif</Text>
+            <View style={styles.tagsRow}>
+              {REVIEW_TAGS.negative.map((tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={[
+                    styles.tagChip,
+                    selectedTags.includes(tag) && styles.tagChipNegativeActive,
+                  ]}
+                  onPress={() => toggleTag(tag)}
+                >
+                  <Text
+                    style={[
+                      styles.tagChipText,
+                      selectedTags.includes(tag) && styles.tagChipTextNegativeActive,
+                    ]}
+                  >
+                    {tag}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
 
-        {/* Yorum */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Yorum (Opsiyonel)</Text>
-          <TextInput
-            style={styles.commentInput}
-            placeholder="Deneyiminizi paylasın..."
-            placeholderTextColor={colors.textMuted}
-            value={content}
-            onChangeText={setContent}
-            multiline
-            maxLength={500}
-            textAlignVertical="top"
-          />
-          <Text style={styles.charCount}>{content.length}/500</Text>
-        </View>
+          {/* Yorum */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Yorum (Opsiyonel)</Text>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Deneyiminizi paylasIn..."
+              placeholderTextColor={colors.textMuted}
+              value={content}
+              onChangeText={setContent}
+              multiline
+              maxLength={500}
+              textAlignVertical="top"
+            />
+            <Text style={styles.charCount}>{content.length}/500</Text>
+          </View>
 
-        {/* Anonim Toggle */}
-        <View style={styles.anonymousRow}>
-          <View style={styles.anonymousTextContainer}>
-            <Text style={styles.anonymousLabel}>Anonim Degerlendir</Text>
-            <Text style={styles.anonymousDesc}>
-              Kapatirsan kullanici adin gorunur
+          {/* Anonim Toggle */}
+          <View style={styles.anonymousRow}>
+            <View style={styles.anonymousTextContainer}>
+              <Text style={styles.anonymousLabel}>Anonim Degerlendir</Text>
+              <Text style={styles.anonymousDesc}>
+                Kapatirsan kullanici adin gorunur
+              </Text>
+            </View>
+            <Switch
+              value={isAnonymous}
+              onValueChange={setIsAnonymous}
+              trackColor={{ false: colors.border, true: `${colors.primary}80` }}
+              thumbColor={isAnonymous ? colors.primary : colors.textMuted}
+            />
+          </View>
+
+          {existingReview && (
+            <Text style={styles.updateNote}>
+              Daha once degerlendirmistiniz. Gonder'e basarsaniz guncellenecek.
             </Text>
-          </View>
-          <Switch
-            value={isAnonymous}
-            onValueChange={setIsAnonymous}
-            trackColor={{ false: colors.border, true: `${colors.primary}80` }}
-            thumbColor={isAnonymous ? colors.primary : colors.textMuted}
-          />
-        </View>
+          )}
 
-        {existingReview && (
-          <Text style={styles.updateNote}>
-            Daha once degerlendirmistiniz. Gonder'e basarsaniz guncellenecek.
-          </Text>
-        )}
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -283,9 +288,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: glass.border,
   },
   closeButton: {
     padding: spacing.sm,
@@ -347,8 +352,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: glass.border,
+    backgroundColor: glass.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -386,8 +391,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: glass.border,
+    backgroundColor: glass.background,
   },
   tagChipPositiveActive: {
     borderColor: colors.success,
@@ -410,9 +415,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   commentInput: {
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     fontSize: fontSize.base,
@@ -431,10 +436,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginHorizontal: spacing.lg,
     marginTop: spacing.xl,
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
     padding: spacing.lg,
   },
   anonymousTextContainer: {

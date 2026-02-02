@@ -12,13 +12,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, MessageCircle } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchConversations,
   subscribeToAllMessages,
   ConversationItem,
 } from "@/lib/messaging";
+import { getBlockedUserIds } from "@/lib/blocking";
+import GradientBackground from "@/components/ui/GradientBackground";
 
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -55,7 +57,12 @@ export default function ConversationsScreen() {
     if (!user) return;
     try {
       const data = await fetchConversations(user.id);
-      setConversations(data);
+      // Filter out conversations with blocked users
+      const blockedIds = await getBlockedUserIds(user.id);
+      const filtered = data.filter(
+        (conv) => !blockedIds.includes(conv.otherUserId)
+      );
+      setConversations(filtered);
     } catch (error) {
       console.error("Error loading conversations:", error);
     } finally {
@@ -85,7 +92,30 @@ export default function ConversationsScreen() {
 
   if (loading) {
     return (
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <ArrowLeft size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Mesajlar</Text>
+            <View style={styles.headerRight} />
+          </View>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
+  return (
+    <GradientBackground variant="screen">
       <SafeAreaView style={styles.container} edges={["top"]}>
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -96,112 +126,92 @@ export default function ConversationsScreen() {
           <Text style={styles.headerTitle}>Mesajlar</Text>
           <View style={styles.headerRight} />
         </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mesajlar</Text>
-        <View style={styles.headerRight} />
-      </View>
-
-      {conversations.length === 0 ? (
-        <View style={styles.emptyState}>
-          <MessageCircle size={64} color={colors.border} />
-          <Text style={styles.emptyTitle}>Henuz eslesmeniz yok</Text>
-          <Text style={styles.emptySubtitle}>
-            Eslesme yaptiktan sonra mesajlasmaya baslayabilirsiniz.
-          </Text>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.list}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-            />
-          }
-        >
-          {conversations.map((conv) => (
-            <TouchableOpacity
-              key={conv.matchId}
-              style={styles.conversationCard}
-              onPress={() => router.push(`/chat/${conv.matchId}`)}
-              activeOpacity={0.7}
-            >
-              <Image
-                source={{ uri: conv.otherAvatarUrl }}
-                style={styles.avatar}
+        {conversations.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MessageCircle size={64} color={colors.border} />
+            <Text style={styles.emptyTitle}>Henuz eslesmeniz yok</Text>
+            <Text style={styles.emptySubtitle}>
+              Eslesme yaptiktan sonra mesajlasmaya baslayabilirsiniz.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.list}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
               />
-              <View style={styles.conversationInfo}>
-                <View style={styles.topRow}>
-                  <Text
-                    style={[
-                      styles.username,
-                      conv.unreadCount > 0 && styles.usernameBold,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {conv.otherUsername}
-                  </Text>
-                  <Text style={styles.time}>
-                    {formatTime(conv.lastMessageAt)}
-                  </Text>
+            }
+          >
+            {conversations.map((conv) => (
+              <TouchableOpacity
+                key={conv.matchId}
+                style={styles.conversationCard}
+                onPress={() => router.push(`/chat/${conv.matchId}`)}
+                activeOpacity={0.7}
+              >
+                <Image
+                  source={{ uri: conv.otherAvatarUrl }}
+                  style={styles.avatar}
+                />
+                <View style={styles.conversationInfo}>
+                  <View style={styles.topRow}>
+                    <Text
+                      style={[
+                        styles.username,
+                        conv.unreadCount > 0 && styles.usernameBold,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {conv.otherUsername}
+                    </Text>
+                    <Text style={styles.time}>
+                      {formatTime(conv.lastMessageAt)}
+                    </Text>
+                  </View>
+                  <View style={styles.bottomRow}>
+                    <Text
+                      style={[
+                        styles.preview,
+                        conv.unreadCount > 0 && styles.previewUnread,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {conv.lastMessage || "Henuz mesaj yok"}
+                    </Text>
+                    {conv.unreadCount > 0 && (
+                      <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadText}>
+                          {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-                <View style={styles.bottomRow}>
-                  <Text
-                    style={[
-                      styles.preview,
-                      conv.unreadCount > 0 && styles.previewUnread,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {conv.lastMessage || "Henuz mesaj yok"}
-                  </Text>
-                  {conv.unreadCount > 0 && (
-                    <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadText}>
-                        {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
-    </SafeAreaView>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: glass.border,
   },
   backButton: {
     padding: spacing.sm,
@@ -248,9 +258,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: glass.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: glass.border,
   },
   avatar: {
     width: 48,

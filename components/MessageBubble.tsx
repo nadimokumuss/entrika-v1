@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Check, CheckCheck } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
 import { Message } from "@/lib/supabase";
 
 interface MessageBubbleProps {
@@ -21,37 +22,35 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         isOwn ? styles.containerOwn : styles.containerOther,
       ]}
     >
-      <View
-        style={[
-          styles.bubble,
-          isOwn ? styles.bubbleOwn : styles.bubbleOther,
-        ]}
-      >
-        <Text
-          style={[
-            styles.content,
-            isOwn ? styles.contentOwn : styles.contentOther,
-          ]}
+      {isOwn ? (
+        <LinearGradient
+          colors={gradients.primaryButton}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.bubble, styles.bubbleOwn]}
         >
-          {message.content}
-        </Text>
-        <View style={styles.meta}>
-          <Text
-            style={[
-              styles.time,
-              isOwn ? styles.timeOwn : styles.timeOther,
-            ]}
-          >
-            {time}
+          <Text style={[styles.content, styles.contentOwn]}>
+            {message.content}
           </Text>
-          {isOwn &&
-            (message.is_read ? (
+          <View style={styles.meta}>
+            <Text style={[styles.time, styles.timeOwn]}>{time}</Text>
+            {message.is_read ? (
               <CheckCheck size={14} color="rgba(255,255,255,0.7)" />
             ) : (
               <Check size={14} color="rgba(255,255,255,0.5)" />
-            ))}
+            )}
+          </View>
+        </LinearGradient>
+      ) : (
+        <View style={[styles.bubble, styles.bubbleOther]}>
+          <Text style={[styles.content, styles.contentOther]}>
+            {message.content}
+          </Text>
+          <View style={styles.meta}>
+            <Text style={[styles.time, styles.timeOther]}>{time}</Text>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -74,14 +73,13 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   bubbleOwn: {
-    backgroundColor: colors.primary,
     borderBottomRightRadius: spacing.xs,
   },
   bubbleOther: {
-    backgroundColor: colors.white,
+    backgroundColor: glass.background,
     borderBottomLeftRadius: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: glass.border,
   },
   content: {
     fontSize: fontSize.base,

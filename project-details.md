@@ -135,6 +135,11 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 #### messages
 - id, match_id, sender_id, content, is_read
 
+#### notifications
+- id (UUID, PK), user_id (FK auth.users), type, title, body, data (JSONB), is_read, created_at
+- RLS: kullanicilar kendi bildirimlerini okuyup guncelleyebilir
+- Partial index: okunmamis bildirimler icin hizli sorgu
+
 #### user_reviews
 - id, target_user_id (FK profiles), reviewer_id (FK profiles), score (1-10), content, tags[], is_anonymous
 - UNIQUE(target_user_id, reviewer_id)
@@ -176,13 +181,34 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
   - Chat header'a yildiz butonu ile degerlendirme erisimi
   - Profil'e "Degerlendirmeler" sekmesi - alinan yorumlari gosterir
 
+### 2026-02-02 - Bildirim Ekrani
+- `notifications` tablosu olusturuldu (supabase/notifications.sql)
+  - UUID PK, user_id, type, title, body, data (JSONB), is_read, created_at
+  - Partial index (okunmamis bildirimler icin)
+  - RLS: kullanicilar kendi bildirimlerini okuyup guncelleyebilir
+- Edge function (send-push-notification) guncellendi:
+  - Her bildirimde `notifications` tablosuna INSERT eklendi
+  - Match icin iki kullaniciya ayri kayit (sendToRecipient icinde de INSERT)
+- `app/notifications.tsx` ekrani eklendi:
+  - Bildirim listesi (FlatList, pull-to-refresh)
+  - Tip bazli ikon/renk (message, match, reaction, comment, review)
+  - Okunmamis kartlar highlight ile gosterilir
+  - Tiklaninca ilgili sayfaya yonlendirme + okundu isaretleme
+  - "Tumu okundu" butonu
+  - Bos state (Bell ikonu + aciklama)
+- `app/_layout.tsx` guncellendi: notifications route eklendi (slide_from_right)
+- `app/(tabs)/index.tsx` guncellendi:
+  - Feed header'a Bell ikonu eklendi
+  - Okunmamis bildirim sayisi badge (9+ gosterimi)
+  - useFocusEffect ile her tab'a donuste unread count guncellenir
+
 ### Sonraki Oturum Icin Notlar
-- user_reviews tablosunu Supabase SQL Editor'de calistirmak (supabase/user-reviews.sql)
-- Push bildirimleri
-- Gercek fotograf yukleme
-- Ayarlar sayfasi
-- Sifremi unuttum akisi
-- reputation_score otomatik guncelleme (DB trigger)
+- Profil duzenleme (username, bio, avatar degistirme)
+- Post silme / duzenleme
+- Feed'de realtime guncellemeler
+- Gelismis filtreleme (match'te yas, lokasyon)
+- Davetiye zincir takibi
+- Premium ozellikler
 
 ---
 

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase, Profile, Gender } from "@/lib/supabase";
+import { deactivatePushTokens } from "@/lib/notifications";
 
 // Mock modda çalışmak için (Supabase aktif, false yap)
 const MOCK_MODE = false;
@@ -289,6 +290,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setIsAuthenticated(false);
     } else {
+      // Push token'lari deaktif et
+      if (user) {
+        await deactivatePushTokens(user.id);
+      }
       await supabase.auth.signOut();
       setProfile(null);
       setIsAuthenticated(false);
