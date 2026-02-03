@@ -1,5 +1,5 @@
 {
   "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
-  "routes": [{ "src": "/(.*)", "dest": "/" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
