@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,6 @@ import { useRouter } from "expo-router";
 import { Lock, AtSign, ChevronLeft, Mail } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 
@@ -42,7 +41,6 @@ const MALE_AVATARS = [
 export default function RegisterScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
-  const [inviteCode, setInviteCode] = useState("");
   const [gender, setGender] = useState<Gender | null>(null);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -53,12 +51,6 @@ export default function RegisterScreen() {
 
   const avatarOptions = gender === "female" ? FEMALE_AVATARS : gender === "male" ? MALE_AVATARS : [];
 
-  useEffect(() => {
-    AsyncStorage.getItem("pendingInviteCode").then((code) => {
-      if (code) setInviteCode(code);
-    });
-  }, []);
-
   const handleGenderSelect = (selectedGender: Gender) => {
     setGender(selectedGender);
     setSelectedAvatar(selectedGender === "female" ? FEMALE_AVATARS[0] : MALE_AVATARS[0]);
@@ -66,27 +58,27 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!gender) {
-      setError("Cinsiyet secimi gerekli");
+      setError("Cinsiyet seçimi gerekli");
       return;
     }
     if (!selectedAvatar) {
-      setError("Avatar secimi gerekli");
+      setError("Avatar seçimi gerekli");
       return;
     }
     if (!email.trim() || !email.includes("@")) {
-      setError("Gecerli bir e-posta adresi gerekli");
+      setError("Geçerli bir e-posta adresi gerekli");
       return;
     }
     if (!username.trim()) {
-      setError("Kullanici adi gerekli");
+      setError("Kullanıcı adı gerekli");
       return;
     }
     if (username.length < 3) {
-      setError("Kullanici adi en az 3 karakter olmali");
+      setError("Kullanıcı adı en az 3 karakter olmalı");
       return;
     }
     if (password.length < 6) {
-      setError("Sifre en az 6 karakter olmali");
+      setError("Şifre en az 6 karakter olmalı");
       return;
     }
 
@@ -94,22 +86,19 @@ export default function RegisterScreen() {
     setError("");
 
     try {
-      console.log("[REGISTER] signUp cagriliyor:", { email, username, gender, inviteCode });
+      console.log("[REGISTER] signUp cagriliyor:", { email, username, gender });
       const { error: signUpError } = await signUp(
         email,
         password,
         username,
         gender,
-        selectedAvatar,
-        inviteCode
+        selectedAvatar
       );
 
       console.log("[REGISTER] signUp sonucu:", signUpError ? signUpError.message : "basarili");
 
       if (signUpError) {
         setError(signUpError.message);
-      } else {
-        await AsyncStorage.removeItem("pendingInviteCode");
       }
     } catch (err: any) {
       console.error("[REGISTER] CATCH hatasi:", err);
@@ -140,13 +129,13 @@ export default function RegisterScreen() {
           <View style={styles.content}>
             {/* Baslik */}
             <View style={styles.titleContainer}>
-              <Text style={styles.title}>Aramiza Hos Geldin</Text>
-              <Text style={styles.subtitle}>Kimligini olustur ve topluluga katil.</Text>
+              <Text style={styles.title}>Aramıza Hoş Geldin</Text>
+              <Text style={styles.subtitle}>Kimliğini oluştur ve topluluğa katıl.</Text>
             </View>
 
             {/* Cinsiyet Secimi */}
             <View style={styles.genderSection}>
-              <Text style={styles.sectionLabel}>Cinsiyetini Sec</Text>
+              <Text style={styles.sectionLabel}>Cinsiyetini Seç</Text>
               <View style={styles.genderOptions}>
                 <TouchableOpacity
                   onPress={() => handleGenderSelect("female")}
@@ -162,7 +151,7 @@ export default function RegisterScreen() {
                       gender === "female" && styles.genderTextSelected,
                     ]}
                   >
-                    Kadin
+                    Kadın
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -188,7 +177,7 @@ export default function RegisterScreen() {
             {/* Avatar Secimi */}
             {gender && (
               <View style={styles.avatarSection}>
-                <Text style={styles.sectionLabel}>Avatar Sec</Text>
+                <Text style={styles.sectionLabel}>Avatar Seç</Text>
                 <View style={styles.avatarGrid}>
                   {avatarOptions.map((avatar, index) => (
                     <TouchableOpacity
@@ -229,7 +218,7 @@ export default function RegisterScreen() {
                 <AtSign size={20} color={colors.primary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Kullanici Adi"
+                  placeholder="Kullanıcı Adı"
                   placeholderTextColor={colors.textMuted}
                   value={username}
                   onChangeText={(text) => {
@@ -245,7 +234,7 @@ export default function RegisterScreen() {
                 <Lock size={20} color={colors.primary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Sifre (en az 6 karakter)"
+                  placeholder="Şifre (en az 6 karakter)"
                   placeholderTextColor={colors.textMuted}
                   value={password}
                   onChangeText={(text) => {
@@ -260,20 +249,13 @@ export default function RegisterScreen() {
 
               <GradientButton
                 onPress={handleRegister}
-                label="Topluluga Katil"
+                label="Topluluğa Katıl"
                 loading={isLoading}
                 disabled={isLoading}
                 style={{ marginTop: spacing.lg }}
               />
             </View>
 
-            {/* Uyari */}
-            <View style={styles.warningBox}>
-              <Text style={styles.warningText}>
-                Unutma: Seni davet eden kisi senin eylemlerinden sorumlu.
-                Kurallari ihlal edersen ikiniz de cezalandirilirsiniz.
-              </Text>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -401,20 +383,5 @@ const styles = StyleSheet.create({
     color: colors.danger,
     textAlign: "center",
     marginBottom: spacing.lg,
-  },
-  warningBox: {
-    marginTop: spacing.xxxl,
-    padding: spacing.lg,
-    backgroundColor: `${colors.warning}15`,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: `${colors.warning}30`,
-    marginBottom: spacing.xxxl,
-  },
-  warningText: {
-    color: colors.warning,
-    fontSize: fontSize.sm,
-    textAlign: "center",
-    lineHeight: 20,
   },
 });

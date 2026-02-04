@@ -1,58 +1,20 @@
-import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Lock, Sparkles } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
-import { useAuth } from "@/contexts/AuthContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 import { LinearGradient } from "expo-linear-gradient";
+import { TouchableOpacity } from "react-native";
 
-export default function GatekeeperScreen() {
+export default function WelcomeScreen() {
   const router = useRouter();
-  const { validateInviteCode } = useAuth();
-  const [inviteCode, setInviteCode] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    const code = inviteCode.trim().toUpperCase();
-
-    if (!code) {
-      setError("Davetiye kodu gerekli");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const { valid, error: validateError } = await validateInviteCode(code);
-
-      if (validateError) {
-        setError("Hata: " + (validateError.message || "Bilinmeyen hata"));
-      } else if (valid) {
-        await AsyncStorage.setItem("pendingInviteCode", code);
-        router.push("/(auth)/register");
-      } else {
-        setError("Gecersiz davetiye kodu");
-      }
-    } catch (err: any) {
-      setError("Hata: " + (err?.message || "Bilinmeyen hata"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <GradientBackground variant="auth">
@@ -61,7 +23,7 @@ export default function GatekeeperScreen() {
         style={styles.container}
       >
         <View style={styles.content}>
-          {/* Logo Alani */}
+          {/* Logo */}
           <View style={styles.logoContainer}>
             <LinearGradient
               colors={gradients.premiumShimmer}
@@ -72,50 +34,22 @@ export default function GatekeeperScreen() {
               <Sparkles size={40} color={colors.white} />
             </LinearGradient>
             <Text style={styles.title}>ENTRIKA</Text>
-            <Text style={styles.subtitle}>Tanismadan Once Tani</Text>
+            <Text style={styles.subtitle}>Tanışmadan Önce Tanı</Text>
           </View>
 
-          {/* Davetiye Kodu Girisi */}
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <Lock size={20} color={colors.primary} />
-              <TextInput
-                style={styles.input}
-                placeholder="Davetiye Kodun"
-                placeholderTextColor={colors.textMuted}
-                value={inviteCode}
-                onChangeText={(text) => {
-                  setInviteCode(text);
-                  setError("");
-                }}
-                autoCapitalize="characters"
-                autoCorrect={false}
-              />
-            </View>
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
+          {/* Butonlar */}
+          <View style={styles.buttonContainer}>
             <GradientButton
-              onPress={handleSubmit}
-              label="Kapiyi Ac"
-              loading={isLoading}
-              disabled={isLoading}
+              onPress={() => router.push("/(auth)/register")}
+              label="Hesap Oluştur"
             />
-          </View>
-
-          {/* Alt Bilgi */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Sadece davetliler girebilir.{"\n"}
-              Bir arkadasindan davetiye kodu al.
-            </Text>
 
             <TouchableOpacity
               onPress={() => router.push("/(auth)/login")}
-              style={styles.loginLink}
+              style={styles.loginButton}
             >
-              <Text style={styles.loginLinkText}>
-                Zaten hesabin var mi? <Text style={styles.loginLinkBold}>Giris Yap</Text>
+              <Text style={styles.loginButtonText}>
+                Zaten hesabın var mı? <Text style={styles.loginButtonBold}>Giriş Yap</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -159,51 +93,19 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: "center",
   },
-  formContainer: {
+  buttonContainer: {
     width: "100%",
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glass.background,
-    borderWidth: 1,
-    borderColor: glass.border,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  input: {
-    flex: 1,
-    color: colors.text,
-    marginLeft: spacing.md,
-    fontSize: fontSize.md,
-  },
-  errorText: {
-    color: colors.danger,
-    textAlign: "center",
-    marginBottom: spacing.lg,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 48,
-    alignItems: "center",
-  },
-  footerText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-  loginLink: {
+  loginButton: {
     marginTop: spacing.xl,
     paddingVertical: spacing.md,
+    alignItems: "center",
   },
-  loginLinkText: {
+  loginButtonText: {
     color: colors.textLight,
     fontSize: fontSize.sm,
   },
-  loginLinkBold: {
+  loginButtonBold: {
     color: colors.primary,
     fontWeight: "600",
   },

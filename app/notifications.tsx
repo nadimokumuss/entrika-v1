@@ -47,12 +47,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az once";
-  if (diffMins < 60) return `${diffMins} dk once`;
+  if (diffMins < 1) return "Az önce";
+  if (diffMins < 60) return `${diffMins} dk önce`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat once`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gun once`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -204,7 +204,7 @@ export default function NotificationsScreen() {
               onPress={markAllAsRead}
               style={styles.markAllButton}
             >
-              <Text style={styles.markAllText}>Tumu okundu</Text>
+              <Text style={styles.markAllText}>Tümü okundu</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.headerRight} />
@@ -214,9 +214,9 @@ export default function NotificationsScreen() {
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
             <Bell size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Henuz bildirim yok</Text>
+            <Text style={styles.emptyTitle}>Henüz bildirim yok</Text>
             <Text style={styles.emptySubtitle}>
-              Yeni bildirimleriniz burada gorunecek.
+              Yeni bildirimleriniz burada görünecek.
             </Text>
           </View>
         ) : (

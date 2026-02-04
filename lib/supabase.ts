@@ -61,22 +61,9 @@ export interface Profile {
   avatar_url: string;
   gender: Gender;
   reputation_score: number;
-  invite_quota: number;
-  invited_by: string | null;
-  invite_code: string;
   is_verified: boolean;
   created_at: string;
   updated_at: string;
-}
-
-export interface InviteCode {
-  id: string;
-  code: string;
-  created_by: string;
-  used_by: string | null;
-  is_used: boolean;
-  created_at: string;
-  used_at: string | null;
 }
 
 export interface Post {

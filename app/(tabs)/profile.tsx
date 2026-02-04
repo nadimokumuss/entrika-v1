@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Users, Heart, Star, Camera } from "lucide-react-native";
+import { Settings, Share2, Heart, Star, Camera } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
@@ -21,13 +21,13 @@ import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, deleteImage } from "@/lib/storage";
 import GradientBackground from "@/components/ui/GradientBackground";
 
-type TabType = "paylaşımlar" | "referanslar" | "degerlendirmeler";
+type TabType = "paylaşımlar" | "degerlendirmeler";
 
 interface ReviewWithReviewer extends UserReview {
   reviewer?: { username: string } | null;
 }
 
-const POSITIVE_TAGS = ["Nazik", "Guvenilir", "Eglenceli", "Samimi", "Ilgili", "Saygili", "Durst"];
+const POSITIVE_TAGS = ["Nazik", "Güvenilir", "Eğlenceli", "Samimi", "İlgili", "Saygılı", "Dürüst"];
 
 
 interface UserPost {
@@ -42,12 +42,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az once";
-  if (diffMins < 60) return `${diffMins} dk once`;
+  if (diffMins < 1) return "Az önce";
+  if (diffMins < 60) return `${diffMins} dk önce`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat once`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gun once`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -57,7 +57,6 @@ export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState<TabType>("paylaşımlar");
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
   const [postCount, setPostCount] = useState(0);
-  const [referralCount, setReferralCount] = useState(0);
   const [reviews, setReviews] = useState<ReviewWithReviewer[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -84,14 +83,6 @@ export default function ProfileScreen() {
           created_at: p.created_at,
         }));
       setUserPosts(visiblePosts);
-
-      const { data: inviteData } = await supabase
-        .from("invite_codes")
-        .select("id")
-        .eq("created_by", user.id)
-        .eq("is_used", true);
-
-      setReferralCount(inviteData?.length || 0);
 
       const { data: reviewsData } = await supabase
         .from("user_reviews")
@@ -139,7 +130,7 @@ export default function ProfileScreen() {
 
         await refreshProfile();
       } catch (error: any) {
-        Alert.alert("Hata", error.message || "Avatar yuklenemedi.");
+        Alert.alert("Hata", error.message || "Avatar yüklenemedi.");
       } finally {
         setUploadingAvatar(false);
       }
@@ -230,30 +221,25 @@ export default function ProfileScreen() {
               <View style={[styles.reputationDot, { backgroundColor: scoreColor }]} />
               <Text style={[styles.reputationText, { color: scoreColor }]}>
                 {profile.reputation_score >= 8
-                  ? "Guvenilir Uye"
+                  ? "Güvenilir Üye"
                   : profile.reputation_score >= 6
-                  ? "Iyi Itibar"
+                  ? "İyi İtibar"
                   : profile.reputation_score >= 4
-                  ? "Orta Itibar"
-                  : "Dusuk Itibar"}
+                  ? "Orta İtibar"
+                  : "Düşük İtibar"}
               </Text>
             </View>
 
             {/* Istatistikler */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{profile.invite_quota}</Text>
-                <Text style={styles.statLabel}>Davetiye</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
                 <Text style={styles.statValue}>{loading ? "-" : postCount}</Text>
-                <Text style={styles.statLabel}>Paylasim</Text>
+                <Text style={styles.statLabel}>Paylaşım</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{loading ? "-" : referralCount}</Text>
-                <Text style={styles.statLabel}>Referans</Text>
+                <Text style={styles.statValue}>{loading ? "-" : reviews.length}</Text>
+                <Text style={styles.statLabel}>Değerlendirme</Text>
               </View>
             </View>
 
@@ -263,7 +249,7 @@ export default function ProfileScreen() {
               onPress={() => router.push("/edit-dating-profile")}
             >
               <Heart size={18} color={colors.accent} />
-              <Text style={styles.datingProfileButtonText}>Dating Profilini Duzenle</Text>
+              <Text style={styles.datingProfileButtonText}>Dating Profilini Düzenle</Text>
             </TouchableOpacity>
           </View>
 
@@ -279,20 +265,7 @@ export default function ProfileScreen() {
                   activeTab === "paylaşımlar" && styles.tabTextActive,
                 ]}
               >
-                Paylasimlarim
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "referanslar" && styles.tabActive]}
-              onPress={() => setActiveTab("referanslar")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "referanslar" && styles.tabTextActive,
-                ]}
-              >
-                Referanslarim
+                Paylaşımlarım
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -305,7 +278,7 @@ export default function ProfileScreen() {
                   activeTab === "degerlendirmeler" && styles.tabTextActive,
                 ]}
               >
-                Degerlendirmeler
+                Değerlendirmeler
               </Text>
             </TouchableOpacity>
           </View>
@@ -333,22 +306,12 @@ export default function ProfileScreen() {
                 ))
               ) : (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Henuz paylasimin yok.</Text>
+                  <Text style={styles.emptyStateText}>Henüz paylaşımın yok.</Text>
                   <Text style={styles.emptyStateSubtext}>
-                    Anonim paylasimlar burada gorunmez.
+                    Anonim paylaşımlar burada görünmez.
                   </Text>
                 </View>
               )
-            ) : activeTab === "referanslar" ? (
-              <View style={styles.emptyState}>
-                <Users size={48} color={colors.border} />
-                <Text style={styles.emptyStateText}>
-                  {"Davet ettigin kisiler\nburada gorunecek."}
-                </Text>
-                <TouchableOpacity style={styles.shareButton}>
-                  <Text style={styles.shareButtonText}>Davetiye Paylas</Text>
-                </TouchableOpacity>
-              </View>
             ) : loading ? (
               <View style={styles.loadingContent}>
                 <ActivityIndicator size="small" color={colors.primary} />
@@ -366,7 +329,7 @@ export default function ProfileScreen() {
                     </View>
                     <Text style={styles.reviewAuthor}>
                       {review.is_anonymous
-                        ? "Anonim Kullanici"
+                        ? "Anonim Kullanıcı"
                         : review.reviewer?.username
                           ? `@${review.reviewer.username}`
                           : "Bilinmeyen"}
@@ -408,7 +371,7 @@ export default function ProfileScreen() {
               <View style={styles.emptyState}>
                 <Star size={48} color={colors.border} />
                 <Text style={styles.emptyStateText}>
-                  Henuz degerlendirme almadin.
+                  Henüz değerlendirme almadın.
                 </Text>
               </View>
             )}
@@ -649,19 +612,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: fontSize.xs,
     marginTop: spacing.xs,
-  },
-  shareButton: {
-    backgroundColor: glass.background,
-    borderWidth: 1,
-    borderColor: glass.borderHighlight,
-    paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    marginTop: spacing.lg,
-  },
-  shareButtonText: {
-    color: colors.primary,
-    fontWeight: "600",
   },
   reviewCard: {
     backgroundColor: glass.background,

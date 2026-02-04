@@ -134,7 +134,7 @@ function ProfileCard({
           />
         ) : (
           <View style={[styles.photo, { alignItems: "center", justifyContent: "center" }]}>
-            <Text style={{ color: colors.textMuted, fontSize: fontSize.lg }}>Fotograf yok</Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSize.lg }}>Fotoğraf yok</Text>
           </View>
         )}
 
@@ -194,10 +194,10 @@ function ProfileCard({
         {isFirst && (
           <>
             <Animated.View style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
-              <Text style={styles.likeStampText}>BEGENDIM</Text>
+              <Text style={styles.likeStampText}>BEĞENDİM</Text>
             </Animated.View>
             <Animated.View style={[styles.stamp, styles.nopeStamp, { opacity: nopeOpacity }]}>
-              <Text style={styles.nopeStampText}>GEC</Text>
+              <Text style={styles.nopeStampText}>GEÇ</Text>
             </Animated.View>
           </>
         )}
@@ -235,7 +235,7 @@ function ProfileCard({
         {/* Community Score */}
         <View style={styles.scoreSection}>
           <View style={styles.scoreHeader}>
-            <Text style={styles.scoreTitle}>Topluluk Puani</Text>
+            <Text style={styles.scoreTitle}>Topluluk Puanı</Text>
             {profile.communityScore < 4 && (
               <View style={styles.warningBadge}>
                 <AlertTriangle size={12} color={colors.danger} />
@@ -251,7 +251,7 @@ function ProfileCard({
               <Text style={[styles.scoreMax, { color: scoreColor }]}>/10</Text>
             </View>
             <Text style={styles.reviewCount}>
-              {profile.reviewCount} degerlendirme
+              {profile.reviewCount} değerlendirme
             </Text>
           </View>
 
@@ -259,7 +259,7 @@ function ProfileCard({
           {profile.tags.length > 0 && (
             <View style={styles.tagsContainer}>
               {profile.tags.map((tag, index) => {
-                const isNegative = ["Manipulatif", "Agresif", "Dikkat!", "Aldatici", "Yalanci", "Belirsiz", "Gec cevap"].includes(tag);
+                const isNegative = ["Manipülatif", "Agresif", "Dikkat!", "Aldatıcı", "Yalancı", "Belirsiz", "Geç cevap"].includes(tag);
                 return (
                   <View
                     key={index}
@@ -366,7 +366,7 @@ export default function MatchScreen() {
         return {
           id: dp.id,
           user_id: dp.user_id,
-          name: profileInfo?.username || "Kullanici",
+          name: profileInfo?.username || "Kullanıcı",
           age: dp.age,
           city: dp.city,
           bio: dp.bio,
@@ -518,8 +518,8 @@ export default function MatchScreen() {
         <SafeAreaView style={styles.container} edges={["top"]}>
           <AnimatedHeader style={styles.headerRow}>
             <View>
-              <Text style={styles.headerTitle}>Eslesmeler</Text>
-              <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+              <Text style={styles.headerTitle}>Eşleşmeler</Text>
+              <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
             </View>
             <TouchableOpacity
               style={styles.messageButton}
@@ -549,8 +549,8 @@ export default function MatchScreen() {
         {/* Header */}
         <AnimatedHeader style={styles.headerRow}>
           <View>
-            <Text style={styles.headerTitle}>Eslesmeler</Text>
-            <Text style={styles.headerSubtitle}>Tanismadan once tani</Text>
+            <Text style={styles.headerTitle}>Eşleşmeler</Text>
+            <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
           </View>
           <TouchableOpacity
             style={styles.messageButton}
@@ -592,9 +592,9 @@ export default function MatchScreen() {
           ) : (
             <View style={styles.emptyState}>
               <Heart size={64} color={colors.border} />
-              <Text style={styles.emptyTitle}>Profil kalmadi!</Text>
+              <Text style={styles.emptyTitle}>Profil kalmadı!</Text>
               <Text style={styles.emptySubtitle}>
-                Yeni profiller icin daha sonra tekrar kontrol et.
+                Yeni profiller için daha sonra tekrar kontrol et.
               </Text>
             </View>
           )}

@@ -28,7 +28,7 @@ Kullanıcı "sync-end" dediğinde:
 - Kullanıcılar birbirini değerlendirebiliyor (topluluk puanı)
 - Tinder benzeri eşleşme sistemi AMA eşleşmeden önce karşı tarafın topluluk puanını görebiliyorsun
 - Anonim paylaşımlar (itiraf, ifşa, red flag, yılanlık, dolandırıcılık, tavsiye)
-- Davetiye sistemi (zincir sorumluluk)
+- Herkese açık kayıt (davetiye sistemi kaldırıldı)
 
 ### Hedef Kitle
 - Hem kadınlar hem erkekler
@@ -73,7 +73,7 @@ entrika/
 ├── app/
 │   ├── (auth)/          # Auth ekranları
 │   │   ├── _layout.tsx
-│   │   ├── index.tsx    # Gatekeeper (davetiye kodu)
+│   │   ├── index.tsx    # Karşılama ekranı (Hesap Oluştur / Giriş Yap)
 │   │   ├── login.tsx    # Giriş
 │   │   ├── forgot-password.tsx # Sifremi unuttum
 │   │   └── register.tsx # Kayıt (cinsiyet + avatar)
@@ -118,13 +118,13 @@ entrika/
 ## Mevcut Durum
 
 ### Tamamlanan Özellikler
-- [x] Gatekeeper ekranı (davetiye kodu doğrulama)
+- [x] Karşılama ekranı (Hesap Oluştur / Giriş Yap)
 - [x] Kayıt ekranı (cinsiyet seçimi, cinsiyete göre avatar, email, username, şifre)
 - [x] Giriş ekranı
 - [x] Feed (Supabase: posts + reactions + comments)
 - [x] Match tab (Supabase: dating_profiles + swipes)
 - [x] Explore tab (Supabase: shadow_profiles + shadow_reviews)
-- [x] Profile sayfası (Supabase: profil + postlar + referanslar + cikis yap)
+- [x] Profile sayfası (Supabase: profil + postlar + değerlendirmeler)
 - [x] Yeni paylaşım (Supabase insert)
 - [x] Supabase production aktif (MOCK_MODE = false)
 - [x] Auth context ve navigation guard
@@ -148,8 +148,7 @@ entrika/
 2. [ ] Post silme / duzenleme
 3. [ ] Feed'de realtime guncellemeler
 4. [ ] Gelismis filtreleme (match'te yas, lokasyon)
-5. [ ] Davetiye zincir takibi
-6. [ ] Premium ozellikler
+5. [ ] Premium ozellikler
 
 ### Tamamlanan Ek Ozellikler
 - [x] Web deploy (Vercel) - https://entrika.vercel.app
@@ -169,13 +168,8 @@ entrika/
 5. **Mock data temizlendi** - data/mockData.ts sadece re-export, asil sabitler constants/categories.ts'de
 6. **E-posta dogrulama kapatildi** - Supabase Authentication > Providers > Email > Confirm email = OFF
 7. **Web deploy Vercel uzerinden** - Static rendering + rewrites ile SPA routing
-
-### Test Davetiye Kodları (Supabase)
-- `ENTRIKA2024`
-- `HOSGELDIN`
-- `DAVET123`
-- `BETA2024`
-- `TOPLULUK`
+8. **Davetiye sistemi kaldirildi** - Uygulama herkese acik, gatekeeper yerine karsilama ekrani
+9. **Turkce karakter duzeltmeleri** - Tum UI metinlerinde ö, ü, ş, ç, ğ, ı, İ, Ş, Ç karakterleri duzeltildi
 
 ### Dikkat Edilecekler
 - Expo Go ile test edilebilir (development build gerekmez)

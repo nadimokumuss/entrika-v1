@@ -27,11 +27,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !email.includes("@")) {
-      setError("Gecerli bir e-posta adresi gerekli");
+      setError("Geçerli bir e-posta adresi gerekli");
       return;
     }
     if (!password) {
-      setError("Sifre gerekli");
+      setError("Şifre gerekli");
       return;
     }
 
@@ -75,8 +75,8 @@ export default function LoginScreen() {
             >
               <Sparkles size={32} color={colors.white} />
             </LinearGradient>
-            <Text style={styles.title}>Tekrar Hos Geldin</Text>
-            <Text style={styles.subtitle}>Hesabina giris yap</Text>
+            <Text style={styles.title}>Tekrar Hoş Geldin</Text>
+            <Text style={styles.subtitle}>Hesabına giriş yap</Text>
           </View>
 
           {/* Form */}
@@ -102,7 +102,7 @@ export default function LoginScreen() {
               <Lock size={20} color={colors.primary} />
               <TextInput
                 style={styles.input}
-                placeholder="Sifre"
+                placeholder="Şifre"
                 placeholderTextColor={colors.textMuted}
                 value={password}
                 onChangeText={(text) => {
@@ -117,7 +117,7 @@ export default function LoginScreen() {
 
             <GradientButton
               onPress={handleLogin}
-              label="Giris Yap"
+              label="Giriş Yap"
               loading={isLoading}
               disabled={isLoading}
               style={{ marginTop: spacing.lg }}
@@ -127,7 +127,7 @@ export default function LoginScreen() {
               style={styles.forgotPassword}
               onPress={() => router.push("/(auth)/forgot-password")}
             >
-              <Text style={styles.forgotPasswordText}>Sifremi Unuttum</Text>
+              <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
             </TouchableOpacity>
           </View>
         </View>

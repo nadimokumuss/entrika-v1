@@ -20,8 +20,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
 const REVIEW_TAGS = {
-  positive: ["Nazik", "Guvenilir", "Eglenceli", "Samimi", "Ilgili", "Saygili", "Durst"],
-  negative: ["Kaba", "Sahtekar", "Rahatsiz Edici", "Yalanci", "Manipulatif", "Agresif", "Gec Cevap"],
+  positive: ["Nazik", "Güvenilir", "Eğlenceli", "Samimi", "İlgili", "Saygılı", "Dürüst"],
+  negative: ["Kaba", "Sahtekar", "Rahatsız Edici", "Yalancı", "Manipülatif", "Agresif", "Geç Cevap"],
 };
 
 export default function ReviewUserScreen() {
@@ -37,10 +37,10 @@ export default function ReviewUserScreen() {
   const [saving, setSaving] = useState(false);
   const [existingReview, setExistingReview] = useState<UserReview | null>(null);
 
-  // Kendini degerlendirmeye izin verme
+  // Kendini değerlendirmeye izin verme
   useEffect(() => {
     if (user && userId && user.id === userId) {
-      Alert.alert("Hata", "Kendinizi degerlendiremezsiniz.");
+      Alert.alert("Hata", "Kendinizi değerlendiremezsiniz.");
       router.back();
     }
   }, [user, userId]);
@@ -80,7 +80,7 @@ export default function ReviewUserScreen() {
     if (!user || !userId) return;
 
     if (score === null) {
-      Alert.alert("Hata", "Lutfen bir puan secin.");
+      Alert.alert("Hata", "Lütfen bir puan seçin.");
       return;
     }
 
@@ -102,7 +102,7 @@ export default function ReviewUserScreen() {
     setSaving(false);
 
     if (error) {
-      Alert.alert("Hata", "Degerlendirme kaydedilirken bir hata olustu.");
+      Alert.alert("Hata", "Değerlendirme kaydedilirken bir hata oluştu.");
       console.error("Review upsert error:", error);
       return;
     }
@@ -130,7 +130,7 @@ export default function ReviewUserScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
             <X size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Degerlendir</Text>
+          <Text style={styles.headerTitle}>Değerlendir</Text>
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={saving || score === null}
@@ -139,16 +139,16 @@ export default function ReviewUserScreen() {
             {saving ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>Gonder</Text>
+              <Text style={styles.submitButtonText}>Gönder</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Hedef kullanici */}
+          {/* Hedef kullanıcı */}
           <Text style={styles.targetUser}>@{username}</Text>
 
-          {/* Puan Secimi */}
+          {/* Puan Seçimi */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Puan</Text>
             <View style={styles.scoreRow}>
@@ -233,7 +233,7 @@ export default function ReviewUserScreen() {
             <Text style={styles.sectionTitle}>Yorum (Opsiyonel)</Text>
             <TextInput
               style={styles.commentInput}
-              placeholder="Deneyiminizi paylasIn..."
+              placeholder="Deneyiminizi paylaşın..."
               placeholderTextColor={colors.textMuted}
               value={content}
               onChangeText={setContent}
@@ -247,9 +247,9 @@ export default function ReviewUserScreen() {
           {/* Anonim Toggle */}
           <View style={styles.anonymousRow}>
             <View style={styles.anonymousTextContainer}>
-              <Text style={styles.anonymousLabel}>Anonim Degerlendir</Text>
+              <Text style={styles.anonymousLabel}>Anonim Değerlendir</Text>
               <Text style={styles.anonymousDesc}>
-                Kapatirsan kullanici adin gorunur
+                Kapatırsan kullanıcı adın görünür
               </Text>
             </View>
             <Switch
@@ -262,7 +262,7 @@ export default function ReviewUserScreen() {
 
           {existingReview && (
             <Text style={styles.updateNote}>
-              Daha once degerlendirmistiniz. Gonder'e basarsaniz guncellenecek.
+              Daha önce değerlendirmiştiniz. Gönder'e basarsanız güncellenecek.
             </Text>
           )}
 

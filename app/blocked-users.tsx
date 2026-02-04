@@ -49,19 +49,19 @@ export default function BlockedUsersScreen() {
 
   const handleUnblock = (blockedUser: BlockedUserWithProfile) => {
     Alert.alert(
-      "Engeli Kaldir",
-      `@${blockedUser.username} adli kullanicinin engelini kaldirmak istediginize emin misiniz?`,
+      "Engeli Kaldır",
+      `@${blockedUser.username} adlı kullanıcının engelini kaldırmak istediğinize emin misiniz?`,
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
-          text: "Engeli Kaldir",
+          text: "Engeli Kaldır",
           onPress: async () => {
             if (!user) return;
             const success = await unblockUser(user.id, blockedUser.blocked_id);
             if (success) {
               setBlockedUsers((prev) => prev.filter((u) => u.id !== blockedUser.id));
             } else {
-              Alert.alert("Hata", "Engel kaldirilamadi. Lutfen tekrar deneyin.");
+              Alert.alert("Hata", "Engel kaldırılamadı. Lütfen tekrar deneyin.");
             }
           },
         },
@@ -76,7 +76,7 @@ export default function BlockedUsersScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Engellenen Kullanicilar</Text>
+          <Text style={styles.headerTitle}>Engellenen Kullanıcılar</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -87,9 +87,9 @@ export default function BlockedUsersScreen() {
         ) : blockedUsers.length === 0 ? (
           <View style={styles.emptyState}>
             <ShieldOff size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Engellenen kullanici yok</Text>
+            <Text style={styles.emptyTitle}>Engellenen kullanıcı yok</Text>
             <Text style={styles.emptySubtitle}>
-              Engelledigeniz kullanicilar burada gorunecek.
+              Engellediğiniz kullanıcılar burada görünecek.
             </Text>
           </View>
         ) : (
@@ -111,7 +111,7 @@ export default function BlockedUsersScreen() {
                   onPress={() => handleUnblock(blockedUser)}
                 >
                   <UserX size={18} color={colors.danger} />
-                  <Text style={styles.unblockText}>Kaldir</Text>
+                  <Text style={styles.unblockText}>Kaldır</Text>
                 </TouchableOpacity>
               </View>
             ))}

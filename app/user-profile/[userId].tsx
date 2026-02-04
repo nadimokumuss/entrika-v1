@@ -59,12 +59,12 @@ interface PublicProfile {
 
 const POSITIVE_TAGS = [
   "Nazik",
-  "Guvenilir",
-  "Eglenceli",
+  "Güvenilir",
+  "Eğlenceli",
   "Samimi",
-  "Ilgili",
-  "Saygili",
-  "Durst",
+  "İlgili",
+  "Saygılı",
+  "Dürüst",
 ];
 
 function formatTimeAgo(dateStr: string): string {
@@ -72,12 +72,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az once";
-  if (diffMins < 60) return `${diffMins} dk once`;
+  if (diffMins < 1) return "Az önce";
+  if (diffMins < 60) return `${diffMins} dk önce`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat once`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gun once`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -172,10 +172,10 @@ export default function UserProfileScreen() {
     setShowMenu(false);
     if (!user || !profile) return;
     Alert.alert(
-      "Kullaniciyi Engelle",
-      `@${profile.username} adli kullaniciyi engellemek istediginize emin misiniz? Bu kullanicinin paylasimlarini ve profilini goremezsiniz.`,
+      "Kullanıcıyı Engelle",
+      `@${profile.username} adlı kullanıcıyı engellemek istediğinize emin misiniz? Bu kullanıcının paylaşımlarını ve profilini göremezsiniz.`,
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -188,7 +188,7 @@ export default function UserProfileScreen() {
               );
               router.back();
             } else {
-              Alert.alert("Hata", "Kullanici engellenemedi.");
+              Alert.alert("Hata", "Kullanıcı engellenemedi.");
             }
           },
         },
@@ -306,12 +306,12 @@ export default function UserProfileScreen() {
               />
               <Text style={[styles.reputationText, { color: scoreColor }]}>
                 {profile.reputation_score >= 8
-                  ? "Guvenilir Uye"
+                  ? "Güvenilir Üye"
                   : profile.reputation_score >= 6
-                  ? "Iyi Itibar"
+                  ? "İyi İtibar"
                   : profile.reputation_score >= 4
-                  ? "Orta Itibar"
-                  : "Dusuk Itibar"}
+                  ? "Orta İtibar"
+                  : "Düşük İtibar"}
               </Text>
             </View>
 
@@ -319,12 +319,12 @@ export default function UserProfileScreen() {
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{postCount}</Text>
-                <Text style={styles.statLabel}>Paylasim</Text>
+                <Text style={styles.statLabel}>Paylaşım</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{reviewCount}</Text>
-                <Text style={styles.statLabel}>Degerlendirme</Text>
+                <Text style={styles.statLabel}>Değerlendirme</Text>
               </View>
             </View>
 
@@ -335,7 +335,7 @@ export default function UserProfileScreen() {
                 onPress={handleReview}
               >
                 <Star size={18} color={colors.primary} />
-                <Text style={styles.reviewButtonText}>Degerlendir</Text>
+                <Text style={styles.reviewButtonText}>Değerlendir</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -355,7 +355,7 @@ export default function UserProfileScreen() {
                   activeTab === "paylaşımlar" && styles.tabTextActive,
                 ]}
               >
-                Paylasimlar
+                Paylaşımlar
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -371,7 +371,7 @@ export default function UserProfileScreen() {
                   activeTab === "degerlendirmeler" && styles.tabTextActive,
                 ]}
               >
-                Degerlendirmeler
+                Değerlendirmeler
               </Text>
             </TouchableOpacity>
           </View>
@@ -408,10 +408,10 @@ export default function UserProfileScreen() {
               ) : (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateText}>
-                    Henuz paylasim yok.
+                    Henüz paylaşım yok.
                   </Text>
                   <Text style={styles.emptyStateSubtext}>
-                    Anonim paylasimlar burada gorunmez.
+                    Anonim paylaşımlar burada görünmez.
                   </Text>
                 </View>
               )
@@ -438,7 +438,7 @@ export default function UserProfileScreen() {
                     </View>
                     <Text style={styles.reviewAuthor}>
                       {review.is_anonymous
-                        ? "Anonim Kullanici"
+                        ? "Anonim Kullanıcı"
                         : review.reviewer?.username
                         ? `@${review.reviewer.username}`
                         : "Bilinmeyen"}
@@ -484,7 +484,7 @@ export default function UserProfileScreen() {
               <View style={styles.emptyState}>
                 <Star size={48} color={colors.border} />
                 <Text style={styles.emptyStateText}>
-                  Henuz degerlendirme yok.
+                  Henüz değerlendirme yok.
                 </Text>
               </View>
             )}
@@ -516,7 +516,7 @@ export default function UserProfileScreen() {
                 <Text
                   style={[styles.menuItemText, { color: colors.danger }]}
                 >
-                  Kullaniciyi Engelle
+                  Kullanıcıyı Engelle
                 </Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
@@ -530,7 +530,7 @@ export default function UserProfileScreen() {
                     { color: colors.textMuted, textAlign: "center" },
                   ]}
                 >
-                  Iptal
+                  İptal
                 </Text>
               </TouchableOpacity>
             </View>

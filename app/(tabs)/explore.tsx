@@ -65,7 +65,7 @@ function ShadowProfileCard({ profile }: { profile: ShadowProfileView }) {
             </View>
           )}
 
-          <Text style={styles.reviewCount}>{profile.total_reviews} degerlendirme</Text>
+          <Text style={styles.reviewCount}>{profile.total_reviews} değerlendirme</Text>
         </View>
 
         {/* Sag - Puan */}
@@ -189,14 +189,14 @@ export default function ExploreScreen() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         {/* Header */}
         <AnimatedHeader>
-          <Text style={styles.headerTitle}>Kesfet</Text>
+          <Text style={styles.headerTitle}>Keşfet</Text>
 
           {/* Arama */}
           <View style={styles.searchContainer}>
             <Search size={20} color={colors.textMuted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Isim, sehir veya etiket ara..."
+              placeholder="İsim, şehir veya etiket ara..."
               placeholderTextColor={colors.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -213,7 +213,7 @@ export default function ExploreScreen() {
           {/* Uyari Banner */}
           <View style={styles.warningBanner}>
             <Text style={styles.warningBannerText}>
-              {"Profiller kullanici yorumlarina dayanir.\nBilgiler dogrulanmamis olabilir."}
+              {"Profiller kullanıcı yorumlarına dayanır.\nBilgiler doğrulanmamış olabilir."}
             </Text>
           </View>
 
@@ -229,8 +229,8 @@ export default function ExploreScreen() {
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>
                 {searchQuery
-                  ? "Aradiginiz kriterlere uygun profil bulunamadi."
-                  : "Henuz profil olusturulmamis."}
+                  ? "Aradığınız kriterlere uygun profil bulunamadı."
+                  : "Henüz profil oluşturulmamış."}
               </Text>
             </View>
           )}

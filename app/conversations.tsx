@@ -35,7 +35,7 @@ function formatTime(dateStr: string | null): string {
       minute: "2-digit",
     });
   }
-  if (diffDays === 1) return "Dun";
+  if (diffDays === 1) return "Dün";
   if (diffDays < 7) {
     const days = ["Paz", "Pzt", "Sal", "Car", "Per", "Cum", "Cmt"];
     return days[date.getDay()];
@@ -130,9 +130,9 @@ export default function ConversationsScreen() {
         {conversations.length === 0 ? (
           <View style={styles.emptyState}>
             <MessageCircle size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Henuz eslesmeniz yok</Text>
+            <Text style={styles.emptyTitle}>Henüz eşleşmeniz yok</Text>
             <Text style={styles.emptySubtitle}>
-              Eslesme yaptiktan sonra mesajlasmaya baslayabilirsiniz.
+              Eşleşme yaptıktan sonra mesajlaşmaya başlayabilirsiniz.
             </Text>
           </View>
         ) : (
@@ -180,7 +180,7 @@ export default function ConversationsScreen() {
                       ]}
                       numberOfLines={1}
                     >
-                      {conv.lastMessage || "Henuz mesaj yok"}
+                      {conv.lastMessage || "Henüz mesaj yok"}
                     </Text>
                     {conv.unreadCount > 0 && (
                       <View style={styles.unreadBadge}>

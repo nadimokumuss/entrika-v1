@@ -19,12 +19,10 @@ interface AuthContextType {
     password: string,
     username: string,
     gender: Gender,
-    avatarUrl: string,
-    inviteCode: string
+    avatarUrl: string
   ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  validateInviteCode: (code: string) => Promise<{ valid: boolean; error: Error | null }>;
   refreshProfile: () => Promise<void>;
   mockSignIn: () => Promise<void>;
 }
@@ -113,9 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar_url: "https://api.dicebear.com/7.x/lorelei/png?seed=luna",
       gender: "female",
       reputation_score: 5.0,
-      invite_quota: 3,
-      invited_by: null,
-      invite_code: "TESTCODE",
       is_verified: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -126,41 +121,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
   };
 
-  const validateInviteCode = async (code: string): Promise<{ valid: boolean; error: Error | null }> => {
-    if (MOCK_MODE) {
-      const validCodes = ["ENTRIKA2024", "HOSGELDIN", "DAVET123"];
-      return { valid: validCodes.includes(code.toUpperCase()), error: null };
-    }
-
-    try {
-      console.log("[INVITE] Validating code:", code.toUpperCase());
-      const { data, error } = await supabase
-        .from("invite_codes")
-        .select("*")
-        .eq("code", code.toUpperCase())
-        .eq("is_used", false)
-        .single();
-
-      console.log("[INVITE] Result:", JSON.stringify({ data: !!data, error: error?.message }));
-
-      if (error || !data) {
-        return { valid: false, error: null };
-      }
-
-      return { valid: true, error: null };
-    } catch (error: any) {
-      console.error("[INVITE] Exception:", error?.message || error);
-      return { valid: false, error: error as Error };
-    }
-  };
-
   const signUp = async (
     email: string,
     password: string,
     username: string,
     gender: Gender,
-    avatarUrl: string,
-    inviteCode: string
+    avatarUrl: string
   ): Promise<{ error: Error | null }> => {
     if (MOCK_MODE) {
       // Mock modda profil oluştur ve kaydet
@@ -170,9 +136,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar_url: avatarUrl,
         gender,
         reputation_score: 5.0,
-        invite_quota: 3,
-        invited_by: null,
-        invite_code: generateInviteCode(),
         is_verified: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -185,34 +148,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      console.log("[SIGNUP] 1. Davetiye kodu kontrol ediliyor:", inviteCode.toUpperCase());
-      const { data: inviteData, error: inviteError } = await supabase
-        .from("invite_codes")
-        .select("*")
-        .eq("code", inviteCode.toUpperCase())
-        .eq("is_used", false)
-        .single();
-
-      console.log("[SIGNUP] 2. Davetiye sonucu:", JSON.stringify({ inviteData: !!inviteData, inviteError }));
-
-      if (inviteError || !inviteData) {
-        return { error: new Error("Geçersiz veya kullanılmış davetiye kodu") };
-      }
-
-      console.log("[SIGNUP] 3. Kullanici adi kontrol ediliyor:", username);
+      console.log("[SIGNUP] 1. Kullanici adi kontrol ediliyor:", username);
       const { data: existingUser, error: usernameError } = await supabase
         .from("profiles")
         .select("username")
         .eq("username", username)
         .single();
 
-      console.log("[SIGNUP] 4. Username sonucu:", JSON.stringify({ existingUser, usernameError }));
+      console.log("[SIGNUP] 2. Username sonucu:", JSON.stringify({ existingUser, usernameError }));
 
       if (existingUser) {
         return { error: new Error("Bu kullanıcı adı zaten alınmış") };
       }
 
-      console.log("[SIGNUP] 5. Supabase auth.signUp cagriliyor...");
+      console.log("[SIGNUP] 3. Supabase auth.signUp cagriliyor...");
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -221,47 +170,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             username,
             avatar_url: avatarUrl,
             gender,
-            invited_by: inviteData.created_by,
           },
         },
       });
 
-      console.log("[SIGNUP] 6. Auth sonucu:", JSON.stringify({
+      console.log("[SIGNUP] 4. Auth sonucu:", JSON.stringify({
         user: authData?.user?.id,
         session: !!authData?.session,
         authError,
       }));
 
       if (authError) throw authError;
-      if (!authData.user) throw new Error("Kayıt başarısız");
-
-      console.log("[SIGNUP] 7. Davetiye kodu kullanildi olarak isaretleniyor...");
-      const { error: updateError } = await supabase
-        .from("invite_codes")
-        .update({ is_used: true, used_by: authData.user.id, used_at: new Date().toISOString() })
-        .eq("id", inviteData.id);
-
-      console.log("[SIGNUP] 8. Davetiye update sonucu:", JSON.stringify({ updateError }));
+      if (!authData.user) throw new Error("Kayit basarisiz");
 
       if (!authData.session) {
-        console.log("[SIGNUP] 9. Session yok, manuel giris deneniyor...");
+        console.log("[SIGNUP] 5. Session yok, manuel giris deneniyor...");
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        console.log("[SIGNUP] 10. Manuel giris sonucu:", JSON.stringify({
+        console.log("[SIGNUP] 6. Manuel giris sonucu:", JSON.stringify({
           session: !!signInData?.session,
           signInError,
         }));
         if (signInError) {
-          console.log("[SIGNUP] 11. Manuel giris basarisiz, profil direkt cekilecek");
+          console.log("[SIGNUP] 7. Manuel giris basarisiz, profil direkt cekilecek");
           await fetchProfile(authData.user.id);
           setUser(authData.user);
           setIsAuthenticated(true);
         }
       }
 
-      console.log("[SIGNUP] 12. Kayit tamamlandi!");
+      console.log("[SIGNUP] 8. Kayit tamamlandi!");
       return { error: null };
     } catch (error) {
       console.error("[SIGNUP] HATA:", error);
@@ -315,7 +255,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
-        validateInviteCode,
         refreshProfile,
         mockSignIn,
       }}
@@ -333,11 +272,3 @@ export function useAuth() {
   return context;
 }
 
-function generateInviteCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}

@@ -26,7 +26,7 @@ export default function ForgotPasswordScreen() {
 
   const handleReset = async () => {
     if (!email.trim() || !email.includes("@")) {
-      setError("Gecerli bir e-posta adresi gerekli");
+      setError("Geçerli bir e-posta adresi gerekli");
       return;
     }
 
@@ -44,7 +44,7 @@ export default function ForgotPasswordScreen() {
         setIsSent(true);
       }
     } catch (err: any) {
-      setError(err.message || "Bir hata olustu");
+      setError(err.message || "Bir hata oluştu");
     } finally {
       setIsLoading(false);
     }
@@ -74,21 +74,21 @@ export default function ForgotPasswordScreen() {
             >
               <KeyRound size={32} color={colors.white} />
             </LinearGradient>
-            <Text style={styles.title}>Sifremi Unuttum</Text>
+            <Text style={styles.title}>Şifremi Unuttum</Text>
             <Text style={styles.subtitle}>
-              Sifirlama baglantisi e-postana gonderilecek
+              Sıfırlama bağlantısı e-postana gönderilecek
             </Text>
           </View>
 
           {isSent ? (
             <View style={styles.successContainer}>
               <Text style={styles.successText}>
-                Sifirlama baglantisi e-posta adresine gonderildi. Lutfen e-postani
+                Sıfırlama bağlantısı e-posta adresine gönderildi. Lütfen e-postanı
                 kontrol et.
               </Text>
               <GradientButton
                 onPress={() => router.back()}
-                label="Girise Don"
+                label="Girişe Dön"
               />
             </View>
           ) : (
@@ -114,7 +114,7 @@ export default function ForgotPasswordScreen() {
 
               <GradientButton
                 onPress={handleReset}
-                label="Sifirla"
+                label="Sıfırla"
                 loading={isLoading}
                 disabled={isLoading}
                 style={{ marginTop: spacing.lg }}

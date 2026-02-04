@@ -173,10 +173,10 @@ export default function ChatScreen() {
     setShowMenu(false);
     if (!user || !otherUserId || !otherUser) return;
     Alert.alert(
-      "Kullaniciyi Engelle",
-      `@${otherUser.username} adli kullaniciyi engellemek istediginize emin misiniz?`,
+      "Kullanıcıyı Engelle",
+      `@${otherUser.username} adlı kullanıcıyı engellemek istediğinize emin misiniz?`,
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -186,7 +186,7 @@ export default function ChatScreen() {
               Alert.alert("Engellendi", `@${otherUser.username} engellendi.`);
               router.back();
             } else {
-              Alert.alert("Hata", "Kullanici engellenemedi.");
+              Alert.alert("Hata", "Kullanıcı engellenemedi.");
             }
           },
         },
@@ -198,12 +198,12 @@ export default function ChatScreen() {
     setShowMenu(false);
     if (!matchId) return;
     Alert.alert(
-      "Eslesmeyi Boz",
-      "Bu eslesmeyi bozmak istediginize emin misiniz? Tum mesajlar silinecek.",
+      "Eşleşmeyi Boz",
+      "Bu eşleşmeyi bozmak istediğinize emin misiniz? Tüm mesajlar silinecek.",
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
-          text: "Eslesmeyi Boz",
+          text: "Eşleşmeyi Boz",
           style: "destructive",
           onPress: async () => {
             try {
@@ -213,7 +213,7 @@ export default function ChatScreen() {
               await supabase.from("matches").delete().eq("id", matchId);
               router.back();
             } catch (error) {
-              Alert.alert("Hata", "Eslesme bozmada bir hata olustu.");
+              Alert.alert("Hata", "Eşleşme bozmada bir hata oluştu.");
             }
           },
         },
@@ -268,7 +268,7 @@ export default function ChatScreen() {
           ) : messages.length === 0 ? (
             <View style={styles.emptyChat}>
               <Text style={styles.emptyChatText}>
-                Henuz mesaj yok. Ilk mesaji gonder!
+                Henüz mesaj yok. İlk mesajı gönder!
               </Text>
             </View>
           ) : (
@@ -322,7 +322,7 @@ export default function ChatScreen() {
             <View style={styles.menuContainer}>
               <TouchableOpacity style={styles.menuItem} onPress={handleReview}>
                 <Star size={20} color={colors.warning} />
-                <Text style={styles.menuItemText}>Degerlendir</Text>
+                <Text style={styles.menuItemText}>Değerlendir</Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
               <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
@@ -340,7 +340,7 @@ export default function ChatScreen() {
               <TouchableOpacity style={styles.menuItem} onPress={handleUnmatch}>
                 <Unlink size={20} color={colors.danger} />
                 <Text style={[styles.menuItemText, { color: colors.danger }]}>
-                  Eslesmeyi Boz
+                  Eşleşmeyi Boz
                 </Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
@@ -349,7 +349,7 @@ export default function ChatScreen() {
                 onPress={() => setShowMenu(false)}
               >
                 <Text style={[styles.menuItemText, { color: colors.textMuted, textAlign: "center" }]}>
-                  Iptal
+                  İptal
                 </Text>
               </TouchableOpacity>
             </View>

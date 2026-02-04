@@ -1,6 +1,6 @@
 # Entrika - Project Details
 
-> Son güncelleme: 2026-01-26
+> Son güncelleme: 2026-02-04
 > Versiyon: 0.1.0 (MVP Development)
 
 ---
@@ -20,25 +20,19 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - Topluluk puanı sistemi (1-10 arası)
 - Anonim deneyim paylaşımı
 - Eşleşmeden önce karşı tarafın "sicilini" görme
-- Davetiye sistemi ile kaliteli topluluk
+- Herkese açık kayıt sistemi
 
 ---
 
 ## Özellikler Detayı
 
-### 1. Davetiye Sistemi (Gatekeeper)
-- Uygulamaya sadece davetiye kodu ile girilebilir
-- Her kullanıcı 3 davetiye hakkına sahip
-- Zincir sorumluluk: Davet eden kişi, davet ettiğinin eylemlerinden kısmen sorumlu
-- Kural ihlalinde her ikisinin de puanı düşebilir
-
-### 2. Kayıt Sistemi
+### 1. Kayıt Sistemi
+- Herkese açık kayıt (davetiye sistemi kaldırıldı)
 - Cinsiyet seçimi (Kadın/Erkek)
 - Cinsiyete göre avatar seçenekleri
   - Kadın: Lorelei avatar stili
   - Erkek: Avataaars stili
 - Email + username + şifre
-- Davetiye kodu doğrulama
 
 ### 3. Feed (Akış)
 **Kategoriler:**
@@ -83,9 +77,9 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 ### 6. Profile (Profil)
 - Avatar ve kullanıcı adı
 - İtibar puanı (diğer kullanıcıların verdiği)
-- İstatistikler: Davetiye sayısı, paylaşım sayısı, referans sayısı
+- İstatistikler: Paylaşım sayısı, değerlendirme sayısı
 - Kendi paylaşımları
-- Davet ettiği kişiler listesi
+- Değerlendirmeler sekmesi
 
 ---
 
@@ -99,14 +93,8 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - avatar_url (TEXT)
 - gender (TEXT: 'female' | 'male')
 - reputation_score (DECIMAL, default 5.0)
-- invite_quota (INTEGER, default 3)
-- invited_by (UUID, FK)
-- invite_code (TEXT, UNIQUE)
 - is_verified (BOOLEAN)
 - created_at, updated_at
-
-#### invite_codes
-- id, code, created_by, used_by, is_used, created_at, used_at
 
 #### posts
 - id, content, category, is_anonymous, is_spoiler, image_url, author_id, created_at
@@ -219,24 +207,40 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - Davetiye kodu dogrulama'ya console logging eklendi (debug icin)
 - Site canli: https://entrika.vercel.app
 
+### 2026-02-04 - Davetiye Sistemi Kaldirma + Turkce Karakter Duzeltmeleri
+- **Davetiye sistemi tamamen kaldirildi:**
+  - Gatekeeper ekrani karsilama ekranina donusturuldu (Hesap Olustur / Giris Yap)
+  - `app/(auth)/index.tsx` - WelcomeScreen olarak yeniden yazildi
+  - `app/(auth)/register.tsx` - inviteCode state, AsyncStorage, uyari kutusu kaldirildi
+  - `contexts/AuthContext.tsx` - validateInviteCode, generateInviteCode, signUp'tan invite dogrulama kaldirildi
+  - `app/(tabs)/profile.tsx` - Davetiye/Referans istatistikleri ve referanslar sekmesi kaldirildi
+  - `app/settings.tsx` - Davetiye bolumu tamamen kaldirildi
+  - `lib/supabase.ts` - InviteCode interface'i ve Profile'dan invite alanlari kaldirildi
+- **Turkce karakter duzeltmeleri (21+ dosya, ~150+ duzeltme):**
+  - Tum UI metinlerinde ö, ü, ş, ç, ğ, ı, İ, Ş, Ç karakterleri duzeltildi
+  - Kategori etiketleri (Itiraf→İtiraf, Ifsa→İfşa, Yilanlik→Yılanlık, Dolandiricilik→Dolandırıcılık)
+  - Reaksiyon etiketleri (Yanindayim→Yanındayım, Yilan→Yılan, Sok→Şok)
+  - Degerlendirme etiketleri (Guvenilir→Güvenilir, Durst→Dürüst, Saygili→Saygılı, vb.)
+  - Auth ekranlari, profil, ayarlar, chat, explore, match, bildirimler, raporlama tum ekranlar duzeltildi
+- **Not:** Veritabaninda eski etiket degerleriyle kaydedilmis degerlendirmeler varsa migration gerekebilir
+
 ### Sonraki Oturum Icin Notlar
 - Profil duzenleme (username, bio, avatar degistirme)
 - Post silme / duzenleme
 - Feed'de realtime guncellemeler
 - Gelismis filtreleme (match'te yas, lokasyon)
-- Davetiye zincir takibi
 - Premium ozellikler
 - Web'de UI iyilestirmeleri (responsive tasarim, web-specific stiller)
+- Veritabanindaki eski etiket degerlerini (Guvenilir, Durst vb.) yeni Turkce karakterli hallerine migrate etme
 
 ---
 
 ## API Endpoints (Supabase RPC/Functions)
 
 ### Auth
-- `signUp(email, password, username, gender, avatar, inviteCode)`
+- `signUp(email, password, username, gender, avatar)`
 - `signIn(email, password)`
 - `signOut()`
-- `validateInviteCode(code)`
 
 ### Posts
 - `getPosts(category?, limit, offset)`

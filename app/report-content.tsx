@@ -18,14 +18,14 @@ import { supabase, ReportType } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 const REPORT_REASONS = [
-  { id: "inappropriate", label: "Uygunsuz Icerik" },
-  { id: "harassment", label: "Taciz / Zorbalik" },
+  { id: "inappropriate", label: "Uygunsuz İçerik" },
+  { id: "harassment", label: "Taciz / Zorbalık" },
   { id: "fake_profile", label: "Sahte Profil" },
   { id: "spam", label: "Spam / Reklam" },
-  { id: "scam", label: "Dolandiricilik" },
-  { id: "hate_speech", label: "Nefret Soylemi" },
-  { id: "violence", label: "Siddet / Tehdit" },
-  { id: "other", label: "Diger" },
+  { id: "scam", label: "Dolandırıcılık" },
+  { id: "hate_speech", label: "Nefret Söylemi" },
+  { id: "violence", label: "Şiddet / Tehdit" },
+  { id: "other", label: "Diğer" },
 ];
 
 export default function ReportContentScreen() {
@@ -44,9 +44,9 @@ export default function ReportContentScreen() {
   const getTitle = () => {
     switch (type) {
       case "post":
-        return "Paylasimi Raporla";
+        return "Paylaşımı Raporla";
       case "user":
-        return "Kullaniciyi Raporla";
+        return "Kullanıcıyı Raporla";
       case "shadow_profile":
         return "Profili Raporla";
       default:
@@ -70,7 +70,7 @@ export default function ReportContentScreen() {
       if (error) throw error;
       setSubmitted(true);
     } catch (error: any) {
-      Alert.alert("Hata", error.message || "Rapor gonderilemedi. Lutfen tekrar deneyin.");
+      Alert.alert("Hata", error.message || "Rapor gönderilemedi. Lütfen tekrar deneyin.");
     } finally {
       setSubmitting(false);
     }
@@ -89,9 +89,9 @@ export default function ReportContentScreen() {
           </View>
           <View style={styles.successContainer}>
             <CheckCircle size={64} color={colors.success} />
-            <Text style={styles.successTitle}>Rapor Gonderildi</Text>
+            <Text style={styles.successTitle}>Rapor Gönderildi</Text>
             <Text style={styles.successText}>
-              Raporunuz inceleme ekibimize iletildi. Geri bildiriminiz icin tesekkurler.
+              Raporunuz inceleme ekibimize iletildi. Geri bildiriminiz için teşekkürler.
             </Text>
             <TouchableOpacity style={styles.doneButton} onPress={() => router.back()}>
               <Text style={styles.doneButtonText}>Tamam</Text>
@@ -119,7 +119,7 @@ export default function ReportContentScreen() {
             <View style={styles.targetInfo}>
               <AlertTriangle size={20} color={colors.warning} />
               <Text style={styles.targetText}>
-                {type === "post" ? "Paylasim" : type === "user" ? "Kullanici" : "Profil"}:{" "}
+                {type === "post" ? "Paylaşım" : type === "user" ? "Kullanıcı" : "Profil"}:{" "}
                 <Text style={styles.targetName}>{targetName}</Text>
               </Text>
             </View>
@@ -180,7 +180,7 @@ export default function ReportContentScreen() {
             {submitting ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>Rapor Gonder</Text>
+              <Text style={styles.submitButtonText}>Rapor Gönder</Text>
             )}
           </TouchableOpacity>
 

@@ -74,12 +74,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az once";
-  if (diffMins < 60) return `${diffMins} dk once`;
+  if (diffMins < 1) return "Az önce";
+  if (diffMins < 60) return `${diffMins} dk önce`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat once`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gun once`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -232,7 +232,7 @@ export default function PostDetailScreen() {
 
       if (error) {
         console.error("Comment error:", error);
-        Alert.alert("Hata", "Yorum gonderilemedi.");
+        Alert.alert("Hata", "Yorum gönderilemedi.");
         setInputText(text);
       }
     } catch (e) {
@@ -271,7 +271,7 @@ export default function PostDetailScreen() {
         type: "post",
         targetId: post.id,
         targetName: post.is_anonymous
-          ? "Anonim paylasim"
+          ? "Anonim paylaşım"
           : `@${post.profiles?.username}`,
       },
     });
@@ -281,10 +281,10 @@ export default function PostDetailScreen() {
     setShowMenu(false);
     if (!user || !post || post.is_anonymous) return;
     Alert.alert(
-      "Kullaniciyi Engelle",
-      `@${post.profiles?.username} adli kullaniciyi engellemek istediginize emin misiniz?`,
+      "Kullanıcıyı Engelle",
+      `@${post.profiles?.username} adlı kullanıcıyı engellemek istediğinize emin misiniz?`,
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -406,9 +406,9 @@ export default function PostDetailScreen() {
                   >
                     <View style={styles.spoilerBox}>
                       <Text style={styles.spoilerText}>
-                        {"Hassas icerik\n"}
+                        {"Hassas içerik\n"}
                         <Text style={styles.spoilerSubtext}>
-                          Gormek icin dokun
+                          Görmek için dokun
                         </Text>
                       </Text>
                     </View>
@@ -501,8 +501,8 @@ export default function PostDetailScreen() {
   const renderEmpty = () => (
     <View style={styles.emptyComments}>
       <MessageCircle size={32} color={colors.textMuted} />
-      <Text style={styles.emptyCommentsTitle}>Henuz yorum yok</Text>
-      <Text style={styles.emptyCommentsText}>Ilk yorumu sen yap!</Text>
+      <Text style={styles.emptyCommentsTitle}>Henüz yorum yok</Text>
+      <Text style={styles.emptyCommentsText}>İlk yorumu sen yap!</Text>
     </View>
   );
 
@@ -517,7 +517,7 @@ export default function PostDetailScreen() {
             >
               <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Paylasim</Text>
+            <Text style={styles.headerTitle}>Paylaşım</Text>
           </View>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -538,7 +538,7 @@ export default function PostDetailScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Paylasim</Text>
+          <Text style={styles.headerTitle}>Paylaşım</Text>
         </View>
 
         <KeyboardAvoidingView
@@ -650,7 +650,7 @@ export default function PostDetailScreen() {
                           { color: colors.danger },
                         ]}
                       >
-                        Kullaniciyi Engelle
+                        Kullanıcıyı Engelle
                       </Text>
                     </TouchableOpacity>
                   </>
@@ -666,7 +666,7 @@ export default function PostDetailScreen() {
                     { color: colors.textMuted, textAlign: "center" },
                   ]}
                 >
-                  Iptal
+                  İptal
                 </Text>
               </TouchableOpacity>
             </View>

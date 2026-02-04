@@ -68,7 +68,7 @@ export default function NewPostScreen() {
       if (error) throw error;
       router.back();
     } catch (error: any) {
-      Alert.alert("Hata", error.message || "Paylasim olusturulamadi. Tekrar deneyin.");
+      Alert.alert("Hata", error.message || "Paylaşım oluşturulamadı. Tekrar deneyin.");
     } finally {
       setSubmitting(false);
     }
@@ -89,7 +89,7 @@ export default function NewPostScreen() {
               <X size={24} color={colors.text} />
             </TouchableOpacity>
 
-            <Text style={styles.headerTitle}>Yeni Paylasim</Text>
+            <Text style={styles.headerTitle}>Yeni Paylaşım</Text>
 
             <TouchableOpacity
               onPress={handleSubmit}
@@ -102,7 +102,7 @@ export default function NewPostScreen() {
                 <>
                   <Send size={16} color={isValid ? colors.white : colors.textMuted} />
                   <Text style={[styles.submitButtonText, isValid && styles.submitButtonTextActive]}>
-                    Paylas
+                    Paylaş
                   </Text>
                 </>
               )}
@@ -110,9 +110,9 @@ export default function NewPostScreen() {
           </View>
 
           <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
-            {/* Kategori Secimi */}
+            {/* Kategori Seçimi */}
             <View style={styles.categorySection}>
-              <Text style={styles.sectionLabel}>Kategori Sec *</Text>
+              <Text style={styles.sectionLabel}>Kategori Seç *</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -151,23 +151,23 @@ export default function NewPostScreen() {
               </ScrollView>
             </View>
 
-            {/* Uyari */}
+            {/* Uyarı */}
             {(selectedCategory === "ifsa" ||
               selectedCategory === "red_flag" ||
               selectedCategory === "dolandiricilik") && (
               <View style={styles.warningBox}>
                 <Text style={styles.warningText}>
-                  Bu kategori hassas icerik olarak isaretlenecek ve spoiler filtresiyle
-                  kapatilacaktir.
+                  Bu kategori hassas içerik olarak işaretlenecek ve spoiler filtresiyle
+                  kapatılacaktır.
                 </Text>
               </View>
             )}
 
-            {/* Icerik */}
+            {/* İçerik */}
             <View style={styles.contentSection}>
               <TextInput
                 style={styles.contentInput}
-                placeholder="Deneyimini paylas..."
+                placeholder="Deneyimini paylaş..."
                 placeholderTextColor={colors.textMuted}
                 value={content}
                 onChangeText={setContent}
@@ -176,7 +176,7 @@ export default function NewPostScreen() {
               />
             </View>
 
-            {/* Fotograf Onizleme */}
+            {/* Fotoğraf Önizleme */}
             {selectedImageUri && (
               <View style={styles.imagePreviewContainer}>
                 <Image source={{ uri: selectedImageUri }} style={styles.imagePreview} />
@@ -195,8 +195,8 @@ export default function NewPostScreen() {
             {/* Anonim Mod */}
             <View style={styles.anonRow}>
               <View>
-                <Text style={styles.anonLabel}>Anonim Paylas</Text>
-                <Text style={styles.anonDescription}>Kullanici adin gizlenecek</Text>
+                <Text style={styles.anonLabel}>Anonim Paylaş</Text>
+                <Text style={styles.anonDescription}>Kullanıcı adın gizlenecek</Text>
               </View>
               <Switch
                 value={isAnonymous}
@@ -210,7 +210,7 @@ export default function NewPostScreen() {
             <TouchableOpacity style={styles.mediaButton} onPress={handleAddImage}>
               <ImageIcon size={20} color={colors.primary} />
               <Text style={styles.mediaButtonText}>
-                {selectedImageUri ? "Fotografu Degistir" : "Fotograf Ekle"}
+                {selectedImageUri ? "Fotoğrafı Değiştir" : "Fotoğraf Ekle"}
               </Text>
             </TouchableOpacity>
           </View>

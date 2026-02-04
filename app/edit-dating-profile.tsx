@@ -25,7 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { pickImage, uploadImage, deleteImage, extractPathFromUrl, showImageSourcePicker } from "@/lib/storage";
 
 const INTERESTS_LIST = [
-  "Muzik",
+  "Müzik",
   "Spor",
   "Seyahat",
   "Yemek",
@@ -36,14 +36,14 @@ const INTERESTS_LIST = [
   "Sanat",
   "Dans",
   "Yoga",
-  "Fotograf",
-  "Doga",
+  "Fotoğraf",
+  "Doğa",
   "Kahve",
   "Hayvanlar",
 ];
 
 const LOOKING_FOR_OPTIONS = [
-  { value: "female", label: "Kadin" },
+  { value: "female", label: "Kadın" },
   { value: "male", label: "Erkek" },
   { value: "both", label: "Her ikisi" },
 ];
@@ -131,7 +131,7 @@ export default function EditDatingProfileScreen() {
         const publicUrl = await uploadImage("dating-photos", user.id, uri);
         setPhotos((prev) => [...prev, publicUrl]);
       } catch (error: any) {
-        Alert.alert("Hata", error.message || "Fotograf yuklenemedi.");
+        Alert.alert("Hata", error.message || "Fotoğraf yüklenemedi.");
       } finally {
         setUploadingPhoto(false);
       }
@@ -140,8 +140,8 @@ export default function EditDatingProfileScreen() {
 
   const handleDeletePhoto = (index: number) => {
     const url = photos[index];
-    Alert.alert("Fotografu Sil", "Bu fotografu silmek istediginize emin misiniz?", [
-      { text: "Iptal", style: "cancel" },
+    Alert.alert("Fotoğrafı Sil", "Bu fotoğrafı silmek istediğinize emin misiniz?", [
+      { text: "İptal", style: "cancel" },
       {
         text: "Sil",
         style: "destructive",
@@ -153,7 +153,7 @@ export default function EditDatingProfileScreen() {
             }
             setPhotos((prev) => prev.filter((_, i) => i !== index));
           } catch (error: any) {
-            Alert.alert("Hata", error.message || "Fotograf silinemedi.");
+            Alert.alert("Hata", error.message || "Fotoğraf silinemedi.");
           }
         },
       },
@@ -167,7 +167,7 @@ export default function EditDatingProfileScreen() {
     if (age.trim() !== "") {
       const ageNum = parseInt(age, 10);
       if (isNaN(ageNum) || ageNum < 18 || ageNum > 99) {
-        Alert.alert("Hata", "Yas 18 ile 99 arasinda olmalidir.");
+        Alert.alert("Hata", "Yaş 18 ile 99 arasında olmalıdır.");
         return;
       }
     }
@@ -257,9 +257,9 @@ export default function EditDatingProfileScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Fotograflar */}
+            {/* Fotoğraflar */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Fotograflar ({photos.length}/{MAX_PHOTOS})</Text>
+              <Text style={styles.fieldLabel}>Fotoğraflar ({photos.length}/{MAX_PHOTOS})</Text>
               <View style={styles.photoGrid}>
                 {photos.map((url, index) => (
                   <View key={url} style={styles.photoItem}>
@@ -288,12 +288,12 @@ export default function EditDatingProfileScreen() {
               </View>
             </View>
 
-            {/* Yas */}
+            {/* Yaş */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Yas</Text>
+              <Text style={styles.fieldLabel}>Yaş</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Orn: 25"
+                placeholder="Örn: 25"
                 placeholderTextColor={colors.textMuted}
                 value={age}
                 onChangeText={setAge}
@@ -302,12 +302,12 @@ export default function EditDatingProfileScreen() {
               />
             </View>
 
-            {/* Sehir */}
+            {/* Şehir */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Sehir</Text>
+              <Text style={styles.fieldLabel}>Şehir</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Orn: Istanbul"
+                placeholder="Örn: İstanbul"
                 placeholderTextColor={colors.textMuted}
                 value={city}
                 onChangeText={setCity}
@@ -319,19 +319,19 @@ export default function EditDatingProfileScreen() {
               <Text style={styles.fieldLabel}>Meslek</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Orn: Yazilim Muhendisi"
+                placeholder="Örn: Yazılım Mühendisi"
                 placeholderTextColor={colors.textMuted}
                 value={job}
                 onChangeText={setJob}
               />
             </View>
 
-            {/* Egitim */}
+            {/* Eğitim */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Egitim</Text>
+              <Text style={styles.fieldLabel}>Eğitim</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Orn: Istanbul Universitesi"
+                placeholder="Örn: İstanbul Üniversitesi"
                 placeholderTextColor={colors.textMuted}
                 value={education}
                 onChangeText={setEducation}
@@ -340,7 +340,7 @@ export default function EditDatingProfileScreen() {
 
             {/* Bio */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Hakkinda</Text>
+              <Text style={styles.fieldLabel}>Hakkında</Text>
               <TextInput
                 style={[styles.textInput, styles.bioInput]}
                 placeholder="Kendinden bahset..."
@@ -352,9 +352,9 @@ export default function EditDatingProfileScreen() {
               />
             </View>
 
-            {/* Ilgi Alanlari */}
+            {/* İlgi Alanları */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Ilgi Alanlari</Text>
+              <Text style={styles.fieldLabel}>İlgi Alanları</Text>
               <View style={styles.chipsContainer}>
                 {INTERESTS_LIST.map((interest) => {
                   const isSelected = interests.includes(interest);
@@ -416,7 +416,7 @@ export default function EditDatingProfileScreen() {
                 <View>
                   <Text style={styles.fieldLabel}>Profil Aktif</Text>
                   <Text style={styles.switchDescription}>
-                    Kapatirsan eslesme ekraninda gorunmezsin
+                    Kapatırsan eşleşme ekranında görünmezsin
                   </Text>
                 </View>
                 <Switch

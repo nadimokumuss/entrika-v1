@@ -55,12 +55,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az once";
-  if (diffMins < 60) return `${diffMins} dk once`;
+  if (diffMins < 1) return "Az önce";
+  if (diffMins < 60) return `${diffMins} dk önce`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat once`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gun once`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -104,7 +104,7 @@ function PostCard({
       params: {
         type: "post",
         targetId: post.id,
-        targetName: post.is_anonymous ? "Anonim paylasim" : `@${post.profiles?.username}`,
+        targetName: post.is_anonymous ? "Anonim paylaşım" : `@${post.profiles?.username}`,
       },
     });
   };
@@ -113,10 +113,10 @@ function PostCard({
     setShowMenu(false);
     if (!user || post.is_anonymous) return;
     Alert.alert(
-      "Kullaniciyi Engelle",
-      `@${post.profiles?.username} adli kullaniciyi engellemek istediginize emin misiniz? Bu kullanicinin paylasimlarini ve profilini goremezsiniz.`,
+      "Kullanıcıyı Engelle",
+      `@${post.profiles?.username} adlı kullanıcıyı engellemek istediğinize emin misiniz? Bu kullanıcının paylaşımlarını ve profilini göremezsiniz.`,
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -126,7 +126,7 @@ function PostCard({
               Alert.alert("Engellendi", `@${post.profiles?.username} engellendi.`);
               onRefresh();
             } else {
-              Alert.alert("Hata", "Kullanici engellenemedi.");
+              Alert.alert("Hata", "Kullanıcı engellenemedi.");
             }
           },
         },
@@ -173,8 +173,8 @@ function PostCard({
                 <TouchableOpacity onPress={() => setRevealed(true)} activeOpacity={0.8}>
                   <View style={styles.spoilerBox}>
                     <Text style={styles.spoilerText}>
-                      {"Hassas icerik\n"}
-                      <Text style={styles.spoilerSubtext}>Gormek icin dokun</Text>
+                      {"Hassas içerik\n"}
+                      <Text style={styles.spoilerSubtext}>Görmek için dokun</Text>
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -263,7 +263,7 @@ function PostCard({
                 <TouchableOpacity style={styles.menuItem} onPress={handleBlockUser}>
                   <ShieldBan size={20} color={colors.danger} />
                   <Text style={[styles.menuItemText, { color: colors.danger }]}>
-                    Kullaniciyi Engelle
+                    Kullanıcıyı Engelle
                   </Text>
                 </TouchableOpacity>
               </>
@@ -274,7 +274,7 @@ function PostCard({
               onPress={() => setShowMenu(false)}
             >
               <Text style={[styles.menuItemText, { color: colors.textMuted, textAlign: "center" }]}>
-                Iptal
+                İptal
               </Text>
             </TouchableOpacity>
           </View>
@@ -470,7 +470,7 @@ export default function FeedScreen() {
                 selectedCategory === null && styles.filterChipTextActive,
               ]}
             >
-              Tumu
+              Tümü
             </Text>
           </TouchableOpacity>
           {(Object.keys(CATEGORIES) as PostCategory[]).map((key) => {
@@ -519,13 +519,13 @@ export default function FeedScreen() {
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateTitle}>
                   {selectedCategory
-                    ? "Bu kategoride paylasim yok"
-                    : "Henuz paylasim yok"}
+                    ? "Bu kategoride paylaşım yok"
+                    : "Henüz paylaşım yok"}
                 </Text>
                 <Text style={styles.emptyStateText}>
                   {selectedCategory
-                    ? "Baska bir kategori dene veya ilk paylasimi sen yap!"
-                    : "Ilk paylasimi sen yap!"}
+                    ? "Başka bir kategori dene veya ilk paylaşımı sen yap!"
+                    : "İlk paylaşımı sen yap!"}
                 </Text>
               </View>
             );

@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Switch,
   Alert,
-  Share,
   Platform,
   Linking,
 } from "react-native";
@@ -25,9 +24,6 @@ import {
   Heart,
   MessageCircle,
   Star,
-  Gift,
-  Copy,
-  Share2,
   Info,
   Headphones,
   Shield,
@@ -40,7 +36,6 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import GlassCard from "@/components/ui/GlassCard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import * as Clipboard from "expo-clipboard";
 
 const APP_VERSION = "1.0.0";
 
@@ -64,12 +59,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { profile, user, signOut, refreshProfile } = useAuth();
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(DEFAULT_PREFS);
-  const [inviteCode, setInviteCode] = useState<string>("");
-  const [remainingInvites, setRemainingInvites] = useState(0);
-
   useEffect(() => {
     loadNotificationPreferences();
-    loadInviteData();
   }, []);
 
   const loadNotificationPreferences = async () => {
@@ -87,12 +78,6 @@ export default function SettingsScreen() {
     } catch {
       // Use defaults
     }
-  };
-
-  const loadInviteData = async () => {
-    if (!profile) return;
-    setInviteCode(profile.invite_code || "");
-    setRemainingInvites(profile.invite_quota || 0);
   };
 
   const saveNotificationPreferences = async (prefs: NotificationPreferences) => {
@@ -131,13 +116,13 @@ export default function SettingsScreen() {
 
   const handleChangeUsername = () => {
     Alert.prompt(
-      "Kullanici Adi Degistir",
-      "Yeni kullanici adinizi girin:",
+      "Kullanıcı Adı Değiştir",
+      "Yeni kullanıcı adınızı girin:",
       async (newUsername) => {
         if (!newUsername || !newUsername.trim()) return;
         const trimmed = newUsername.trim();
         if (trimmed.length < 3) {
-          Alert.alert("Hata", "Kullanici adi en az 3 karakter olmali.");
+          Alert.alert("Hata", "Kullanıcı adı en az 3 karakter olmalı.");
           return;
         }
         try {
@@ -150,7 +135,7 @@ export default function SettingsScreen() {
             .single();
 
           if (existing) {
-            Alert.alert("Hata", "Bu kullanici adi zaten alinmis.");
+            Alert.alert("Hata", "Bu kullanıcı adı zaten alınmış.");
             return;
           }
 
@@ -161,9 +146,9 @@ export default function SettingsScreen() {
 
           if (error) throw error;
           await refreshProfile();
-          Alert.alert("Basarili", "Kullanici adiniz guncellendi.");
+          Alert.alert("Başarılı", "Kullanıcı adınız güncellendi.");
         } catch (error: any) {
-          Alert.alert("Hata", error.message || "Kullanici adi guncellenemedi.");
+          Alert.alert("Hata", error.message || "Kullanıcı adı güncellenemedi.");
         }
       },
       "plain-text",
@@ -173,7 +158,7 @@ export default function SettingsScreen() {
 
   const handleChangeEmail = () => {
     Alert.prompt(
-      "E-posta Degistir",
+      "E-posta Değiştir",
       "Yeni e-posta adresinizi girin:",
       async (newEmail) => {
         if (!newEmail || !newEmail.trim()) return;
@@ -181,9 +166,9 @@ export default function SettingsScreen() {
         try {
           const { error } = await supabase.auth.updateUser({ email: trimmed });
           if (error) throw error;
-          Alert.alert("Basarili", "E-posta adresiniz guncellendi. Dogrulama maili gonderilmis olabilir.");
+          Alert.alert("Başarılı", "E-posta adresiniz güncellendi. Doğrulama maili gönderilmiş olabilir.");
         } catch (error: any) {
-          Alert.alert("Hata", error.message || "E-posta guncellenemedi.");
+          Alert.alert("Hata", error.message || "E-posta güncellenemedi.");
         }
       },
       "plain-text",
@@ -193,20 +178,20 @@ export default function SettingsScreen() {
 
   const handleChangePassword = () => {
     Alert.prompt(
-      "Sifre Degistir",
-      "Yeni sifrenizi girin (en az 6 karakter):",
+      "Şifre Değiştir",
+      "Yeni şifrenizi girin (en az 6 karakter):",
       async (newPassword) => {
         if (!newPassword || !newPassword.trim()) return;
         if (newPassword.length < 6) {
-          Alert.alert("Hata", "Sifre en az 6 karakter olmali.");
+          Alert.alert("Hata", "Şifre en az 6 karakter olmalı.");
           return;
         }
         try {
           const { error } = await supabase.auth.updateUser({ password: newPassword });
           if (error) throw error;
-          Alert.alert("Basarili", "Sifreniz guncellendi.");
+          Alert.alert("Başarılı", "Şifreniz güncellendi.");
         } catch (error: any) {
-          Alert.alert("Hata", error.message || "Sifre guncellenemedi.");
+          Alert.alert("Hata", error.message || "Şifre güncellenemedi.");
         }
       },
       "secure-text"
@@ -215,19 +200,19 @@ export default function SettingsScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Hesabi Sil",
-      "Hesabinizi silmek istediginize emin misiniz? Bu islem geri alinamaz.",
+      "Hesabı Sil",
+      "Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
-          text: "Hesabi Sil",
+          text: "Hesabı Sil",
           style: "destructive",
           onPress: () => {
             Alert.alert(
               "Son Onay",
-              "Tum verileriniz kalici olarak silinecek. Devam etmek istiyor musunuz?",
+              "Tüm verileriniz kalıcı olarak silinecek. Devam etmek istiyor musunuz?",
               [
-                { text: "Vazgec", style: "cancel" },
+                { text: "Vazgeç", style: "cancel" },
                 {
                   text: "Evet, Sil",
                   style: "destructive",
@@ -249,35 +234,16 @@ export default function SettingsScreen() {
     );
   };
 
-  // --- Davetiye ---
-
-  const handleCopyInviteCode = async () => {
-    if (!inviteCode) return;
-    await Clipboard.setStringAsync(inviteCode);
-    Alert.alert("Kopyalandi", "Davet kodunuz panoya kopyalandi.");
-  };
-
-  const handleShareInviteCode = async () => {
-    if (!inviteCode) return;
-    try {
-      await Share.share({
-        message: `Entrika'ya katil! Davet kodum: ${inviteCode}\nUygulamayi indir ve bu kodla kayit ol.`,
-      });
-    } catch {
-      // User cancelled
-    }
-  };
-
   // --- Cikis ---
 
   const handleSignOut = () => {
     Alert.alert(
-      "Cikis Yap",
-      "Cikis yapmak istediginize emin misiniz?",
+      "Çıkış Yap",
+      "Çıkış yapmak istediğinize emin misiniz?",
       [
-        { text: "Iptal", style: "cancel" },
+        { text: "İptal", style: "cancel" },
         {
-          text: "Cikis Yap",
+          text: "Çıkış Yap",
           style: "destructive",
           onPress: async () => {
             await signOut();
@@ -316,7 +282,7 @@ export default function SettingsScreen() {
               <TouchableOpacity style={styles.row} onPress={handleChangeUsername}>
                 <View style={styles.rowLeft}>
                   <User size={20} color={colors.primary} />
-                  <Text style={styles.rowLabel}>Kullanici Adi</Text>
+                  <Text style={styles.rowLabel}>Kullanıcı Adı</Text>
                 </View>
                 <View style={styles.rowRight}>
                   <Text style={styles.rowValue}>@{profile?.username}</Text>
@@ -342,7 +308,7 @@ export default function SettingsScreen() {
               <TouchableOpacity style={styles.row} onPress={handleChangePassword}>
                 <View style={styles.rowLeft}>
                   <Lock size={20} color={colors.primary} />
-                  <Text style={styles.rowLabel}>Sifre Degistir</Text>
+                  <Text style={styles.rowLabel}>Şifre Değiştir</Text>
                 </View>
                 <View style={styles.rowRight}>
                   <ChevronRight size={18} color={colors.textMuted} />
@@ -354,7 +320,7 @@ export default function SettingsScreen() {
               <TouchableOpacity style={styles.row} onPress={handleDeleteAccount}>
                 <View style={styles.rowLeft}>
                   <Trash2 size={20} color={colors.danger} />
-                  <Text style={[styles.rowLabel, { color: colors.danger }]}>Hesabi Sil</Text>
+                  <Text style={[styles.rowLabel, { color: colors.danger }]}>Hesabı Sil</Text>
                 </View>
                 <View style={styles.rowRight}>
                   <ChevronRight size={18} color={colors.danger} />
@@ -404,7 +370,7 @@ export default function SettingsScreen() {
                 <View style={styles.rowLeft}>
                   <Heart size={20} color={notifPrefs.push_enabled ? colors.textLight : colors.textMuted} />
                   <Text style={[styles.rowLabel, !notifPrefs.push_enabled && styles.rowLabelDisabled]}>
-                    Eslesmeler
+                    Eşleşmeler
                   </Text>
                 </View>
                 <Switch
@@ -440,7 +406,7 @@ export default function SettingsScreen() {
                 <View style={styles.rowLeft}>
                   <Star size={20} color={notifPrefs.push_enabled ? colors.textLight : colors.textMuted} />
                   <Text style={[styles.rowLabel, !notifPrefs.push_enabled && styles.rowLabelDisabled]}>
-                    Degerlendirmeler
+                    Değerlendirmeler
                   </Text>
                 </View>
                 <Switch
@@ -456,7 +422,7 @@ export default function SettingsScreen() {
 
           {/* Gizlilik ve Guvenlik */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Gizlilik ve Guvenlik</Text>
+            <Text style={styles.sectionTitle}>Gizlilik ve Güvenlik</Text>
             <View style={styles.sectionCard}>
               <TouchableOpacity
                 style={styles.row}
@@ -464,7 +430,7 @@ export default function SettingsScreen() {
               >
                 <View style={styles.rowLeft}>
                   <ShieldBan size={20} color={colors.danger} />
-                  <Text style={styles.rowLabel}>Engellenen Kullanicilar</Text>
+                  <Text style={styles.rowLabel}>Engellenen Kullanıcılar</Text>
                 </View>
                 <View style={styles.rowRight}>
                   <ChevronRight size={18} color={colors.textMuted} />
@@ -473,25 +439,9 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Davetiye */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Davetiye</Text>
-            <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.inviteCodeCard} onPress={handleCopyInviteCode}>
-                <Text style={styles.inviteCodeText}>{inviteCode || "---"}</Text>
-                <Copy size={20} color={colors.primary} />
-              </TouchableOpacity>
-              <Text style={styles.remainingText}>Kalan Davetiye Hakki: {remainingInvites}</Text>
-              <TouchableOpacity style={styles.shareInviteButton} onPress={handleShareInviteCode}>
-                <Share2 size={18} color={colors.white} />
-                <Text style={styles.shareInviteButtonText}>Davetiye Kodunu Paylas</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
           {/* Hakkinda */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Hakkinda</Text>
+            <Text style={styles.sectionTitle}>Hakkında</Text>
             <View style={styles.sectionCard}>
               <View style={styles.row}>
                 <View style={styles.rowLeft}>
@@ -518,11 +468,11 @@ export default function SettingsScreen() {
 
               <TouchableOpacity
                 style={styles.row}
-                onPress={() => Alert.alert("Gizlilik Politikasi", "Gizlilik politikasi yaklasimda...")}
+                onPress={() => Alert.alert("Gizlilik Politikası", "Gizlilik politikası yaklaşımda...")}
               >
                 <View style={styles.rowLeft}>
                   <Shield size={20} color={colors.textLight} />
-                  <Text style={styles.rowLabel}>Gizlilik Politikasi</Text>
+                  <Text style={styles.rowLabel}>Gizlilik Politikası</Text>
                 </View>
                 <ChevronRight size={18} color={colors.textMuted} />
               </TouchableOpacity>
@@ -531,11 +481,11 @@ export default function SettingsScreen() {
 
               <TouchableOpacity
                 style={styles.row}
-                onPress={() => Alert.alert("Kullanim Sartlari", "Kullanim sartlari yaklasimda...")}
+                onPress={() => Alert.alert("Kullanım Şartları", "Kullanım şartları yaklaşımda...")}
               >
                 <View style={styles.rowLeft}>
                   <FileText size={20} color={colors.textLight} />
-                  <Text style={styles.rowLabel}>Kullanim Sartlari</Text>
+                  <Text style={styles.rowLabel}>Kullanım Şartları</Text>
                 </View>
                 <ChevronRight size={18} color={colors.textMuted} />
               </TouchableOpacity>
@@ -545,7 +495,7 @@ export default function SettingsScreen() {
           {/* Cikis Yap */}
           <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
             <LogOut size={20} color={colors.white} />
-            <Text style={styles.signOutButtonText}>Cikis Yap</Text>
+            <Text style={styles.signOutButtonText}>Çıkış Yap</Text>
           </TouchableOpacity>
 
           <View style={styles.bottomSpacer} />
@@ -639,42 +589,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: glass.border,
     marginLeft: spacing.lg + 20 + spacing.md,
-  },
-  inviteCodeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  inviteCodeText: {
-    fontSize: fontSize.xxl,
-    fontWeight: "bold",
-    color: colors.primary,
-    letterSpacing: 3,
-  },
-  remainingText: {
-    textAlign: "center",
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-    marginBottom: spacing.lg,
-  },
-  shareInviteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.primary,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-  },
-  shareInviteButtonText: {
-    color: colors.white,
-    fontWeight: "600",
-    fontSize: fontSize.base,
   },
   signOutButton: {
     flexDirection: "row",
