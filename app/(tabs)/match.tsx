@@ -43,7 +43,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { MatchModal } from "@/components/ui/MatchModal";
 import { FilterModal } from "@/components/ui/FilterModal";
 import type { FilterOptions } from "@/components/ui/FilterModal";
-import { Filter as FilterIcon } from "lucide-react-native";
+import { PremiumModal } from "@/components/ui/PremiumModal";
+import { Filter as FilterIcon, RotateCcw, Zap, Crown } from "lucide-react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
@@ -349,11 +350,14 @@ export default function MatchScreen() {
     username: string;
   } | null>(null);
   const [filterModal, setFilterModal] = useState(false);
+  const [premiumModal, setPremiumModal] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     ageMin: 18,
     ageMax: 100,
     city: undefined,
   });
+  const [lastSwipedProfile, setLastSwipedProfile] = useState<DatingProfileView | null>(null);
+  const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | null>(null);
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
 
@@ -505,6 +509,10 @@ export default function MatchScreen() {
     if (!user || profiles.length === 0) return;
     const currentProfile = profiles[0];
 
+    // Save last swiped profile for rewind functionality
+    setLastSwipedProfile(currentProfile);
+    setLastSwipeDirection(isLike ? "right" : "left");
+
     // Save swipe to Supabase
     try {
       await supabase.from("swipes").insert({
@@ -540,6 +548,28 @@ export default function MatchScreen() {
 
     setProfiles((prev) => prev.slice(1));
     swipe.setValue({ x: 0, y: 0 });
+  };
+
+  const handleRewind = async () => {
+    // For now, show premium modal for rewind
+    setPremiumModal(true);
+
+    // TODO: Implement actual rewind logic with premium check
+    // if (lastSwipedProfile && lastSwipeDirection) {
+    //   // Remove swipe from database
+    //   await supabase.from("swipes").delete().eq("swiper_id", user.id).eq("swiped_id", lastSwipedProfile.user_id);
+    //   // Add profile back to the list
+    //   setProfiles((prev) => [lastSwipedProfile, ...prev]);
+    //   setLastSwipedProfile(null);
+    //   setLastSwipeDirection(null);
+    // }
+  };
+
+  const handleBoost = () => {
+    // For now, show premium modal for boost
+    setPremiumModal(true);
+
+    // TODO: Implement actual boost logic with premium check
   };
 
   const handleSwipeLeft = () => {
@@ -715,6 +745,26 @@ export default function MatchScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Premium Actions */}
+        {profiles.length > 0 && (
+          <View style={styles.premiumActions}>
+            <TouchableOpacity
+              style={[styles.premiumButton, lastSwipedProfile ? styles.premiumButtonActive : styles.premiumButtonInactive]}
+              onPress={handleRewind}
+              disabled={!lastSwipedProfile}
+            >
+              <RotateCcw size={20} color={lastSwipedProfile ? colors.primary : colors.textMuted} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.premiumButton}
+              onPress={handleBoost}
+            >
+              <Zap size={20} color={colors.warning} />
+            </TouchableOpacity>
+          </View>
+        )}
       </SafeAreaView>
 
       {/* Match Modal */}
@@ -732,6 +782,16 @@ export default function MatchScreen() {
           setFilters(newFilters);
         }}
         currentFilters={filters}
+      />
+
+      {/* Premium Modal */}
+      <PremiumModal
+        visible={premiumModal}
+        onClose={() => setPremiumModal(false)}
+        onUpgrade={(plan) => {
+          // TODO: Implement payment flow
+          console.log("Upgrade to:", plan);
+        }}
       />
     </GradientBackground>
   );
@@ -1107,5 +1167,29 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.success,
     ...shadows.glow,
+  },
+  premiumActions: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+  premiumButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: glass.background,
+    borderWidth: 1,
+    borderColor: glass.border,
+  },
+  premiumButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}15`,
+  },
+  premiumButtonInactive: {
+    opacity: 0.5,
   },
 });
