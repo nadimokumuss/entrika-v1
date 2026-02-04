@@ -30,6 +30,7 @@ import {
   FileText,
   LogOut,
   ShieldBan,
+  Edit3,
 } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
 import GradientBackground from "@/components/ui/GradientBackground";
@@ -113,48 +114,6 @@ export default function SettingsScreen() {
   };
 
   // --- Hesap ---
-
-  const handleChangeUsername = () => {
-    Alert.prompt(
-      "Kullanıcı Adı Değiştir",
-      "Yeni kullanıcı adınızı girin:",
-      async (newUsername) => {
-        if (!newUsername || !newUsername.trim()) return;
-        const trimmed = newUsername.trim();
-        if (trimmed.length < 3) {
-          Alert.alert("Hata", "Kullanıcı adı en az 3 karakter olmalı.");
-          return;
-        }
-        try {
-          // Check uniqueness
-          const { data: existing } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("username", trimmed)
-            .neq("id", user?.id || "")
-            .single();
-
-          if (existing) {
-            Alert.alert("Hata", "Bu kullanıcı adı zaten alınmış.");
-            return;
-          }
-
-          const { error } = await supabase
-            .from("profiles")
-            .update({ username: trimmed })
-            .eq("id", user?.id);
-
-          if (error) throw error;
-          await refreshProfile();
-          Alert.alert("Başarılı", "Kullanıcı adınız güncellendi.");
-        } catch (error: any) {
-          Alert.alert("Hata", error.message || "Kullanıcı adı güncellenemedi.");
-        }
-      },
-      "plain-text",
-      profile?.username || ""
-    );
-  };
 
   const handleChangeEmail = () => {
     Alert.prompt(
@@ -279,10 +238,10 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Hesap</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} onPress={handleChangeUsername}>
+              <TouchableOpacity style={styles.row} onPress={() => router.push("/edit-profile")}>
                 <View style={styles.rowLeft}>
-                  <User size={20} color={colors.primary} />
-                  <Text style={styles.rowLabel}>Kullanıcı Adı</Text>
+                  <Edit3 size={20} color={colors.primary} />
+                  <Text style={styles.rowLabel}>Profili Düzenle</Text>
                 </View>
                 <View style={styles.rowRight}>
                   <Text style={styles.rowValue}>@{profile?.username}</Text>

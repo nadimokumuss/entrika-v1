@@ -62,6 +62,7 @@ export interface Profile {
   gender: Gender;
   reputation_score: number;
   is_verified: boolean;
+  bio: string | null;
   created_at: string;
   updated_at: string;
 }

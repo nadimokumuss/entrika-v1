@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Heart, Star, Camera } from "lucide-react-native";
+import { Settings, Share2, Heart, Star, Camera, Edit3 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
@@ -213,8 +213,22 @@ export default function ProfileScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Kullanici Adi */}
-            <Text style={styles.username}>@{profile.username}</Text>
+            {/* Kullanici Adi ve Düzenle Butonu */}
+            <View style={styles.usernameRow}>
+              <Text style={styles.username}>@{profile.username}</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => router.push("/edit-profile")}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Edit3 size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Bio */}
+            {profile.bio && (
+              <Text style={styles.bio}>{profile.bio}</Text>
+            )}
 
             {/* Itibar Aciklamasi */}
             <View style={styles.reputationRow}>
@@ -485,7 +499,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "bold",
+  },
+  usernameRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: spacing.lg,
+  },
+  editButton: {
+    marginLeft: spacing.sm,
+    padding: spacing.xs,
+  },
+  bio: {
+    color: colors.textLight,
+    fontSize: fontSize.sm,
+    textAlign: "center",
+    marginTop: spacing.sm,
+    lineHeight: 20,
   },
   reputationRow: {
     flexDirection: "row",
