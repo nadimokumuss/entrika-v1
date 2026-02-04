@@ -1,0 +1,27 @@
+import { ReactNode } from "react";
+import { View, StyleSheet, Platform } from "react-native";
+import { glass, colors, spacing, shadows } from "@/constants/theme";
+
+interface AnimatedHeaderProps {
+  children: ReactNode;
+  style?: object;
+}
+
+export default function AnimatedHeader({ children, style }: AnimatedHeaderProps) {
+  return (
+    <View style={[styles.header, style]}>
+      {children}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: glass.background,
+    borderBottomWidth: 1,
+    borderBottomColor: glass.border,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    ...shadows.sm,
+  },
+});
