@@ -26,6 +26,15 @@ import {
 import * as Haptics from "expo-haptics";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
+
+// Fallback for glass (web build compatibility)
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  backgroundLight: "rgba(22, 22, 31, 0.4)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+  blur: 20,
+};
 import { useAuth } from "@/contexts/AuthContext";
 import { getBlockedUserIds } from "@/lib/blocking";
 import { blockUser } from "@/lib/blocking";
@@ -858,9 +867,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   filterChip: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
@@ -956,9 +965,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   spoilerBox: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
   },
@@ -986,7 +995,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   authorAvatar: {
     width: 24,
@@ -1005,7 +1014,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   reactionsList: {
     flexDirection: "row",
@@ -1017,9 +1026,9 @@ const styles = StyleSheet.create({
   reactionChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
@@ -1049,9 +1058,9 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -50 }],
   },
   reactionPicker: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     flexDirection: "row",
@@ -1087,7 +1096,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardElevated,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     overflow: "hidden",
   },
   menuItem: {
@@ -1104,6 +1113,6 @@ const styles = StyleSheet.create({
   },
   menuDivider: {
     height: 1,
-    backgroundColor: glass.border,
+    backgroundColor: glassFallback.border,
   },
 });
