@@ -40,6 +40,7 @@ import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { MatchModal } from "@/components/ui/MatchModal";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
@@ -336,6 +337,14 @@ export default function MatchScreen() {
   const [profiles, setProfiles] = useState<DatingProfileView[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [matchModal, setMatchModal] = useState(false);
+  const [matchData, setMatchData] = useState<{
+    id: string;
+    name: string;
+    age?: number;
+    avatar_url?: string;
+    username: string;
+  } | null>(null);
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
 
@@ -479,6 +488,27 @@ export default function MatchScreen() {
         is_like: isLike,
         is_super_like: isSuperLike,
       });
+
+      // Check if there's a match
+      const { data: matchCheck } = await supabase
+        .from("swipes")
+        .select("swiper_id, swiped_id, is_like")
+        .eq("swiper_id", currentProfile.user_id)
+        .eq("swiped_id", user.id)
+        .eq("is_like", true)
+        .single();
+
+      if (matchCheck && isLike) {
+        // Match created! Show modal
+        setMatchData({
+          id: currentProfile.user_id,
+          name: currentProfile.name,
+          age: currentProfile.age,
+          avatar_url: currentProfile.photos[0],
+          username: currentProfile.username,
+        });
+        setMatchModal(true);
+      }
     } catch (error) {
       console.error("Error saving swipe:", error);
     }
@@ -639,6 +669,13 @@ export default function MatchScreen() {
           </View>
         )}
       </SafeAreaView>
+
+      {/* Match Modal */}
+      <MatchModal
+        visible={matchModal}
+        matchData={matchData}
+        onClose={() => setMatchModal(false)}
+      />
     </GradientBackground>
   );
 }
