@@ -44,6 +44,7 @@ export const gradients: Record<string, [string, string, ...string[]]> = {
   primaryButton: ["#A855F7", "#9333EA"],
   accentButton: ["#F472B6", "#EC4899"],
   premiumShimmer: ["#A855F7", "#F472B6", "#A855F7"],
+  skeletonShimmer: ["#1E1E2A", "#2A2A3C", "#1E1E2A"],
   tabBar: ["rgba(10,10,15,0)", "rgba(10,10,15,0.8)", "#0A0A0F"],
   cardOverlay: ["transparent", "rgba(10,10,15,0.9)"],
   glassOverlay: ["rgba(22,22,31,0.6)", "rgba(22,22,31,0.8)"],

@@ -32,6 +32,7 @@ import { blockUser } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
+import { PostCardSkeleton } from "@/components/ui/Skeleton";
 
 interface FeedPost {
   id: string;
@@ -418,9 +419,15 @@ export default function FeedScreen() {
               </TouchableOpacity>
             </View>
           </AnimatedHeader>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <PostCardSkeleton />
+            <PostCardSkeleton />
+            <PostCardSkeleton />
+          </ScrollView>
         </SafeAreaView>
       </GradientBackground>
     );
