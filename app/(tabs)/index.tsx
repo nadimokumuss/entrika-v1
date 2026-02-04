@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, memo, useMemo } from "react";
 import {
   View,
   Text,
@@ -68,7 +68,7 @@ function formatTimeAgo(dateStr: string): string {
   return date.toLocaleDateString("tr-TR");
 }
 
-function PostCard({
+const PostCard = memo(function PostCard({
   post,
   onRefresh,
   onEdit,
@@ -84,12 +84,12 @@ function PostCard({
   const router = useRouter();
   const category = CATEGORIES[post.category];
 
-  const handleLongPress = () => {
+  const handleLongPress = useCallback(() => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowReactions(true);
-  };
+  }, []);
 
-  const handleReaction = async (type: ReactionType) => {
+  const handleReaction = useCallback(async (type: ReactionType) => {
     if (Platform.OS !== 'web') Haptics.selectionAsync();
     setShowReactions(false);
     if (!user) return;
@@ -101,9 +101,9 @@ function PostCard({
     } catch (e) {
       console.error("Reaction error:", e);
     }
-  };
+  }, [post.id, user?.id]);
 
-  const handleReport = () => {
+  const handleReport = useCallback(() => {
     setShowMenu(false);
     router.push({
       pathname: "/report-content",
@@ -113,9 +113,9 @@ function PostCard({
         targetName: post.is_anonymous ? "Anonim paylaşım" : `@${post.profiles?.username}`,
       },
     });
-  };
+  }, [post.id, post.is_anonymous, post.profiles?.username, router]);
 
-  const handleBlockUser = () => {
+  const handleBlockUser = useCallback(() => {
     setShowMenu(false);
     if (!user || post.is_anonymous) return;
     Alert.alert(
@@ -138,14 +138,14 @@ function PostCard({
         },
       ]
     );
-  };
+  }, [user?.id, post.author_id, post.is_anonymous, post.profiles?.username, onRefresh]);
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     router.push({
       pathname: "/post-detail",
       params: { postId: post.id },
     });
-  };
+  }, [post.id, router]);
 
   return (
     <Pressable
@@ -307,7 +307,7 @@ function PostCard({
       </Modal>
     </Pressable>
   );
-}
+});
 
 export default function FeedScreen() {
   const { user } = useAuth();
@@ -590,16 +590,23 @@ export default function FeedScreen() {
     fetchPosts();
   }, [fetchPosts]);
 
-  const handleEditPost = (post: FeedPost) => {
+  const handleEditPost = useCallback((post: FeedPost) => {
     setSelectedPost(post);
     setEditModalVisible(true);
-  };
+  }, []);
 
-  const handleCloseEditModal = () => {
+  const handleCloseEditModal = useCallback(() => {
     setEditModalVisible(false);
     setSelectedPost(null);
     fetchPosts();
-  };
+  }, [fetchPosts]);
+
+  // Memoize filtered posts to avoid recalculation on every render
+  const filteredPosts = useMemo(() => {
+    return selectedCategory
+      ? posts.filter((p) => p.category === selectedCategory)
+      : posts;
+  }, [posts, selectedCategory]);
 
   if (loading) {
     return (
@@ -741,18 +748,13 @@ export default function FeedScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
         >
-          {(() => {
-            const filtered = selectedCategory
-              ? posts.filter((p) => p.category === selectedCategory)
-              : posts;
-            return filtered.length > 0 ? (
-              filtered.map((post) => (
-                <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} />
-              ))
-            ) : (
-              <EmptyState type={selectedCategory ? "feed" : "feed"} />
-            );
-          })()}
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => (
+              <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} />
+            ))
+          ) : (
+            <EmptyState type={selectedCategory ? "feed" : "feed"} />
+          )}
           <View style={styles.bottomSpacer} />
         </ScrollView>
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import {
   View,
   Text,
@@ -67,7 +67,7 @@ interface DatingProfileView {
   lastActive: string;
 }
 
-function ProfileCard({
+const ProfileCard = memo(function ProfileCard({
   profile,
   isFirst,
   swipe,
@@ -87,12 +87,12 @@ function ProfileCard({
 }) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = useCallback((score: number) => {
     if (score >= 8) return colors.success;
     if (score >= 6) return "#EAB308";
     if (score >= 4) return colors.warning;
     return colors.danger;
-  };
+  }, []);
 
   const scoreColor = getScoreColor(profile.communityScore);
 
