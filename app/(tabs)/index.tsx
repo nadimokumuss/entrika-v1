@@ -33,6 +33,8 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import { PostCardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface FeedPost {
   id: string;
@@ -293,6 +295,7 @@ export default function FeedScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
@@ -383,8 +386,13 @@ export default function FeedScreen() {
       });
 
       setPosts(feedPosts);
-    } catch (error) {
+      setError(null);
+    } catch (error: any) {
       console.error("Error fetching posts:", error);
+      const errorType = error?.message?.includes("network") || error?.message?.includes("fetch")
+        ? "network"
+        : "server";
+      setError({ type: errorType, message: error?.message });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -428,6 +436,35 @@ export default function FeedScreen() {
             <PostCardSkeleton />
             <PostCardSkeleton />
           </ScrollView>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
+  if (error) {
+    return (
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <AnimatedHeader>
+            <View style={styles.headerContent}>
+              <Sparkles size={24} color={colors.primary} />
+              <Text style={styles.headerTitle}>ENTRIKA</Text>
+              <TouchableOpacity
+                onPress={() => router.push("/notifications")}
+                style={styles.bellButton}
+              >
+                <Bell size={24} color={colors.textLight} />
+              </TouchableOpacity>
+            </View>
+          </AnimatedHeader>
+          <ErrorState
+            type={error.type}
+            message={error.message}
+            onRetry={() => {
+              setError(null);
+              fetchPosts();
+            }}
+          />
         </SafeAreaView>
       </GradientBackground>
     );
@@ -523,18 +560,7 @@ export default function FeedScreen() {
                 <PostCard key={post.id} post={post} onRefresh={fetchPosts} />
               ))
             ) : (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateTitle}>
-                  {selectedCategory
-                    ? "Bu kategoride paylaşım yok"
-                    : "Henüz paylaşım yok"}
-                </Text>
-                <Text style={styles.emptyStateText}>
-                  {selectedCategory
-                    ? "Başka bir kategori dene veya ilk paylaşımı sen yap!"
-                    : "İlk paylaşımı sen yap!"}
-                </Text>
-              </View>
+              <EmptyState type={selectedCategory ? "feed" : "feed"} />
             );
           })()}
           <View style={styles.bottomSpacer} />

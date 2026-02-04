@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface ShadowProfileView {
   id: string;
@@ -226,13 +227,7 @@ export default function ExploreScreen() {
               <ShadowProfileCard key={profile.id} profile={profile} />
             ))
           ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                {searchQuery
-                  ? "Aradığınız kriterlere uygun profil bulunamadı."
-                  : "Henüz profil oluşturulmamış."}
-              </Text>
-            </View>
+            <EmptyState type="explore" />
           )}
 
           <View style={styles.bottomSpacer} />

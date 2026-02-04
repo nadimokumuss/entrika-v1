@@ -39,6 +39,7 @@ import {
 import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
@@ -96,14 +97,26 @@ function ProfileCard({
   });
 
   const likeOpacity = swipe.x.interpolate({
-    inputRange: [0, SCREEN_WIDTH / 4],
-    outputRange: [0, 1],
+    inputRange: [0, SCREEN_WIDTH / 6, SCREEN_WIDTH / 4],
+    outputRange: [0, 0.5, 1],
     extrapolate: "clamp",
   });
 
   const nopeOpacity = swipe.x.interpolate({
-    inputRange: [-SCREEN_WIDTH / 4, 0],
-    outputRange: [1, 0],
+    inputRange: [-SCREEN_WIDTH / 4, -SCREEN_WIDTH / 6, 0],
+    outputRange: [1, 0.5, 0],
+    extrapolate: "clamp",
+  });
+
+  const likeGlowOpacity = swipe.x.interpolate({
+    inputRange: [0, SCREEN_WIDTH / 8, SCREEN_WIDTH / 4],
+    outputRange: [0, 0.1, 0.3],
+    extrapolate: "clamp",
+  });
+
+  const nopeGlowOpacity = swipe.x.interpolate({
+    inputRange: [-SCREEN_WIDTH / 4, -SCREEN_WIDTH / 8, 0],
+    outputRange: [0.3, 0.1, 0],
     extrapolate: "clamp",
   });
 
@@ -190,13 +203,19 @@ function ProfileCard({
           style={styles.gradientOverlay}
         />
 
+        {/* Like/Nope Glow Effects */}
+        <Animated.View style={[styles.glow, styles.likeGlow, { opacity: likeGlowOpacity }]} />
+        <Animated.View style={[styles.glow, styles.nopeGlow, { opacity: nopeGlowOpacity }]} />
+
         {/* Like/Nope Stamps */}
         {isFirst && (
           <>
             <Animated.View style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
+              <Heart size={28} color={colors.success} />
               <Text style={styles.likeStampText}>BEĞENDİM</Text>
             </Animated.View>
             <Animated.View style={[styles.stamp, styles.nopeStamp, { opacity: nopeOpacity }]}>
+              <X size={28} color={colors.danger} />
               <Text style={styles.nopeStampText}>GEÇ</Text>
             </Animated.View>
           </>
@@ -590,13 +609,7 @@ export default function MatchScreen() {
                 );
               })
           ) : (
-            <View style={styles.emptyState}>
-              <Heart size={64} color={colors.border} />
-              <Text style={styles.emptyTitle}>Profil kalmadı!</Text>
-              <Text style={styles.emptySubtitle}>
-                Yeni profiller için daha sonra tekrar kontrol et.
-              </Text>
-            </View>
+            <EmptyState type="match" />
           )}
         </View>
 
@@ -759,10 +772,14 @@ const styles = StyleSheet.create({
   stamp: {
     position: "absolute",
     top: 60,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 3,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
+    gap: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: `${colors.card}90`,
   },
   likeStamp: {
     right: spacing.lg,
@@ -776,13 +793,27 @@ const styles = StyleSheet.create({
   },
   likeStampText: {
     color: colors.success,
-    fontSize: fontSize.xl,
+    fontSize: fontSize.lg,
     fontWeight: "bold",
   },
   nopeStampText: {
     color: colors.danger,
-    fontSize: fontSize.xl,
+    fontSize: fontSize.lg,
     fontWeight: "bold",
+  },
+  glow: {
+    position: "absolute",
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: 20,
+  },
+  likeGlow: {
+    backgroundColor: colors.success,
+  },
+  nopeGlow: {
+    backgroundColor: colors.danger,
   },
   photoInfo: {
     position: "absolute",
