@@ -202,6 +202,23 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
   - Okunmamis bildirim sayisi badge (9+ gosterimi)
   - useFocusEffect ile her tab'a donuste unread count guncellenir
 
+### 2026-02-04 - Web Deploy (Vercel)
+- Web'e deploy icin Platform kontrolleri eklendi:
+  - **Haptics**: 7 dosyada `Platform.OS !== 'web'` check (GradientButton, GradientTabBar, AnimatedPressable, index, post-detail, match, chat)
+  - **Notifications**: `lib/notifications.ts` ve `hooks/usePushNotifications.ts` - web'de atlanir
+  - **SecureStore**: `lib/supabase.ts` - conditional require, web'de localStorage
+  - **ImagePicker**: `lib/storage.ts` - web'de izin isteme atlanir
+  - **SplashScreen**: `app/_layout.tsx` - web'de preventAutoHide/hideAsync atlanir
+- SSR hydration fix: `_layout.tsx`'te `isClient` state pattern ile hydration mismatch onlendi
+- Vercel yapilandirmasi:
+  - `vercel.json`: `rewrites` (routes degil!) + buildCommand ile `.env` olusturma
+  - `package.json`: `build:web` script (`expo export --platform web --clear`)
+  - Vercel env vars: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` (production scope)
+- Template dosyasi `app/(tabs)/two.tsx` silindi, tab layout'tan referansi kaldirildi
+- Onemli bug fix: `vercel.json`'da `routes` yerine `rewrites` - routes tum istekleri (JS bundle dahil) index.html'e yonlendiriyordu
+- Davetiye kodu dogrulama'ya console logging eklendi (debug icin)
+- Site canli: https://entrika.vercel.app
+
 ### Sonraki Oturum Icin Notlar
 - Profil duzenleme (username, bio, avatar degistirme)
 - Post silme / duzenleme
@@ -209,6 +226,7 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - Gelismis filtreleme (match'te yas, lokasyon)
 - Davetiye zincir takibi
 - Premium ozellikler
+- Web'de UI iyilestirmeleri (responsive tasarim, web-specific stiller)
 
 ---
 

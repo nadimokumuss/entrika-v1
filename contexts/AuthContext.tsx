@@ -133,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log("[INVITE] Validating code:", code.toUpperCase());
       const { data, error } = await supabase
         .from("invite_codes")
         .select("*")
@@ -140,12 +141,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("is_used", false)
         .single();
 
+      console.log("[INVITE] Result:", JSON.stringify({ data: !!data, error: error?.message }));
+
       if (error || !data) {
         return { valid: false, error: null };
       }
 
       return { valid: true, error: null };
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[INVITE] Exception:", error?.message || error);
       return { valid: false, error: error as Error };
     }
   };

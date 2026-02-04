@@ -40,27 +40,30 @@ Kullanıcı "sync-end" dediğinde:
 ## Teknik Bilgiler
 
 ### Tech Stack
-- **Framework:** React Native (Expo SDK 53)
-- **Router:** Expo Router (file-based routing)
+- **Framework:** React Native (Expo SDK 54)
+- **Router:** Expo Router ~6.0.22 (file-based routing)
 - **Language:** TypeScript
 - **Styling:** React Native StyleSheet (NativeWind kaldırıldı - Node.js 24 uyumsuzluğu)
 - **Backend:** Supabase (production aktif, MOCK_MODE = false)
 - **Icons:** Lucide React Native
+- **Web Hosting:** Vercel (https://entrika.vercel.app)
 
-### Renk Paleti (Light Mode - Vibrant & Fun)
+### Renk Paleti (Dark Premium)
 ```typescript
 colors = {
-  background: "#FFF7ED",  // Cream/Peach
-  card: "#FFFFFF",
-  primary: "#F97316",     // Orange
-  accent: "#EC4899",      // Pink
+  background: "#0A0A0F",  // Derin koyu
+  card: "#16161F",
+  cardElevated: "#1E1E2A",
+  primary: "#A855F7",     // Mor
+  primaryLight: "#C084FC",
+  accent: "#F472B6",      // Pembe
   danger: "#EF4444",
   success: "#22C55E",
   warning: "#F59E0B",
-  text: "#1F2937",
-  textLight: "#6B7280",
-  textMuted: "#9CA3AF",
-  border: "#E5E7EB",
+  text: "#F1F1F6",
+  textLight: "#A1A1B5",
+  textMuted: "#5A5A72",
+  border: "#2A2A3C",
 }
 ```
 
@@ -148,17 +151,24 @@ entrika/
 5. [ ] Davetiye zincir takibi
 6. [ ] Premium ozellikler
 
+### Tamamlanan Ek Ozellikler
+- [x] Web deploy (Vercel) - https://entrika.vercel.app
+- [x] Platform kontrolleri (Haptics, Notifications, SecureStore, ImagePicker)
+- [x] SSR hydration fix (isClient pattern)
+- [x] Template dosyalari temizlendi (two.tsx kaldirildi)
+
 ---
 
 ## Önemli Kararlar ve Notlar
 
 ### Alınan Kararlar
 1. **Kadın-erkek ayrımı kaldırıldı** - Uygulama her iki cinsiyete de hitap edecek
-2. **Light mode tercih edildi** - Warm/vibrant renkler (turuncu/pembe)
+2. **Dark Premium tema** - Koyu arka plan (#0A0A0F), mor (#A855F7) ve pembe (#F472B6) vurgular
 3. **NativeWind kaldırıldı** - Node.js 24 ile ESM uyumsuzluğu nedeniyle StyleSheet kullanılıyor
 4. **Supabase production aktif** - MOCK_MODE = false, tum ekranlar gercek veri kullaniyor
 5. **Mock data temizlendi** - data/mockData.ts sadece re-export, asil sabitler constants/categories.ts'de
 6. **E-posta dogrulama kapatildi** - Supabase Authentication > Providers > Email > Confirm email = OFF
+7. **Web deploy Vercel uzerinden** - Static rendering + rewrites ile SPA routing
 
 ### Test Davetiye Kodları (Supabase)
 - `ENTRIKA2024`
@@ -175,6 +185,16 @@ entrika/
 - `supabase/user-reviews.sql` Supabase SQL Editor'de calistirilmali (user_reviews tablosu)
 - `supabase/notifications.sql` Supabase SQL Editor'de calistirildi (notifications tablosu)
 
+### Web Deploy Notlari
+- **Vercel URL:** https://entrika.vercel.app
+- **Vercel env vars:** `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` production scope'da tanimli
+- **Build command:** `.env` dosyasi Vercel env vars'tan olusturulup `expo export --platform web --clear` calistirilir
+- **vercel.json:** `rewrites` kullanilir (`routes` degil - routes statik dosyalari da yonlendirir!)
+- **Platform kontrolleri:** Haptics, SplashScreen, SecureStore, ImagePicker, Notifications - hepsi `Platform.OS !== 'web'` ile sarili
+- **Hydration fix:** `_layout.tsx`'te `isClient` state pattern - SSR'da bos View render edilir, client mount sonrasi gercek icerik
+- **SecureStore:** Web'de `require('expo-secure-store')` yerine `localStorage` kullanilir
+- **Auth storage:** Web'de localStorage, native'de SecureStore
+
 ---
 
 ## Geliştirme Komutları
@@ -189,6 +209,15 @@ npx expo start --port 8082
 
 # Tunnel modunda başlat (telefon testi için)
 npx expo start --tunnel
+
+# Web dev mode
+npx expo start --web
+
+# Web build (static export)
+npx expo export --platform web
+
+# Vercel deploy (production)
+npx vercel --prod --yes
 
 # Paket ekle
 npm install <paket-adı>

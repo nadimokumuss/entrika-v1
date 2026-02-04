@@ -40,15 +40,15 @@ export default function GatekeeperScreen() {
       const { valid, error: validateError } = await validateInviteCode(code);
 
       if (validateError) {
-        setError("Bir hata olustu. Lutfen tekrar deneyin.");
+        setError("Hata: " + (validateError.message || "Bilinmeyen hata"));
       } else if (valid) {
         await AsyncStorage.setItem("pendingInviteCode", code);
         router.push("/(auth)/register");
       } else {
         setError("Gecersiz davetiye kodu");
       }
-    } catch (err) {
-      setError("Bir hata olustu");
+    } catch (err: any) {
+      setError("Hata: " + (err?.message || "Bilinmeyen hata"));
     } finally {
       setIsLoading(false);
     }
