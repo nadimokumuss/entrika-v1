@@ -287,8 +287,9 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
             </TouchableOpacity>
           </View>
         </View>
+        </Animated.View>
       </View>
-    </View>
+    </Modal>
   );
 }
 

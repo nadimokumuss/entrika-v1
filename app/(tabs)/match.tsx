@@ -41,6 +41,9 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MatchModal } from "@/components/ui/MatchModal";
+import { FilterModal } from "@/components/ui/FilterModal";
+import type { FilterOptions } from "@/components/ui/FilterModal";
+import { Filter as FilterIcon } from "lucide-react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
@@ -345,6 +348,12 @@ export default function MatchScreen() {
     avatar_url?: string;
     username: string;
   } | null>(null);
+  const [filterModal, setFilterModal] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({
+    ageMin: 18,
+    ageMax: 100,
+    city: undefined,
+  });
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
 
@@ -377,6 +386,22 @@ export default function MatchScreen() {
 
       if (swipedIds.length > 0) {
         query = query.not("user_id", "in", `(${swipedIds.join(",")})`);
+      }
+
+      // Apply filters
+      if (filters.ageMin > 18 || filters.ageMax < 100) {
+        // Calculate birth year range
+        const currentYear = new Date().getFullYear();
+        const maxBirthYear = currentYear - filters.ageMin;
+        const minBirthYear = currentYear - filters.ageMax;
+
+        query = query
+          .gte("birth_year", minBirthYear)
+          .lte("birth_year", maxBirthYear);
+      }
+
+      if (filters.city) {
+        query = query.ilike("city", `%${filters.city}%`);
       }
 
       const { data: datingData, error: datingError } = await query;
@@ -570,19 +595,30 @@ export default function MatchScreen() {
               <Text style={styles.headerTitle}>Eşleşmeler</Text>
               <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
             </View>
-            <TouchableOpacity
-              style={styles.messageButton}
-              onPress={() => router.push("/conversations")}
-            >
-              <MessageCircle size={24} color={colors.primary} />
-              {unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setFilterModal(true)}
+              >
+                <FilterIcon size={24} color={colors.primary} />
+                {(filters.ageMin !== 18 || filters.ageMax !== 100 || filters.city) && (
+                  <View style={styles.filterBadge} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.messageButton}
+                onPress={() => router.push("/conversations")}
+              >
+                <MessageCircle size={24} color={colors.primary} />
+                {unreadCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </AnimatedHeader>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -601,19 +637,30 @@ export default function MatchScreen() {
             <Text style={styles.headerTitle}>Eşleşmeler</Text>
             <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
           </View>
-          <TouchableOpacity
-            style={styles.messageButton}
-            onPress={() => router.push("/conversations")}
-          >
-            <MessageCircle size={24} color={colors.primary} />
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setFilterModal(true)}
+            >
+              <FilterIcon size={24} color={colors.primary} />
+              {(filters.ageMin !== 18 || filters.ageMax !== 100 || filters.city) && (
+                <View style={styles.filterBadge} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.messageButton}
+              onPress={() => router.push("/conversations")}
+            >
+              <MessageCircle size={24} color={colors.primary} />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </AnimatedHeader>
 
         {/* Cards */}
@@ -676,6 +723,16 @@ export default function MatchScreen() {
         matchData={matchData}
         onClose={() => setMatchModal(false)}
       />
+
+      {/* Filter Modal */}
+      <FilterModal
+        visible={filterModal}
+        onClose={() => setFilterModal(false)}
+        onApply={(newFilters) => {
+          setFilters(newFilters);
+        }}
+        currentFilters={filters}
+      />
     </GradientBackground>
   );
 }
@@ -689,6 +746,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  iconButton: {
+    padding: spacing.sm,
+    position: "relative",
+  },
+  filterBadge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.accent,
   },
   messageButton: {
     padding: spacing.sm,

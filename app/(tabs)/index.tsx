@@ -35,6 +35,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import { PostCardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { EditPostModal } from "@/components/ui/EditPostModal";
 
 interface FeedPost {
   id: string;
@@ -70,9 +71,11 @@ function formatTimeAgo(dateStr: string): string {
 function PostCard({
   post,
   onRefresh,
+  onEdit,
 }: {
   post: FeedPost;
   onRefresh: () => void;
+  onEdit: (post: FeedPost) => void;
 }) {
   const [revealed, setRevealed] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
@@ -256,10 +259,29 @@ function PostCard({
       <Modal visible={showMenu} transparent animationType="fade">
         <Pressable style={styles.modalOverlay} onPress={() => setShowMenu(false)}>
           <View style={styles.menuContainer}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
-              <Flag size={20} color={colors.warning} />
-              <Text style={styles.menuItemText}>Raporla</Text>
-            </TouchableOpacity>
+            {post.author_id === user?.id ? (
+              <>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setShowMenu(false);
+                    onEdit(post);
+                  }}
+                >
+                  <Sparkles size={20} color={colors.primary} />
+                  <Text style={styles.menuItemText}>Düzenle</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
+                  <Flag size={20} color={colors.warning} />
+                  <Text style={styles.menuItemText}>Raporla</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
+                <Flag size={20} color={colors.warning} />
+                <Text style={styles.menuItemText}>Raporla</Text>
+              </TouchableOpacity>
+            )}
             {!post.is_anonymous && post.author_id !== user?.id && (
               <>
                 <View style={styles.menuDivider} />
@@ -296,6 +318,8 @@ export default function FeedScreen() {
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
@@ -411,6 +435,17 @@ export default function FeedScreen() {
     fetchPosts();
   }, [fetchPosts]);
 
+  const handleEditPost = (post: FeedPost) => {
+    setSelectedPost(post);
+    setEditModalVisible(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalVisible(false);
+    setSelectedPost(null);
+    fetchPosts();
+  };
+
   if (loading) {
     return (
       <GradientBackground variant="screen">
@@ -428,8 +463,8 @@ export default function FeedScreen() {
             </View>
           </AnimatedHeader>
           <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: spacing.xl, gap: spacing.md }}
             showsVerticalScrollIndicator={false}
           >
             <PostCardSkeleton />
@@ -557,7 +592,7 @@ export default function FeedScreen() {
               : posts;
             return filtered.length > 0 ? (
               filtered.map((post) => (
-                <PostCard key={post.id} post={post} onRefresh={fetchPosts} />
+                <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} />
               ))
             ) : (
               <EmptyState type={selectedCategory ? "feed" : "feed"} />
@@ -565,6 +600,20 @@ export default function FeedScreen() {
           })()}
           <View style={styles.bottomSpacer} />
         </ScrollView>
+
+        {/* Edit Post Modal */}
+        <EditPostModal
+          visible={editModalVisible}
+          onClose={handleCloseEditModal}
+          post={selectedPost ? {
+            id: selectedPost.id,
+            content: selectedPost.content,
+            category: selectedPost.category,
+            is_anonymous: selectedPost.is_anonymous,
+            is_spoiler: selectedPost.is_spoiler,
+            image_url: selectedPost.image_url,
+          } : null}
+        />
       </SafeAreaView>
     </GradientBackground>
   );

@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
   StatusBar,
+  Dimensions,
 } from "react-native";
 import { X } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
