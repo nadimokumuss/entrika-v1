@@ -333,7 +333,7 @@ const ProfileCard = memo(function ProfileCard({
   }
 
   return <View style={styles.cardContainer}>{renderCard()}</View>;
-}
+});
 
 export default function MatchScreen() {
   const { user } = useAuth();

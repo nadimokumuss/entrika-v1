@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.entrika.app"
+      "bundleIdentifier": "com.entrika.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +26,9 @@
         "backgroundColor": "#FFF7ED"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.entrika.app"
+      "package": "com.entrika.app",
+      "jsEngine": "hermes",
+      "enableProguard": true
     },
     "web": {
       "bundler": "metro",

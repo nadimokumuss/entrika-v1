@@ -1,12 +1,12 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  fallback?: (error: Error, retry: () => void) => ReactNode;
+  fallback?: ReactNode | ((error: Error, retry: () => void) => ReactNode);
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
@@ -60,7 +60,14 @@ export class ErrorBoundary extends Component<
     if (this.state.hasError) {
       // Custom fallback component varsa kullan
       if (this.props.fallback) {
-        return this.props.fallback(this.state.error!, this.handleRetry);
+        if (typeof this.props.fallback === "function") {
+          return (this.props.fallback as (error: Error, retry: () => void) => ReactNode)(
+            this.state.error!,
+            this.handleRetry
+          );
+        } else {
+          return this.props.fallback as ReactNode;
+        }
       }
 
       // Varsayılan fallback UI
