@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Heart, Star, Camera, Edit3 } from "lucide-react-native";
+import { Settings, Share2, Heart, Star, Camera, Edit3, Bookmark } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
@@ -164,6 +164,12 @@ export default function ProfileScreen() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Header Actions */}
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push("/bookmarks")}
+            >
+              <Bookmark size={22} color={colors.textLight} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton}>
               <Share2 size={22} color={colors.textLight} />
             </TouchableOpacity>

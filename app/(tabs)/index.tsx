@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell } from "lucide-react-native";
+import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark } from "lucide-react-native";
 import {
   CATEGORIES,
   REACTIONS,
@@ -36,6 +36,7 @@ import { PostCardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EditPostModal } from "@/components/ui/EditPostModal";
+import { isPostBookmarked, toggleBookmark } from "@/lib/bookmarks";
 
 interface FeedPost {
   id: string;
@@ -80,9 +81,28 @@ const PostCard = memo(function PostCard({
   const [revealed, setRevealed] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   const category = CATEGORIES[post.category];
+
+  // Check if post is bookmarked on mount
+  useEffect(() => {
+    if (user?.id) {
+      isPostBookmarked(user.id, post.id).then(setIsBookmarked);
+    }
+  }, [user?.id, post.id]);
+
+  const handleBookmarkToggle = useCallback(async () => {
+    if (!user?.id) return;
+    const { success, isBookmarked: newBookmarkState } = await toggleBookmark(user.id, post.id);
+    if (success) {
+      setIsBookmarked(newBookmarkState);
+      if (Platform.OS !== "web") {
+        Haptics.selectionAsync();
+      }
+    }
+  }, [user?.id, post.id]);
 
   const handleLongPress = useCallback(() => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -163,13 +183,26 @@ const PostCard = memo(function PostCard({
               </Text>
             </View>
             <Text style={styles.timeText}>{formatTimeAgo(post.created_at)}</Text>
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={() => setShowMenu(true)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <MoreHorizontal size={18} color={colors.textMuted} />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.bookmarkButton}
+                onPress={handleBookmarkToggle}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Bookmark
+                  size={18}
+                  color={isBookmarked ? colors.primary : colors.textMuted}
+                  fill={isBookmarked ? colors.primary : "none"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => setShowMenu(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <MoreHorizontal size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Icerik */}
@@ -899,9 +932,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     marginLeft: "auto",
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginLeft: spacing.sm,
+  },
+  bookmarkButton: {
+    padding: spacing.xs,
+  },
   menuButton: {
     padding: spacing.xs,
-    marginLeft: spacing.sm,
   },
   postContent: {
     flexDirection: "row",

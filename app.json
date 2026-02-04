@@ -6,12 +6,13 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "entrika",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "description": "Tanışmadan Önce Tanı - Topluluk Destekli Dating ve Sosyal İstihbarat Platformu. Kullanıcılar birbirini değerlendirebilir, topluluk puanları görebilir ve güvenli bir dating deneyimi yaşayabilir.",
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFF7ED"
+      "backgroundColor": "#0A0A0F"
     },
     "ios": {
       "supportsTablet": false,
@@ -23,7 +24,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#FFF7ED"
+        "backgroundColor": "#0A0A0F"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.entrika.app",
@@ -41,7 +42,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#F97316",
+          "color": "#A855F7",
           "defaultChannel": "default"
         }
       ],
