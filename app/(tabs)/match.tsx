@@ -31,6 +31,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  backgroundLight: "rgba(22, 22, 31, 0.4)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchTotalUnreadCount,
@@ -872,9 +879,9 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH - spacing.md * 2,
   },
   card: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     overflow: "hidden",
     shadowColor: "#000",
@@ -1021,7 +1028,7 @@ const styles = StyleSheet.create({
   },
   details: {
     padding: spacing.lg,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
   },
   scoreSection: {
     marginBottom: spacing.md,
@@ -1143,9 +1150,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -1181,9 +1188,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   premiumButtonActive: {
     borderColor: colors.primary,

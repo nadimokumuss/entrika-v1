@@ -16,6 +16,13 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
 import { supabase, UserReview } from "@/lib/supabase";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  backgroundLight: "rgba(22, 22, 31, 0.4)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, deleteImage } from "@/lib/storage";
@@ -540,12 +547,12 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     marginTop: spacing.xxl,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     width: "100%",
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   statItem: {
     flex: 1,
@@ -563,7 +570,7 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: glass.border,
+    backgroundColor: glassFallback.border,
   },
   datingProfileButton: {
     flexDirection: "row",
@@ -571,7 +578,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: `${colors.accent}30`,
@@ -585,8 +592,8 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
-    backgroundColor: glass.background,
+    borderBottomColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
   },
   tab: {
     flex: 1,
@@ -609,9 +616,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   postCard: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -649,9 +656,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   reviewCard: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,

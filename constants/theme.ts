@@ -160,3 +160,15 @@ export const fontSize = {
   xxl: 24,
   xxxl: 32,
 };
+
+// Re-export glass as default for compatibility
+export { glass as defaultGlass };
+export default {
+  colors,
+  gradients,
+  glass,
+  shadows,
+  spacing,
+  borderRadius,
+  fontSize,
+};
