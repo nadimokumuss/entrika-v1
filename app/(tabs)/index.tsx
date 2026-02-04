@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -429,6 +429,161 @@ export default function FeedScreen() {
       fetchUnreadCount();
     }, [fetchPosts, fetchUnreadCount])
   );
+
+  // Realtime subscriptions for posts, reactions, and comments
+  useEffect(() => {
+    if (!user) return;
+
+    // Posts channel subscription
+    const postsChannel = supabase
+      .channel("posts-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "posts",
+        },
+        async (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload as any;
+
+          if (eventType === "INSERT") {
+            // Yeni post eklendi - feed'e ekle
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("username, avatar_url")
+              .eq("id", newRecord.author_id)
+              .single();
+
+            const newPost: FeedPost = {
+              id: newRecord.id,
+              content: newRecord.content,
+              category: newRecord.category as PostCategory,
+              is_anonymous: newRecord.is_anonymous,
+              is_spoiler: newRecord.is_spoiler,
+              image_url: newRecord.image_url,
+              author_id: newRecord.author_id,
+              created_at: newRecord.created_at,
+              profiles: profileData as any,
+              reactions: [],
+              commentCount: 0,
+            };
+            setPosts((prev) => [newPost, ...prev]);
+          } else if (eventType === "UPDATE") {
+            // Post güncellendi - feed'deki post'u güncelle
+            setPosts((prev) =>
+              prev.map((post) =>
+                post.id === newRecord.id
+                  ? { ...post, ...newRecord, category: newRecord.category as PostCategory }
+                  : post
+              )
+            );
+          } else if (eventType === "DELETE") {
+            // Post silindi - feed'den çıkar
+            setPosts((prev) => prev.filter((post) => post.id !== oldRecord.id));
+          }
+        }
+      )
+      .subscribe();
+
+    // Reactions channel subscription
+    const reactionsChannel = supabase
+      .channel("reactions-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "post_reactions",
+        },
+        async (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload as any;
+
+          if (eventType === "INSERT" || eventType === "UPDATE") {
+            // Reaksiyon eklendi veya güncellendi - post'un reaksiyonlarını yeniden hesapla
+            const { data } = await supabase
+              .from("post_reactions")
+              .select("reaction_type")
+              .eq("post_id", newRecord.post_id);
+
+            const reactionsMap: Record<string, number> = {};
+            (data || []).forEach((r) => {
+              reactionsMap[r.reaction_type] = (reactionsMap[r.reaction_type] || 0) + 1;
+            });
+
+            const reactions = Object.entries(reactionsMap)
+              .map(([type, count]) => ({ type: type as ReactionType, count }))
+              .sort((a, b) => b.count - a.count);
+
+            setPosts((prev) =>
+              prev.map((post) =>
+                post.id === newRecord.post_id ? { ...post, reactions } : post
+              )
+            );
+          } else if (eventType === "DELETE") {
+            // Reaksiyon silindi - post'un reaksiyonlarını yeniden hesapla
+            const { data } = await supabase
+              .from("post_reactions")
+              .select("reaction_type")
+              .eq("post_id", oldRecord.post_id);
+
+            const reactionsMap: Record<string, number> = {};
+            (data || []).forEach((r) => {
+              reactionsMap[r.reaction_type] = (reactionsMap[r.reaction_type] || 0) + 1;
+            });
+
+            const reactions = Object.entries(reactionsMap)
+              .map(([type, count]) => ({ type: type as ReactionType, count }))
+              .sort((a, b) => b.count - a.count);
+
+            setPosts((prev) =>
+              prev.map((post) =>
+                post.id === oldRecord.post_id ? { ...post, reactions } : post
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    // Comments channel subscription
+    const commentsChannel = supabase
+      .channel("comments-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+        },
+        async (payload) => {
+          const { new: newRecord, old: oldRecord } = payload as any;
+          const postId = newRecord?.post_id || oldRecord?.post_id;
+
+          if (postId) {
+            // Yorum sayısını yeniden hesapla
+            const { count } = await supabase
+              .from("comments")
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", postId);
+
+            setPosts((prev) =>
+              prev.map((post) =>
+                post.id === postId ? { ...post, commentCount: count || 0 } : post
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup function
+    return () => {
+      postsChannel.unsubscribe();
+      reactionsChannel.unsubscribe();
+      commentsChannel.unsubscribe();
+    };
+  }, [user]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
