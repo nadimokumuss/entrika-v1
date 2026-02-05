@@ -13,6 +13,12 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Sparkles, MessageCircle, X } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import * as Haptics from "expo-haptics";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -325,7 +331,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -375,7 +381,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 47,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -410,9 +416,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   keepButton: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   keepButtonText: {
     fontSize: fontSize.md,

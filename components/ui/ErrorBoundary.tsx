@@ -4,6 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode | ((error: Error, retry: () => void) => ReactNode);
@@ -203,7 +209,7 @@ const styles = StyleSheet.create({
   },
   errorDetails: {
     width: "100%",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: `${colors.danger}30`,
@@ -247,9 +253,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
   },

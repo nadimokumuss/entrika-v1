@@ -3,6 +3,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { colors, gradients, spacing, fontSize, shadows, glass } from "@/constants/theme";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 interface TabBarProps {
   state: any;
   descriptors: any;
@@ -96,9 +102,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
     paddingTop: spacing.sm,
     paddingBottom: Platform.OS === "ios" ? 28 : 12,
     paddingHorizontal: spacing.sm,

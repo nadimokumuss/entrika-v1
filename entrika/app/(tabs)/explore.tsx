@@ -16,6 +16,12 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 interface ShadowProfileView {
   id: string;
   target_name: string;
@@ -256,9 +262,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -278,9 +284,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   warningBanner: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,

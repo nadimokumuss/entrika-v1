@@ -2,6 +2,12 @@ import { View, Text, StyleSheet } from "react-native";
 import { Check, CheckCheck } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { Message } from "@/lib/supabase";
 
 interface MessageBubbleProps {
@@ -76,10 +82,10 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: spacing.xs,
   },
   bubbleOther: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomLeftRadius: spacing.xs,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   content: {
     fontSize: fontSize.base,

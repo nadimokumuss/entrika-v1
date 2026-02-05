@@ -28,6 +28,12 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
@@ -418,10 +424,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   filterChipActive: {
     backgroundColor: colors.primary,
@@ -446,11 +452,11 @@ const styles = StyleSheet.create({
   notificationItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   notificationItemUnread: {
     backgroundColor: `${colors.primary}10`,

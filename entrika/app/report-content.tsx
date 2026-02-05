@@ -17,6 +17,12 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import { supabase, ReportType } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 const REPORT_REASONS = [
   { id: "inappropriate", label: "Uygunsuz İçerik" },
   { id: "harassment", label: "Taciz / Zorbalık" },
@@ -202,8 +208,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
-    backgroundColor: glass.background,
+    borderBottomColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
   },
   backButton: {
     padding: spacing.sm,
@@ -246,10 +252,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   reasonsContainer: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     overflow: "hidden",
   },
   reasonOption: {
@@ -258,7 +264,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   reasonOptionSelected: {
     backgroundColor: `${colors.primary}10`,
@@ -291,9 +297,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   detailsInput: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     fontSize: fontSize.base,

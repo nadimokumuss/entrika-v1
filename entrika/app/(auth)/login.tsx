@@ -17,6 +17,12 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 import { LinearGradient } from "expo-linear-gradient";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
@@ -179,9 +185,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,

@@ -24,6 +24,12 @@ import { supabase, type DatingProfile } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { pickImage, uploadImage, deleteImage, extractPathFromUrl, showImageSourcePicker } from "@/lib/storage";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 const INTERESTS_LIST = [
   "Müzik",
   "Spor",
@@ -454,9 +460,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   closeButton: {
     padding: spacing.sm,
@@ -528,16 +534,16 @@ const styles = StyleSheet.create({
     height: PHOTO_HEIGHT,
     borderRadius: borderRadius.lg,
     borderWidth: 2,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
   },
   textInput: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -557,8 +563,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: glass.border,
-    backgroundColor: glass.background,
+    borderColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
   },
   chipSelected: {
     borderColor: colors.primary,
@@ -582,8 +588,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: glass.border,
-    backgroundColor: glass.background,
+    borderColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
     alignItems: "center",
   },
   lookingForButtonSelected: {

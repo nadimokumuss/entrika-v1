@@ -18,6 +18,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 type Gender = "female" | "male";
 
 const FEMALE_AVATARS = [
@@ -309,9 +315,9 @@ const styles = StyleSheet.create({
   },
   genderOption: {
     flex: 1,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 2,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     paddingVertical: spacing.xl,
     alignItems: "center",
@@ -365,9 +371,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,

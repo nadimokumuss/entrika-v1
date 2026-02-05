@@ -27,6 +27,12 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, Message } from "@/lib/supabase";
 import {
@@ -369,7 +375,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
     borderBottomColor: glass.border,
   },
@@ -421,13 +427,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderTopWidth: 1,
     borderTopColor: glass.border,
   },
   textInput: {
     flex: 1,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
@@ -435,7 +441,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   sendButton: {
     width: 40,
@@ -462,7 +468,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardElevated,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     overflow: "hidden",
   },
   menuItem: {

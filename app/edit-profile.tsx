@@ -16,6 +16,12 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Save } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
@@ -312,7 +318,7 @@ const styles = StyleSheet.create({
     height: 72,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
   },
   avatarEmoji: {
     fontSize: 36,
@@ -335,9 +341,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     height: 50,
@@ -369,9 +375,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   bioInput: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,

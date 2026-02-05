@@ -33,6 +33,12 @@ import {
   Edit3,
 } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import GradientBackground from "@/components/ui/GradientBackground";
 import GlassCard from "@/components/ui/GlassCard";
 import { supabase } from "@/lib/supabase";
@@ -476,7 +482,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: glass.border,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
   },
   backButton: {
     padding: spacing.sm,
@@ -506,10 +512,10 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   sectionCard: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     overflow: "hidden",
   },
   row: {

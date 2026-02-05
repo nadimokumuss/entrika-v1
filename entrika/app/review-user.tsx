@@ -19,6 +19,12 @@ import GradientButton from "@/components/ui/GradientButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 const REVIEW_TAGS = {
   positive: ["Nazik", "Güvenilir", "Eğlenceli", "Samimi", "İlgili", "Saygılı", "Dürüst"],
   negative: ["Kaba", "Sahtekar", "Rahatsız Edici", "Yalancı", "Manipülatif", "Agresif", "Geç Cevap"],
@@ -288,9 +294,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   closeButton: {
     padding: spacing.sm,
@@ -352,8 +358,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: glass.border,
-    backgroundColor: glass.background,
+    borderColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -391,8 +397,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: glass.border,
-    backgroundColor: glass.background,
+    borderColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
   },
   tagChipPositiveActive: {
     borderColor: colors.success,
@@ -415,9 +421,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   commentInput: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     fontSize: fontSize.base,
@@ -436,10 +442,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginHorizontal: spacing.lg,
     marginTop: spacing.xl,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     padding: spacing.lg,
   },
   anonymousTextContainer: {

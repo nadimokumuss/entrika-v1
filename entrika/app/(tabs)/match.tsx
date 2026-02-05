@@ -40,6 +40,12 @@ import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 
@@ -687,9 +693,9 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH - spacing.md * 2,
   },
   card: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     overflow: "hidden",
     shadowColor: "#000",
@@ -818,7 +824,7 @@ const styles = StyleSheet.create({
   },
   details: {
     padding: spacing.lg,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
   },
   scoreSection: {
     marginBottom: spacing.md,
@@ -940,9 +946,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,

@@ -18,6 +18,12 @@ import { useRouter } from "expo-router";
 import { X, Image as ImageIcon, Send, XCircle } from "lucide-react-native";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { pickImage, uploadImage, showImageSourcePicker } from "@/lib/storage";
@@ -233,7 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
     borderBottomColor: glass.border,
   },
@@ -289,8 +295,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: glass.border,
-    backgroundColor: glass.background,
+    borderColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
   },
   categoryChipText: {
     fontSize: fontSize.sm,
@@ -320,7 +326,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   toolbar: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderTopWidth: 1,
     borderTopColor: glass.border,
     paddingHorizontal: spacing.lg,
@@ -344,9 +350,9 @@ const styles = StyleSheet.create({
   mediaButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

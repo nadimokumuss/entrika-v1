@@ -16,6 +16,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Trash2, Save, X, Check } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
+
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
@@ -279,7 +285,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   header: {
     flexDirection: "row",
@@ -318,9 +324,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   textInput: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
@@ -346,9 +352,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryChip: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -368,9 +374,9 @@ const styles = StyleSheet.create({
   optionRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
@@ -385,7 +391,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     marginRight: spacing.md,
     alignItems: "center",
     justifyContent: "center",

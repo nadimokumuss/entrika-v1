@@ -22,6 +22,12 @@ import {
 } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, shadows, gradients } from "@/constants/theme";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 interface PremiumModalProps {
   visible: boolean;
   onClose: () => void;
@@ -226,7 +232,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: borderRadius.xxl,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     ...shadows.lg,
   },
   header: {

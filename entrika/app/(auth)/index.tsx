@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Sparkles } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients } from "@/constants/theme";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 import { LinearGradient } from "expo-linear-gradient";

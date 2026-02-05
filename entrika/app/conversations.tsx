@@ -22,6 +22,12 @@ import {
 import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -209,9 +215,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   backButton: {
     padding: spacing.sm,
@@ -258,9 +264,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   avatar: {
     width: 48,

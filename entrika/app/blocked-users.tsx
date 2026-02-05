@@ -21,6 +21,12 @@ import {
   BlockedUserWithProfile,
 } from "@/lib/blocking";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   return date.toLocaleDateString("tr-TR", {
@@ -134,8 +140,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
-    backgroundColor: glass.background,
+    borderBottomColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
   },
   backButton: {
     padding: spacing.sm,
@@ -179,9 +185,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   avatar: {
     width: 44,

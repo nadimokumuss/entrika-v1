@@ -16,6 +16,12 @@ import { X, Sliders, MapPin, ChevronDown, Check } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 interface FilterModalProps {
   visible: boolean;
   onClose: () => void;
@@ -244,7 +250,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     maxHeight: "80%",
   },
   header: {
@@ -311,9 +317,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   ageButton: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -338,9 +344,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cityChip: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -379,9 +385,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     alignItems: "center",
   },
   resetButtonText: {
