@@ -13,6 +13,10 @@ import {
 import { X } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
 
+const glassFallback = glass || {
+  border: "rgba(255, 255, 255, 0.08)",
+};
+
 interface ModalProps {
   visible: boolean;
   onClose: () => void;
@@ -167,7 +171,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     ...Platform.select({
       ios: {
         shadowColor: "#000",

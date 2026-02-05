@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { colors, gradients, spacing, fontSize, shadows, glass } from "@/constants/theme";
+import { colors, gradients, spacing, fontSize, shadows } from "@/constants/theme";
 
 interface TabBarProps {
   state: any;
@@ -84,6 +84,11 @@ export default function GradientTabBar({ state, descriptors, navigation }: TabBa
     </View>
   );
 }
+
+const glass = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+};
 
 const styles = StyleSheet.create({
   wrapper: {

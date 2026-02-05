@@ -1,6 +1,11 @@
 import { ReactNode } from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { glass, colors, spacing, shadows } from "@/constants/theme";
+import { colors, spacing, shadows } from "@/constants/theme";
+
+const glass = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+};
 
 interface AnimatedHeaderProps {
   children: ReactNode;

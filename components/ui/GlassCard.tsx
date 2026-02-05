@@ -1,9 +1,9 @@
 import { ReactNode } from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { glass, colors, borderRadius, shadows } from "@/constants/theme";
+import { colors, borderRadius, shadows } from "@/constants/theme";
 
-// Fallback for web build compatibility
-const glassStyles = glass || {
+// Glass styles - inline for web build compatibility
+const glassStyles = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

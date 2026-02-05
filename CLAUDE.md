@@ -144,7 +144,7 @@ entrika/
 9. [x] Bildirim ekrani (in-app notifications + bell badge)
 
 ### Siradaki Ozellikler
-1. [ ] Profil duzenleme (username, bio, avatar degistirme)
+1. [x] Profil duzenleme (username, bio, avatar degistirme)
 2. [ ] Post silme / duzenleme
 3. [ ] Feed'de realtime guncellemeler
 4. [ ] Gelismis filtreleme (match'te yas, lokasyon)
@@ -188,6 +188,7 @@ entrika/
 - **Hydration fix:** `_layout.tsx`'te `isClient` state pattern - SSR'da bos View render edilir, client mount sonrasi gercek icerik
 - **SecureStore:** Web'de `require('expo-secure-store')` yerine `localStorage` kullanilir
 - **Auth storage:** Web'de localStorage, native'de SecureStore
+- **Glass degiskeni fix:** StyleSheet.create icerisinde import edilen glass web build'te sorun yaratıyordu. Kritik bilesenlerde inline glass tanimi veya glassFallback kullanildi
 
 ---
 

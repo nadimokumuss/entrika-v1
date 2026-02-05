@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 
 interface EmptyStateProps {
   type: "feed" | "match" | "explore" | "notifications" | "messages" | "profile";

@@ -1,6 +1,6 @@
 # Entrika - Project Details
 
-> Son güncelleme: 2026-02-04
+> Son güncelleme: 2026-02-05
 > Versiyon: 0.1.0 (MVP Development)
 
 ---
@@ -224,8 +224,31 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
   - Auth ekranlari, profil, ayarlar, chat, explore, match, bildirimler, raporlama tum ekranlar duzeltildi
 - **Not:** Veritabaninda eski etiket degerleriyle kaydedilmis degerlendirmeler varsa migration gerekebilir
 
+### 2026-02-05 - Profil Duzenleme
+- Profil duzenleme ozelligi tamamlandi:
+  - `app/edit-profile.tsx` - Username ve bio duzenleme ekrani
+  - Username validasyonlari (3-20 karakter, unique kontrol, harf/rakam/_ only)
+  - Bio 150 karakter limiti
+  - `app/(tabs)/profile.tsx` - Avatar degistirme (kamera/galeri secimi)
+  - Avatar upload Supabase Storage ile yapiliyor
+  - Eski avatar otomatik siliniyor
+
+### 2026-02-05 - Web Build Fix (glass is not defined)
+- Vercel web build'de "glass is not defined" hatasi duzeltildi:
+  - `components/ui/GradientTabBar.tsx` - Inline glass tanimi
+  - `components/ui/AnimatedHeader.tsx` - Inline glass tanimi
+  - `components/ui/GlassCard.tsx` - Inline glass tanimi
+  - `components/ui/Modal.tsx` - glassFallback eklendi
+  - `components/ui/ErrorState.tsx` - glassFallback eklendi
+  - `components/ui/EmptyState.tsx` - Gereksiz glass import kaldirildi
+  - `app/(auth)/index.tsx` - Gereksiz glass import kaldirildi
+  - `app/(auth)/login.tsx` - glassFallback eklendi
+  - `app/(auth)/register.tsx` - glassFallback eklendi
+  - `app/(tabs)/_layout.tsx` - Gereksiz glass import kaldirildi
+- **Sorun:** StyleSheet.create icerisinde import edilen glass degiskeni web build sirasinda module resolution sorunu yaratıyordu
+- **Cozum:** Kritik bilesenlerde inline glass tanimi veya glassFallback kullanildi
+
 ### Sonraki Oturum Icin Notlar
-- Profil duzenleme (username, bio, avatar degistirme)
 - Post silme / duzenleme
 - Feed'de realtime guncellemeler
 - Gelismis filtreleme (match'te yas, lokasyon)

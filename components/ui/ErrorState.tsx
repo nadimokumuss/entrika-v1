@@ -5,6 +5,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AlertOctagon, RefreshCw, WifiOff, ServerCrash } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
 
+const glassFallback = glass || {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+};
+
 interface ErrorStateProps {
   type: "network" | "server" | "auth" | "not-found" | "general";
   message?: string;
@@ -137,9 +142,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import { Home, Search, User, PlusCircle, Heart } from "lucide-react-native";
-import { colors, glass } from "@/constants/theme";
+import { colors } from "@/constants/theme";
 import GradientTabBar from "@/components/ui/GradientTabBar";
 
 export default function TabLayout() {
