@@ -13,9 +13,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock, AtSign, ChevronLeft, Mail } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
 };

@@ -14,9 +14,9 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { X, Sliders, MapPin, ChevronDown, Check } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

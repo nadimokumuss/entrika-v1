@@ -13,12 +13,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock, AtSign, ChevronLeft, Mail } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

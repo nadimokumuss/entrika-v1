@@ -13,13 +13,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

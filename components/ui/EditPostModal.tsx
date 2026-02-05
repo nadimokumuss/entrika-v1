@@ -15,9 +15,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Trash2, Save, X, Check } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, borderRadius, spacing, fontSize, glass, gradients } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients } from "@/constants/theme";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

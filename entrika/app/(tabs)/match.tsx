@@ -29,7 +29,7 @@ import {
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -40,7 +40,7 @@ import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

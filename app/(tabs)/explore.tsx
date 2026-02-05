@@ -10,10 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, AlertTriangle } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   backgroundLight: "rgba(22, 22, 31, 0.4)",
   border: "rgba(255, 255, 255, 0.08)",

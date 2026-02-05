@@ -24,11 +24,11 @@ import {
   type ReactionType,
 } from "@/data/mockData";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 
-// Fallback for glass (web build compatibility)
-const glassFallback = glass || {
+// Glass styles - inline for web build compatibility
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   backgroundLight: "rgba(22, 22, 31, 0.4)",
   border: "rgba(255, 255, 255, 0.08)",

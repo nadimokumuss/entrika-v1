@@ -11,9 +11,9 @@ import {
   Dimensions,
 } from "react-native";
 import { X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 
-const glassFallback = glass || {
+const glassFallback = {
   border: "rgba(255, 255, 255, 0.08)",
 };
 

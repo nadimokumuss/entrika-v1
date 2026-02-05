@@ -32,13 +32,13 @@ import {
   ShieldBan,
   Edit3,
 } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GlassCard from "@/components/ui/GlassCard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

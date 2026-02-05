@@ -14,10 +14,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Settings, Share2, Heart, Star, Camera, Edit3, Bookmark } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 import { supabase, UserReview } from "@/lib/supabase";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   backgroundLight: "rgba(22, 22, 31, 0.4)",
   border: "rgba(255, 255, 255, 0.08)",

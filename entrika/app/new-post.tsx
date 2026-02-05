@@ -17,13 +17,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { X, Image as ImageIcon, Send, XCircle } from "lucide-react-native";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
-import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { pickImage, uploadImage, showImageSourcePicker } from "@/lib/storage";
 import GradientBackground from "@/components/ui/GradientBackground";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

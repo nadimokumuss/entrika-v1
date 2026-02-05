@@ -10,13 +10,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, AlertTriangle } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass, gradients, shadows } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

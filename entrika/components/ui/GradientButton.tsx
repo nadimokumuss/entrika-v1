@@ -16,10 +16,9 @@ import {
   spacing,
   fontSize,
   shadows,
-  glass,
 } from "@/constants/theme";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",

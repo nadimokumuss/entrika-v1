@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ChevronLeft, ShieldOff, UserX } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, glass } from "@/constants/theme";
+import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 import GradientBackground from "@/components/ui/GradientBackground";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -21,7 +21,7 @@ import {
   BlockedUserWithProfile,
 } from "@/lib/blocking";
 
-const glassFallback = glass || {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",
