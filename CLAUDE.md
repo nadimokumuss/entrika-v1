@@ -188,7 +188,19 @@ entrika/
 - **Hydration fix:** `_layout.tsx`'te `isClient` state pattern - SSR'da bos View render edilir, client mount sonrasi gercek icerik
 - **SecureStore:** Web'de `require('expo-secure-store')` yerine `localStorage` kullanilir
 - **Auth storage:** Web'de localStorage, native'de SecureStore
-- **Glass degiskeni fix:** StyleSheet.create icerisinde import edilen glass web build'te sorun yaratıyordu. Kritik bilesenlerde inline glass tanimi veya glassFallback kullanildi
+- **Glass degiskeni fix (TAMAMLANDI):** Artık glass import edilmiyor. Tum dosyalarda inline glassFallback kullaniliyor:
+  ```typescript
+  const glassFallback = {
+    background: "rgba(22, 22, 31, 0.6)",
+    border: "rgba(255, 255, 255, 0.08)",
+    borderHighlight: "rgba(168, 85, 247, 0.2)",
+  };
+  ```
+
+### Proje Yapisi
+- **Repo Root:** `C:\Users\reiss\Desktop\Entrika v1\entrika\`
+- **Duplika klasor:** YOK (entrika/entrika/ silindi - 2026-02-06)
+- **Tum dosyalar tek ve dogru lokasyonda
 
 ---
 

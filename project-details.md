@@ -233,20 +233,19 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
   - Avatar upload Supabase Storage ile yapiliyor
   - Eski avatar otomatik siliniyor
 
-### 2026-02-05 - Web Build Fix (glass is not defined)
-- Vercel web build'de "glass is not defined" hatasi duzeltildi:
-  - `components/ui/GradientTabBar.tsx` - Inline glass tanimi
-  - `components/ui/AnimatedHeader.tsx` - Inline glass tanimi
-  - `components/ui/GlassCard.tsx` - Inline glass tanimi
-  - `components/ui/Modal.tsx` - glassFallback eklendi
-  - `components/ui/ErrorState.tsx` - glassFallback eklendi
-  - `components/ui/EmptyState.tsx` - Gereksiz glass import kaldirildi
-  - `app/(auth)/index.tsx` - Gereksiz glass import kaldirildi
-  - `app/(auth)/login.tsx` - glassFallback eklendi
-  - `app/(auth)/register.tsx` - glassFallback eklendi
-  - `app/(tabs)/_layout.tsx` - Gereksiz glass import kaldirildi
+### 2026-02-05 - Web Build Fix (glass is not defined) - TAMAMLANDI
+- Vercel web build'de "glass is not defined" hatasi tamamen duzeltildi:
+  - TUM dosyalardan glass import kaldirildi
+  - Her dosyada inline glassFallback tanimi yapildi
+  - 50+ dosya duzeltildi
 - **Sorun:** StyleSheet.create icerisinde import edilen glass degiskeni web build sirasinda module resolution sorunu yaratıyordu
-- **Cozum:** Kritik bilesenlerde inline glass tanimi veya glassFallback kullanildi
+- **Cozum:** glass artık import edilmiyor, her dosyada inline glassFallback kullaniliyor
+
+### 2026-02-06 - Proje Yapısı Temizligi
+- `entrika/entrika/` duplika klasoru tamamen silindi (85 dosya, -26,242 satır)
+- Proje yapısı temizlendi ve tek bir yapıya indirgendi
+- Dosya duzenlemeleri artik sorunsuz calisiyor
+- Repo root: `C:\Users\reiss\Desktop\Entrika v1\entrika\`
 
 ### Sonraki Oturum Icin Notlar
 - Post silme / duzenleme
