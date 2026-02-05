@@ -18,7 +18,7 @@ import {
   shadows,
 } from "@/constants/theme";
 
-const glass = {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
   borderHighlight: "rgba(168, 85, 247, 0.2)",
@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: glass.borderHighlight,
-    backgroundColor: glass.background,
+    borderColor: glassFallback.borderHighlight,
+    backgroundColor: glassFallback.background,
   },
   outlineText: {
     color: colors.primary,

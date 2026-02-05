@@ -107,7 +107,7 @@ export function FilterModal({
                   step={1}
                   value={ageMin}
                   onValueChange={setAgeMin}
-                  minimumTrackTintColor={glass.border}
+                  minimumTrackTintColor={glassFallback.border}
                   maximumTrackTintColor={colors.primary}
                   thumbTintColor={colors.primary}
                 />
@@ -118,7 +118,7 @@ export function FilterModal({
                   step={1}
                   value={ageMax}
                   onValueChange={setAgeMax}
-                  minimumTrackTintColor={glass.border}
+                  minimumTrackTintColor={glassFallback.border}
                   maximumTrackTintColor={colors.primary}
                   thumbTintColor={colors.primary}
                 />
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   title: {
     fontSize: fontSize.xl,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   resetButton: {
     flex: 1,

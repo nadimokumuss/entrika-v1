@@ -85,7 +85,7 @@ export default function GradientTabBar({ state, descriptors, navigation }: TabBa
   );
 }
 
-const glass = {
+const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
   border: "rgba(255, 255, 255, 0.08)",
 };
@@ -101,9 +101,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
     paddingTop: spacing.sm,
     paddingBottom: Platform.OS === "ios" ? 28 : 12,
     paddingHorizontal: spacing.sm,

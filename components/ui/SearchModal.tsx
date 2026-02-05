@@ -18,9 +18,14 @@ import {
   borderRadius,
   spacing,
   fontSize,
-  glass,
   shadows,
 } from "@/constants/theme";
+
+const glassFallback = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "expo-router";
 
@@ -425,7 +430,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     maxHeight: "80%",
   },
   header: {
@@ -434,14 +439,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
     gap: spacing.md,
   },
   searchContainer: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     height: 44,
@@ -471,10 +476,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   categoryChipActive: {
     backgroundColor: colors.primary,
@@ -522,7 +527,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.md,
   },
   recentText: {
@@ -554,7 +559,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
     gap: spacing.md,
   },
   resultIcon: {

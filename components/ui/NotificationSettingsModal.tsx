@@ -28,9 +28,14 @@ import {
   borderRadius,
   spacing,
   fontSize,
-  glass,
   shadows,
 } from "@/constants/theme";
+
+const glassFallback = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import {
   NotificationPreferences,
   DEFAULT_NOTIFICATION_PREFERENCES,
@@ -62,9 +67,9 @@ function ToggleSwitch({
       value={value}
       onValueChange={onValueChange}
       disabled={disabled}
-      trackColor={{ false: glass.border, true: colors.primary }}
+      trackColor={{ false: glassFallback.border, true: colors.primary }}
       thumbColor={value ? colors.white : colors.textMuted}
-      ios_backgroundColor={glass.border}
+      ios_backgroundColor={glassFallback.border}
     />
   );
 }
@@ -331,7 +336,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     maxHeight: "85%",
   },
   header: {
@@ -341,7 +346,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   headerLeft: {
     flexDirection: "row",
@@ -377,7 +382,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   settingRowBorder: {
     borderBottomWidth: 0,
@@ -398,12 +403,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   categoryContainer: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   categoryHeader: {
     marginBottom: spacing.sm,
@@ -458,7 +463,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   saveButton: {
     borderRadius: borderRadius.lg,

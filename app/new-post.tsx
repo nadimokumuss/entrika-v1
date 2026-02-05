@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   closeButton: {
     padding: spacing.sm,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   toolbar: {
     backgroundColor: glassFallback.background,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
   },

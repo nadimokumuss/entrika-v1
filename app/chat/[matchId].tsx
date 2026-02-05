@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   backButton: {
     padding: spacing.sm,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     backgroundColor: glassFallback.background,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   textInput: {
     flex: 1,
@@ -485,6 +485,6 @@ const styles = StyleSheet.create({
   },
   menuDivider: {
     height: 1,
-    backgroundColor: glass.border,
+    backgroundColor: glassFallback.border,
   },
 });

@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
     backgroundColor: glassFallback.background,
   },
   backButton: {
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     height: 1,
-    backgroundColor: glass.border,
+    backgroundColor: glassFallback.border,
     marginLeft: spacing.lg + 20 + spacing.md,
   },
   signOutButton: {

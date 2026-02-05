@@ -4,6 +4,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Animated } from "react-native";
 import { colors, gradients } from "@/constants/theme";
 
+const glassFallback = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+
 interface SkeletonProps {
   width?: number | string;
   height?: number;
@@ -176,7 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   header: {
     flexDirection: "row",
@@ -206,7 +212,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   avatarContainer: {
     marginBottom: 12,
@@ -230,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   statBox: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: 8,
   },
   bioContainer: {
@@ -244,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   matchImage: {
     width: "100%",

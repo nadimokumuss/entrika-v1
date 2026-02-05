@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   closeButton: {
     padding: spacing.sm,

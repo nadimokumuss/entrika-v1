@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   backButton: {
     padding: spacing.sm,
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   saveButton: {
     flexDirection: "row",

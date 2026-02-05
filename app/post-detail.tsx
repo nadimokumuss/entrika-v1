@@ -32,9 +32,14 @@ import {
   borderRadius,
   spacing,
   fontSize,
-  glass,
   shadows,
 } from "@/constants/theme";
+
+const glassFallback = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
 import {
   CATEGORIES,
   REACTIONS,
@@ -686,9 +691,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderBottomWidth: 1,
-    borderBottomColor: glass.border,
+    borderBottomColor: glassFallback.border,
   },
   backButton: {
     padding: spacing.sm,
@@ -756,9 +761,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   spoilerBox: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
   },
@@ -786,7 +791,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   authorAvatar: {
     width: 24,
@@ -805,7 +810,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   reactionsList: {
     flexDirection: "row",
@@ -817,9 +822,9 @@ const styles = StyleSheet.create({
   reactionChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
@@ -849,9 +854,9 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -50 }],
   },
   reactionPicker: {
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     flexDirection: "row",
@@ -893,9 +898,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -943,9 +948,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderTopWidth: 1,
-    borderTopColor: glass.border,
+    borderTopColor: glassFallback.border,
   },
   inputRow: {
     flexDirection: "row",
@@ -953,7 +958,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    backgroundColor: glass.background,
+    backgroundColor: glassFallback.background,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
@@ -961,7 +966,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
   },
   sendButton: {
     width: 40,
@@ -1012,7 +1017,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardElevated,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glass.border,
+    borderColor: glassFallback.border,
     overflow: "hidden",
   },
   menuItem: {
@@ -1029,6 +1034,6 @@ const styles = StyleSheet.create({
   },
   menuDivider: {
     height: 1,
-    backgroundColor: glass.border,
+    backgroundColor: glassFallback.border,
   },
 });
