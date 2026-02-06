@@ -1,5 +1,6 @@
 -- Review Notifications Trigger
 -- Creates a notification when someone reviews your profile
+-- Mevcut notifications tablosuna uyumlu sürüm
 
 -- Function to create notification on new review
 CREATE OR REPLACE FUNCTION notify_on_review()
@@ -10,7 +11,7 @@ AS $$
 BEGIN
   -- Don't notify if the reviewer is reviewing themselves
   IF NEW.target_user_id != NEW.reviewer_id THEN
-    INSERT INTO notifications (receiver_id, sender_id, type, data)
+    INSERT INTO notifications (recipient_id, sender_id, type, metadata)
     VALUES (
       NEW.target_user_id,
       NEW.reviewer_id,
@@ -36,8 +37,3 @@ CREATE TRIGGER on_review_insert
 AFTER INSERT ON user_reviews
 FOR EACH ROW
 EXECUTE FUNCTION notify_on_review();
-
--- Grant permissions on user_reviews
-GRANT SELECT ON user_reviews TO authenticated;
-GRANT INSERT ON user_reviews TO authenticated;
-GRANT UPDATE ON user_reviews TO authenticated;
