@@ -23,24 +23,39 @@ import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 
-type Gender = "female" | "male";
+type Gender = "female" | "male" | "other";
 
 const FEMALE_AVATARS = [
-  "https://api.dicebear.com/7.x/lorelei/png?seed=luna",
-  "https://api.dicebear.com/7.x/lorelei/png?seed=stella",
-  "https://api.dicebear.com/7.x/lorelei/png?seed=violet",
-  "https://api.dicebear.com/7.x/lorelei/png?seed=rose",
-  "https://api.dicebear.com/7.x/lorelei/png?seed=jade",
-  "https://api.dicebear.com/7.x/lorelei/png?seed=sophie",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=luna",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=stella",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=violet",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=rose",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=jade",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=sophie",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=nova",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=ariel",
 ];
 
 const MALE_AVATARS = [
-  "https://api.dicebear.com/7.x/avataaars/png?seed=jack",
-  "https://api.dicebear.com/7.x/avataaars/png?seed=alex",
-  "https://api.dicebear.com/7.x/avataaars/png?seed=max",
-  "https://api.dicebear.com/7.x/avataaars/png?seed=leo",
-  "https://api.dicebear.com/7.x/avataaars/png?seed=sam",
-  "https://api.dicebear.com/7.x/avataaars/png?seed=ben",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=jack",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=alex",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=max",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=leo",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=sam",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=ben",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=felix",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=oscar",
+];
+
+const OTHER_AVATARS = [
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=quinn",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=river",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=skyler",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=alex",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=jordan",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=taylor",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=morgan",
+  "https://api.dicebear.com/7.x/pixel-art/png?seed=casey",
 ];
 
 export default function RegisterScreen() {
@@ -54,11 +69,17 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const avatarOptions = gender === "female" ? FEMALE_AVATARS : gender === "male" ? MALE_AVATARS : [];
+  const avatarOptions = gender === "female" ? FEMALE_AVATARS : gender === "male" ? MALE_AVATARS : gender === "other" ? OTHER_AVATARS : [];
 
   const handleGenderSelect = (selectedGender: Gender) => {
     setGender(selectedGender);
-    setSelectedAvatar(selectedGender === "female" ? FEMALE_AVATARS[0] : MALE_AVATARS[0]);
+    if (selectedGender === "female") {
+      setSelectedAvatar(FEMALE_AVATARS[0]);
+    } else if (selectedGender === "male") {
+      setSelectedAvatar(MALE_AVATARS[0]);
+    } else {
+      setSelectedAvatar(OTHER_AVATARS[0]);
+    }
   };
 
   const handleRegister = async () => {
@@ -174,6 +195,23 @@ export default function RegisterScreen() {
                     ]}
                   >
                     Erkek
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleGenderSelect("other")}
+                  style={[
+                    styles.genderOption,
+                    gender === "other" && styles.genderOptionSelected,
+                  ]}
+                >
+                  <Text style={styles.genderEmoji}>🎭</Text>
+                  <Text
+                    style={[
+                      styles.genderText,
+                      gender === "other" && styles.genderTextSelected,
+                    ]}
+                  >
+                    Belirtmek İstemiyorum
                   </Text>
                 </TouchableOpacity>
               </View>

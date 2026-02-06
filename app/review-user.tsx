@@ -26,8 +26,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
 const REVIEW_TAGS = {
-  positive: ["Nazik", "Güvenilir", "Eğlenceli", "Samimi", "İlgili", "Saygılı", "Dürüst"],
-  negative: ["Kaba", "Sahtekar", "Rahatsız Edici", "Yalancı", "Manipülatif", "Agresif", "Geç Cevap"],
+  positive: ["Nazik", "Güvenilir", "Eğlenceli", "Samimi", "İlgili", "Saygılı", "Dürüst", "Tatlı Sözler", "İyi Dinleyici", "Anlayışlı"],
+  negative: ["Kaba", "Sahtekar", "Rahatsız Edici", "Yalancı", "Manipülatif", "Ağresif", "Geç Cevap", "İlgisiz", "Kıskanç"],
+};
+
+const SCORE_EMOJIS: Record<number, string> = {
+  1: "😡",
+  2: "😠",
+  3: "🙁",
+  4: "😕",
+  5: "😐",
+  6: "🙂",
+  7: "😊",
+  8: "😃",
+  9: "😍",
+  10: "🤩",
+};
+
+const SCORE_LABELS: Record<number, string> = {
+  1: "Berbat",
+  2: "Çok Kötü",
+  3: "Kötü",
+  4: "İdare Eder",
+  5: "Orta",
+  6: "Güzel",
+  7: "İyi",
+  8: "Çok İyi",
+  9: "Mükemmel",
+  10: "Harika",
 };
 
 export default function ReviewUserScreen() {
@@ -157,6 +183,12 @@ export default function ReviewUserScreen() {
           {/* Puan Seçimi */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Puan</Text>
+            {score !== null && (
+              <View style={styles.scoreFeedback}>
+                <Text style={styles.scoreEmoji}>{SCORE_EMOJIS[score]}</Text>
+                <Text style={styles.scoreLabel}>{SCORE_LABELS[score]}</Text>
+              </View>
+            )}
             <View style={styles.scoreRow}>
               {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
                 <TouchableOpacity
@@ -169,6 +201,7 @@ export default function ReviewUserScreen() {
                     score === num && num < 4 && styles.scoreButtonRed,
                   ]}
                   onPress={() => setScore(num)}
+                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -386,6 +419,24 @@ const styles = StyleSheet.create({
   },
   scoreButtonTextActive: {
     color: colors.white,
+  },
+  scoreFeedback: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    paddingVertical: spacing.lg,
+    backgroundColor: glassFallback.background,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+  },
+  scoreEmoji: {
+    fontSize: 48,
+  },
+  scoreLabel: {
+    fontSize: fontSize.lg,
+    fontWeight: "600",
+    color: colors.text,
+    marginTop: spacing.sm,
   },
   tagsRow: {
     flexDirection: "row",

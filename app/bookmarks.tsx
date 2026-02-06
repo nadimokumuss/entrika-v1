@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bookmark, Trash2, Heart } from "lucide-react-native";
+import { Bookmark, Trash2, Heart, ArrowLeft } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getUserBookmarks,
@@ -153,6 +153,9 @@ export default function BookmarksScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color={colors.text} />
+        </TouchableOpacity>
         <Bookmark size={24} color={colors.primary} />
         <Text style={styles.headerTitle}>Kaydedilenler</Text>
         <Text style={styles.headerCount}>{bookmarks.length}</Text>
@@ -257,6 +260,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: spacing.md,
+  },
+  backButton: {
+    padding: spacing.sm,
+    marginLeft: -spacing.sm,
   },
   headerTitle: {
     flex: 1,

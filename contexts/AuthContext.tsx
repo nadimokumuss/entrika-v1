@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase, Profile, Gender } from "@/lib/supabase";
+import { supabase, Profile, type Gender } from "@/lib/supabase";
 import { deactivatePushTokens } from "@/lib/notifications";
 
 // Mock modda çalışmak için (Supabase aktif, false yap)

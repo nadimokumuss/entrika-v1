@@ -8,7 +8,17 @@ export type PostCategory =
   | "tavsiye";
 
 // Reaksiyon tipleri
-export type ReactionType = "alev" | "yanindayim" | "yilan" | "sok" | "helal";
+export type ReactionType =
+  | "alev"
+  | "yanindayim"
+  | "yilan"
+  | "sok"
+  | "helal"
+  | "begeni"
+  | "ofke"
+  | "korku"
+  | "huzun"
+  | "saskinlik";
 
 export interface Reaction {
   type: ReactionType;
@@ -70,4 +80,9 @@ export const REACTIONS: Record<
   yilan: { emoji: "🐍", label: "Yılan" },
   sok: { emoji: "😱", label: "Şok" },
   helal: { emoji: "👏", label: "Helal" },
+  begeni: { emoji: "❤️", label: "Beğeni" },
+  ofke: { emoji: "😡", label: "Öfke" },
+  korku: { emoji: "😨", label: "Korku" },
+  huzun: { emoji: "😢", label: "Hüzün" },
+  saskinlik: { emoji: "😲", label: "Şaşkınlık" },
 };

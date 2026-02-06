@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Sparkles } from "lucide-react-native";
@@ -31,7 +32,11 @@ export default function WelcomeScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.logoCircle}
             >
-              <Sparkles size={40} color={colors.white} />
+              <Image
+                source={require("../assets/entrika-logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </LinearGradient>
             <Text style={styles.title}>ENTRIKA</Text>
             <Text style={styles.subtitle}>Tanışmadan Önce Tanı</Text>
@@ -80,6 +85,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,
+    overflow: "hidden",
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
   },
   title: {
     fontSize: 32,

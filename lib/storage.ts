@@ -119,9 +119,22 @@ export function extractPathFromUrl(url: string, bucket: Bucket): string | null {
 export function showImageSourcePicker(
   callback: (source: "gallery" | "camera") => void
 ): void {
-  Alert.alert("Fotograf Sec", "Nereden yuklemek istersin?", [
-    { text: "Galeri", onPress: () => callback("gallery") },
-    { text: "Kamera", onPress: () => callback("camera") },
-    { text: "Iptal", style: "cancel" },
-  ]);
+  if (Platform.OS === "web") {
+    // Web: Use alert as fallback, component should be used for better UX
+    alert("Galeriden fotoğraf seçmek için lütfen ilgili butona tıklayın.");
+  } else if (Platform.OS === "ios") {
+    // iOS: Use ActionSheetIOS (handled by ImageSourcePicker component)
+    Alert.alert("Fotoğraf Seç", "Nereden yüklemek istersin?", [
+      { text: "Galeri", onPress: () => callback("gallery") },
+      { text: "Kamera", onPress: () => callback("camera") },
+      { text: "İptal", style: "cancel" },
+    ]);
+  } else {
+    // Android: Use Alert as fallback
+    Alert.alert("Fotoğraf Seç", "Nereden yüklemek istersin?", [
+      { text: "Galeri", onPress: () => callback("gallery") },
+      { text: "Kamera", onPress: () => callback("camera") },
+      { text: "İptal", style: "cancel" },
+    ]);
+  }
 }

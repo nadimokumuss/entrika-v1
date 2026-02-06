@@ -8,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock, Mail, ChevronLeft, Sparkles } from "lucide-react-native";
@@ -78,7 +79,11 @@ export default function LoginScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.logoCircle}
             >
-              <Sparkles size={32} color={colors.white} />
+              <Image
+                source={require("../assets/entrika-logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </LinearGradient>
             <Text style={styles.title}>Tekrar Hoş Geldin</Text>
             <Text style={styles.subtitle}>Hesabına giriş yap</Text>
@@ -168,6 +173,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,
+    overflow: "hidden",
+  },
+  logoImage: {
+    width: 48,
+    height: 48,
   },
   title: {
     fontSize: 28,

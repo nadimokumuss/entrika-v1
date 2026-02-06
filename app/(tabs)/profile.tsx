@@ -8,10 +8,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Heart, Star, Camera, Edit3, Bookmark } from "lucide-react-native";
+import { Settings, Share2, Heart, Star, Camera, Edit3, Bookmark, Award, ChevronRight } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
@@ -29,6 +30,12 @@ import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, dele
 import GradientBackground from "@/components/ui/GradientBackground";
 
 type TabType = "paylaşımlar" | "degerlendirmeler";
+
+interface Badge {
+  id: string;
+  name: string;
+  emoji: string;
+}
 
 interface ReviewWithReviewer extends UserReview {
   reviewer?: { username: string } | null;
@@ -65,6 +72,7 @@ export default function ProfileScreen() {
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [reviews, setReviews] = useState<ReviewWithReviewer[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -98,6 +106,17 @@ export default function ProfileScreen() {
         .order("created_at", { ascending: false });
 
       setReviews((reviewsData as ReviewWithReviewer[]) || []);
+
+      // Fetch user badges
+      const { data: badgesData } = await supabase
+        .from("user_badges")
+        .select("badge_id, badges(*)")
+        .eq("user_id", user.id)
+        .limit(3);
+
+      if (badgesData) {
+        setBadges(badgesData.map((ub: any) => ub.badges).filter(Boolean));
+      }
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
@@ -144,6 +163,30 @@ export default function ProfileScreen() {
     });
   };
 
+  const handleShare = async () => {
+    if (!profile) return;
+
+    const shareUrl = `https://entrika.vercel.app/u/${profile.username}`;
+    const shareMessage = `@${profile.username} profiline göz at! Entrika'da tanışmadan önce tanı.`;
+
+    try {
+      if (Platform.OS === "web") {
+        // Web: Copy to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        Alert.alert("Kopyalandı", "Profil linki panoya kopyalandı!");
+      } else {
+        // Native: Use Share API
+        const { Share } = require("react-native");
+        await Share.share({
+          message: `${shareMessage}\n\n${shareUrl}`,
+          url: shareUrl,
+        });
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+    }
+  };
+
   if (!profile) {
     return (
       <GradientBackground variant="screen">
@@ -177,7 +220,7 @@ export default function ProfileScreen() {
             >
               <Bookmark size={22} color={colors.textLight} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
               <Share2 size={22} color={colors.textLight} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -269,6 +312,28 @@ export default function ProfileScreen() {
                 <Text style={styles.statLabel}>Değerlendirme</Text>
               </View>
             </View>
+
+            {/* Rozetler */}
+            {badges.length > 0 && (
+              <TouchableOpacity
+                style={styles.badgesRow}
+                onPress={() => router.push("/badges")}
+                activeOpacity={0.7}
+              >
+                <View style={styles.badgesInfo}>
+                  <Award size={18} color={colors.primary} />
+                  <Text style={styles.badgesText}>Rozetlerim</Text>
+                </View>
+                <View style={styles.badgesList}>
+                  {badges.slice(0, 3).map((badge) => (
+                    <View key={badge.id} style={styles.miniBadge}>
+                      <Text style={styles.miniBadgeEmoji}>{badge.emoji}</Text>
+                    </View>
+                  ))}
+                  <ChevronRight size={16} color={colors.textMuted} />
+                </View>
+              </TouchableOpacity>
+            )}
 
             {/* Dating Profili Butonu */}
             <TouchableOpacity
@@ -571,6 +636,44 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     backgroundColor: glassFallback.border,
+  },
+  badgesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: spacing.md,
+    backgroundColor: glassFallback.background,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: `${colors.primary}30`,
+    padding: spacing.md,
+    width: "100%",
+  },
+  badgesInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  badgesText: {
+    color: colors.primary,
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+  },
+  badgesList: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  miniBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: `${colors.primary}20`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  miniBadgeEmoji: {
+    fontSize: 14,
   },
   datingProfileButton: {
     flexDirection: "row",

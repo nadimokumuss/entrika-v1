@@ -15,21 +15,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Akis",
+          title: "Akış",
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="match"
         options={{
-          title: "Esles",
+          title: "Eşleş",
           tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Kesfet",
+          title: "Keşfet",
           tabBarIcon: ({ color }) => <Search size={24} color={color} />,
         }}
       />

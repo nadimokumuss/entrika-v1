@@ -62,6 +62,11 @@ interface FeedPost {
   };
   reactions: { type: ReactionType; count: number }[];
   commentCount: number;
+  topComment?: {
+    content: string;
+    author: string;
+    likes: number;
+  } | null;
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -273,6 +278,19 @@ const PostCard = memo(function PostCard({
             </TouchableOpacity>
           </View>
 
+          {/* Top Comment Preview */}
+          {post.topComment && (
+            <TouchableOpacity style={styles.topCommentPreview} onPress={handlePress}>
+              <View style={styles.topCommentLine} />
+              <View style={styles.topCommentContent}>
+                <Text style={styles.topCommentAuthor}>{post.topComment.author}</Text>
+                <Text style={styles.topCommentText} numberOfLines={2}>
+                  {post.topComment.content}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           {/* Reaksiyon Secici */}
           {showReactions && (
             <View style={styles.reactionPickerOverlay}>
@@ -410,11 +428,15 @@ export default function FeedScreen() {
         .select("post_id, reaction_type")
         .in("post_id", postIds);
 
-      // Fetch comment counts
+      // Fetch comment counts and top comments
       const { data: commentsData } = await supabase
         .from("comments")
-        .select("post_id")
-        .in("post_id", postIds);
+        .select("post_id, content, is_anonymous, profiles(username)")
+        .in("post_id", postIds)
+        .order("created_at", { ascending: false });
+
+      // For top comment, we'll need reaction counts per comment
+      // This is a simplified version - in production you might want to optimize this
 
       // Aggregate reactions per post
       const reactionsMap: Record<string, Record<string, number>> = {};
@@ -424,10 +446,19 @@ export default function FeedScreen() {
           (reactionsMap[r.post_id][r.reaction_type] || 0) + 1;
       });
 
-      // Count comments per post
+      // Count comments per post and track top comment
       const commentsMap: Record<string, number> = {};
-      (commentsData || []).forEach((c) => {
+      const topCommentMap: Record<string, { content: string; author: string; likes: number } | null> = {};
+      (commentsData || []).forEach((c: any) => {
         commentsMap[c.post_id] = (commentsMap[c.post_id] || 0) + 1;
+        // First comment (most recent) is the top comment for preview
+        if (!topCommentMap[c.post_id]) {
+          topCommentMap[c.post_id] = {
+            content: c.content,
+            author: c.is_anonymous ? "Anonim" : c.profiles?.username || "Kullanıcı",
+            likes: 0, // Would need comment reactions table
+          };
+        }
       });
 
       const feedPosts: FeedPost[] = postsData.map((p) => {
@@ -448,6 +479,7 @@ export default function FeedScreen() {
           profiles: p.profiles as any,
           reactions,
           commentCount: commentsMap[p.id] || 0,
+          topComment: topCommentMap[p.id] || null,
         };
       });
 
@@ -1049,6 +1081,34 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: fontSize.xs,
     marginLeft: spacing.xs,
+  },
+  topCommentPreview: {
+    flexDirection: "row",
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: glassFallback.border,
+    alignItems: "flex-start",
+  },
+  topCommentLine: {
+    width: 2,
+    backgroundColor: glassFallback.border,
+    marginRight: spacing.md,
+    flex: 1,
+  },
+  topCommentContent: {
+    flex: 1,
+  },
+  topCommentAuthor: {
+    color: colors.textLight,
+    fontSize: fontSize.xs,
+    fontWeight: "600",
+    marginBottom: spacing.xs,
+  },
+  topCommentText: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
+    lineHeight: 16,
   },
   reactionPickerOverlay: {
     position: "absolute",

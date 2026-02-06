@@ -53,7 +53,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Database Types
-export type Gender = "female" | "male";
+export type Gender = "female" | "male" | "other";
 
 export interface Profile {
   id: string;
@@ -132,6 +132,8 @@ export interface UserReview {
   tags: string[];
   is_anonymous: boolean;
   created_at: string;
+  helpful_votes?: number;
+  vote_scores?: Record<string, string>;
 }
 
 export type ReportType = "post" | "user" | "shadow_profile";
