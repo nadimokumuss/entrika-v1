@@ -27,6 +27,7 @@ import {
 } from "@/lib/messaging";
 import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
+import Logo from "@/components/Logo";
 
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -107,6 +108,7 @@ export default function ConversationsScreen() {
             >
               <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
+            <Logo size={24} />
             <Text style={styles.headerTitle}>Mesajlar</Text>
             <View style={styles.headerRight} />
           </View>
@@ -129,6 +131,7 @@ export default function ConversationsScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
+          <Logo size={24} />
           <Text style={styles.headerTitle}>Mesajlar</Text>
           <View style={styles.headerRight} />
         </View>

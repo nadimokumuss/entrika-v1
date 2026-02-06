@@ -7,6 +7,7 @@ import { Platform, ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { FollowProvider } from "@/contexts/FollowContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { colors } from "@/constants/theme";
 
@@ -163,7 +164,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <FollowProvider>
+        <RootLayoutNav />
+      </FollowProvider>
     </AuthProvider>
   );
 }

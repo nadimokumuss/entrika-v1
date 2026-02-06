@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, deleteImage } from "@/lib/storage";
 import GradientBackground from "@/components/ui/GradientBackground";
+import Logo from "@/components/Logo";
 
 type TabType = "paylaşımlar" | "degerlendirmeler";
 
@@ -212,8 +213,10 @@ export default function ProfileScreen() {
     <GradientBackground variant="screen">
       <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Header Actions */}
-          <View style={styles.headerActions}>
+          {/* Header Actions with Logo */}
+          <View style={styles.headerActionsWithLogo}>
+            <Logo size={24} />
+            <View style={styles.headerActionsRight}>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => router.push("/bookmarks")}
@@ -229,6 +232,7 @@ export default function ProfileScreen() {
             >
               <Settings size={22} color={colors.textLight} />
             </TouchableOpacity>
+            </View>
           </View>
 
           {/* Profil Bilgileri */}
@@ -497,6 +501,17 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
+  },
+  headerActionsWithLogo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  headerActionsRight: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   iconButton: {
     padding: spacing.sm,

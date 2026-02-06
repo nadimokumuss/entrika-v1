@@ -52,10 +52,13 @@ export default function NewPostScreen() {
     setSubmitting(true);
 
     try {
+      // Only set is_spoiler for non-anonymous posts
       const isSpoiler =
-        selectedCategory === "ifsa" ||
-        selectedCategory === "red_flag" ||
-        selectedCategory === "dolandiricilik";
+        !isAnonymous && (
+          selectedCategory === "ifsa" ||
+          selectedCategory === "red_flag" ||
+          selectedCategory === "dolandiricilik"
+        );
 
       let imageUrl: string | null = null;
       if (selectedImageUri) {
@@ -158,7 +161,7 @@ export default function NewPostScreen() {
             </View>
 
             {/* Uyarı */}
-            {(selectedCategory === "ifsa" ||
+            {!isAnonymous && (selectedCategory === "ifsa" ||
               selectedCategory === "red_flag" ||
               selectedCategory === "dolandiricilik") && (
               <View style={styles.warningBox}>

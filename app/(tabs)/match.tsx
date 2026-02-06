@@ -43,6 +43,7 @@ import {
   fetchTotalUnreadCount,
   subscribeToAllMessages,
 } from "@/lib/messaging";
+import Logo from "@/components/Logo";
 import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
@@ -628,9 +629,12 @@ export default function MatchScreen() {
       <GradientBackground variant="screen">
         <SafeAreaView style={styles.container} edges={["top"]}>
           <AnimatedHeader style={styles.headerRow}>
-            <View>
-              <Text style={styles.headerTitle}>Eşleşmeler</Text>
-              <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
+            <View style={styles.headerLeft}>
+              <Logo size={28} />
+              <View>
+                <Text style={styles.headerTitle}>Eşleşmeler</Text>
+                <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
+              </View>
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity
@@ -670,9 +674,12 @@ export default function MatchScreen() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         {/* Header */}
         <AnimatedHeader style={styles.headerRow}>
-          <View>
-            <Text style={styles.headerTitle}>Eşleşmeler</Text>
-            <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
+          <View style={styles.headerLeft}>
+            <Logo size={28} />
+            <View>
+              <Text style={styles.headerTitle}>Eşleşmeler</Text>
+              <Text style={styles.headerSubtitle}>Tanışmadan önce tanı</Text>
+            </View>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
@@ -813,6 +820,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   headerActions: {
     flexDirection: "row",

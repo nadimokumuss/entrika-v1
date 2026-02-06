@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark } from "lucide-react-native";
+import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark, Flame } from "lucide-react-native";
 import {
   CATEGORIES,
   REACTIONS,
@@ -46,6 +46,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EditPostModal } from "@/components/ui/EditPostModal";
 import { isPostBookmarked, toggleBookmark } from "@/lib/bookmarks";
+import Logo from "@/components/Logo";
 
 interface FeedPost {
   id: string;
@@ -120,6 +121,11 @@ const PostCard = memo(function PostCard({
 
   const handleLongPress = useCallback(() => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowReactions(true);
+  }, []);
+
+  const handleReactionButtonPress = useCallback(() => {
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
     setShowReactions(true);
   }, []);
 
@@ -222,7 +228,8 @@ const PostCard = memo(function PostCard({
           {/* Icerik */}
           <View style={styles.postContent}>
             <View style={styles.postTextContainer}>
-              {post.is_spoiler && !revealed ? (
+              {/* Spoiler warning only for non-anonymous posts with is_spoiler=true */}
+              {post.is_spoiler && !post.is_anonymous && !revealed ? (
                 <TouchableOpacity onPress={() => setRevealed(true)} activeOpacity={0.8}>
                   <View style={styles.spoilerBox}>
                     <Text style={styles.spoilerText}>
@@ -267,6 +274,14 @@ const PostCard = memo(function PostCard({
                   <Text style={styles.reactionCount}>{reaction.count}</Text>
                 </View>
               ))}
+              {/* Reaction Button */}
+              <TouchableOpacity
+                style={styles.reactionButton}
+                onPress={handleReactionButtonPress}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Flame size={16} color={colors.textMuted} />
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               style={styles.commentsContainer}
@@ -281,13 +296,18 @@ const PostCard = memo(function PostCard({
           {/* Top Comment Preview */}
           {post.topComment && (
             <TouchableOpacity style={styles.topCommentPreview} onPress={handlePress}>
-              <View style={styles.topCommentLine} />
-              <View style={styles.topCommentContent}>
+              <View style={styles.topCommentHeader}>
+                <Text style={styles.topCommentIcon}>💭</Text>
                 <Text style={styles.topCommentAuthor}>{post.topComment.author}</Text>
-                <Text style={styles.topCommentText} numberOfLines={2}>
-                  {post.topComment.content}
-                </Text>
+                {post.topComment.likes > 0 && (
+                  <View style={styles.topCommentLikesBadge}>
+                    <Text style={styles.topCommentLikesText}>{post.topComment.likes}</Text>
+                  </View>
+                )}
               </View>
+              <Text style={styles.topCommentText} numberOfLines={2}>
+                {post.topComment.content}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -400,12 +420,16 @@ export default function FeedScreen() {
       // Get blocked user IDs
       const blockedIds = user ? await getBlockedUserIds(user.id) : [];
 
-      // Fetch posts with author profile
+      // Fetch posts with author profile (last 30 days for algorithmic feed)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
       let query = supabase
         .from("posts")
         .select("*, profiles(username, avatar_url)")
+        .gte("created_at", thirtyDaysAgo.toISOString())
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(100); // Get more posts to apply algorithmic sorting
 
       // Filter out blocked users' posts
       if (blockedIds.length > 0) {
@@ -431,12 +455,22 @@ export default function FeedScreen() {
       // Fetch comment counts and top comments
       const { data: commentsData } = await supabase
         .from("comments")
-        .select("post_id, content, is_anonymous, profiles(username)")
+        .select("id, post_id, content, is_anonymous, profiles(username)")
         .in("post_id", postIds)
         .order("created_at", { ascending: false });
 
-      // For top comment, we'll need reaction counts per comment
-      // This is a simplified version - in production you might want to optimize this
+      // Fetch comment reactions (if table exists)
+      let commentReactionsData: any[] | null = null;
+      try {
+        const { data: crData } = await supabase
+          .from("comment_reactions")
+          .select("comment_id, reaction_type")
+          .in("comment_id", (commentsData || []).map((c: any) => c.id));
+        commentReactionsData = crData;
+      } catch (e) {
+        // Table might not exist yet
+        console.log("Comment reactions table not available yet");
+      }
 
       // Aggregate reactions per post
       const reactionsMap: Record<string, Record<string, number>> = {};
@@ -446,26 +480,65 @@ export default function FeedScreen() {
           (reactionsMap[r.post_id][r.reaction_type] || 0) + 1;
       });
 
-      // Count comments per post and track top comment
+      // Count comments per post and find top comment (most reacted)
       const commentsMap: Record<string, number> = {};
-      const topCommentMap: Record<string, { content: string; author: string; likes: number } | null> = {};
+      const commentReactionMap: Record<string, number> = {};
+
+      // Build comment reaction count map
+      (commentReactionsData || []).forEach((cr: any) => {
+        commentReactionMap[cr.comment_id] = (commentReactionMap[cr.comment_id] || 0) + 1;
+      });
+
+      // Group comments by post and find the most reacted one
+      const commentsByPost: Record<string, any[]> = {};
       (commentsData || []).forEach((c: any) => {
         commentsMap[c.post_id] = (commentsMap[c.post_id] || 0) + 1;
-        // First comment (most recent) is the top comment for preview
-        if (!topCommentMap[c.post_id]) {
-          topCommentMap[c.post_id] = {
-            content: c.content,
-            author: c.is_anonymous ? "Anonim" : c.profiles?.username || "Kullanıcı",
-            likes: 0, // Would need comment reactions table
+        if (!commentsByPost[c.post_id]) {
+          commentsByPost[c.post_id] = [];
+        }
+        commentsByPost[c.post_id].push(c);
+      });
+
+      const topCommentMap: Record<string, { content: string; author: string; likes: number } | null> = {};
+      Object.keys(commentsByPost).forEach(postId => {
+        const postComments = commentsByPost[postId];
+        // Sort by reaction count, then by recency
+        const sorted = [...postComments].sort((a, b) => {
+          const aReactions = commentReactionMap[a.id] || 0;
+          const bReactions = commentReactionMap[b.id] || 0;
+          if (bReactions !== aReactions) return bReactions - aReactions;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        if (sorted.length > 0) {
+          const top = sorted[0];
+          topCommentMap[postId] = {
+            content: top.content,
+            author: top.is_anonymous ? "Anonim" : top.profiles?.username || "Kullanıcı",
+            likes: commentReactionMap[top.id] || 0,
           };
         }
       });
 
-      const feedPosts: FeedPost[] = postsData.map((p) => {
+      // Calculate feed scores and sort
+      const feedPostsWithScore: (FeedPost & { feedScore: number })[] = postsData.map((p) => {
         const postReactions = reactionsMap[p.id] || {};
         const reactions = Object.entries(postReactions)
           .map(([type, count]) => ({ type: type as ReactionType, count }))
           .sort((a, b) => b.count - a.count);
+
+        const totalReactions = reactions.reduce((sum, r) => sum + r.count, 0);
+
+        // Calculate time decay (hours since post)
+        const hoursSincePost = (Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60);
+
+        // Time decay: 1 for new posts, 0 after 72 hours (3 days)
+        const timeDecay = Math.max(0, 1 - hoursSincePost / 72);
+
+        // Reaction score: logarithmic to prevent spam domination
+        const reactionScore = totalReactions > 0 ? Math.log10(totalReactions + 1) / 5 : 0;
+
+        // Final score: 40% time, 60% reactions
+        const feedScore = timeDecay * 0.4 + reactionScore * 0.6;
 
         return {
           id: p.id,
@@ -480,10 +553,16 @@ export default function FeedScreen() {
           reactions,
           commentCount: commentsMap[p.id] || 0,
           topComment: topCommentMap[p.id] || null,
+          feedScore,
         };
       });
 
-      setPosts(feedPosts);
+      // Sort by feed score (highest first)
+      const sortedPosts = feedPostsWithScore
+        .sort((a, b) => b.feedScore - a.feedScore)
+        .slice(0, 50); // Limit to top 50
+
+      setPosts(sortedPosts);
       setError(null);
     } catch (error: any) {
       console.error("Error fetching posts:", error);
@@ -688,7 +767,7 @@ export default function FeedScreen() {
         <SafeAreaView style={styles.container} edges={["top"]}>
           <AnimatedHeader>
             <View style={styles.headerContent}>
-              <Sparkles size={24} color={colors.primary} />
+              <Logo size={28} />
               <Text style={styles.headerTitle}>ENTRIKA</Text>
               <TouchableOpacity
                 onPress={() => router.push("/notifications")}
@@ -718,7 +797,7 @@ export default function FeedScreen() {
         <SafeAreaView style={styles.container} edges={["top"]}>
           <AnimatedHeader>
             <View style={styles.headerContent}>
-              <Sparkles size={24} color={colors.primary} />
+              <Logo size={28} />
               <Text style={styles.headerTitle}>ENTRIKA</Text>
               <TouchableOpacity
                 onPress={() => router.push("/notifications")}
@@ -747,7 +826,7 @@ export default function FeedScreen() {
         {/* Header */}
         <AnimatedHeader>
           <View style={styles.headerContent}>
-            <Sparkles size={24} color={colors.primary} />
+            <Logo size={28} />
             <Text style={styles.headerTitle}>ENTRIKA</Text>
             <TouchableOpacity
               onPress={() => router.push("/notifications")}
@@ -1073,6 +1152,16 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     marginLeft: spacing.xs,
   },
+  reactionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: glassFallback.background,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
   commentsContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -1089,21 +1178,36 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: glassFallback.border,
     alignItems: "flex-start",
+    backgroundColor: `${colors.primary}08`,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
   },
-  topCommentLine: {
-    width: 2,
-    backgroundColor: glassFallback.border,
-    marginRight: spacing.md,
+  topCommentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
     flex: 1,
   },
-  topCommentContent: {
-    flex: 1,
+  topCommentIcon: {
+    fontSize: fontSize.sm,
   },
   topCommentAuthor: {
-    color: colors.textLight,
+    color: colors.primary,
     fontSize: fontSize.xs,
     fontWeight: "600",
-    marginBottom: spacing.xs,
+  },
+  topCommentLikesBadge: {
+    backgroundColor: `${colors.primary}20`,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    marginLeft: "auto",
+  },
+  topCommentLikesText: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: "bold",
   },
   topCommentText: {
     color: colors.textMuted,

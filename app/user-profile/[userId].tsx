@@ -40,6 +40,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { blockUser } from "@/lib/blocking";
 import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import GradientBackground from "@/components/ui/GradientBackground";
+import { useFollow } from "@/contexts/FollowContext";
+import { UserPlus, UserMinus } from "lucide-react-native";
 
 type TabType = "paylaşımlar" | "degerlendirmeler";
 
@@ -90,6 +92,7 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { user } = useAuth();
+  const { followUser, unfollowUser, isFollowing: checkIsFollowing } = useFollow();
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("paylaşımlar");
@@ -99,8 +102,11 @@ export default function UserProfileScreen() {
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const isOwnProfile = user?.id === userId;
+  const isFollowing = userId ? checkIsFollowing(userId) : false;
 
   const fetchUserData = useCallback(async () => {
     if (!userId) return;
@@ -146,6 +152,20 @@ export default function UserProfileScreen() {
       const reviewsList = (reviewsData as ReviewWithReviewer[]) || [];
       setReviews(reviewsList);
       setReviewCount(reviewsList.length);
+
+      // Fetch follow counts
+      const [followersResult, followingResult] = await Promise.all([
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", userId),
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", userId),
+      ]);
+      setFollowersCount(followersResult.count || 0);
+      setFollowingCount(followingResult.count || 0);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     } finally {
@@ -207,6 +227,36 @@ export default function UserProfileScreen() {
       pathname: "/review-user",
       params: { userId: profile.id, username: profile.username },
     });
+  };
+
+  const handleFollow = async () => {
+    if (!profile || !userId) return;
+    await followUser(userId);
+    // Refresh follow counts
+    try {
+      const { data } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", userId);
+      setFollowersCount(data?.length || 0);
+    } catch (e) {
+      console.error("Error updating follower count:", e);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!profile || !userId) return;
+    await unfollowUser(userId);
+    // Refresh follow counts
+    try {
+      const { data } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", userId);
+      setFollowersCount(data?.length || 0);
+    } catch (e) {
+      console.error("Error updating follower count:", e);
+    }
   };
 
   const getScoreColor = (score: number) => {
@@ -328,20 +378,47 @@ export default function UserProfileScreen() {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{reviewCount}</Text>
-                <Text style={styles.statLabel}>Değerlendirme</Text>
+                <Text style={styles.statValue}>{followersCount}</Text>
+                <Text style={styles.statLabel}>Takipçi</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{followingCount}</Text>
+                <Text style={styles.statLabel}>Takip</Text>
               </View>
             </View>
 
-            {/* Review Button (hidden for own profile) */}
+            {/* Action Buttons (hidden for own profile) */}
             {!isOwnProfile && (
-              <TouchableOpacity
-                style={styles.reviewButton}
-                onPress={handleReview}
-              >
-                <Star size={18} color={colors.primary} />
-                <Text style={styles.reviewButtonText}>Değerlendir</Text>
-              </TouchableOpacity>
+              <View style={styles.actionButtonsRow}>
+                {/* Follow Button */}
+                {isFollowing ? (
+                  <TouchableOpacity
+                    style={[styles.followButton, styles.followingButton]}
+                    onPress={handleUnfollow}
+                  >
+                    <UserMinus size={16} color={colors.text} />
+                    <Text style={styles.followingButtonText}>Takip Ediliyor</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.followButton}
+                    onPress={handleFollow}
+                  >
+                    <UserPlus size={16} color={colors.white} />
+                    <Text style={styles.followButtonText}>Takip Et</Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Review Button */}
+                <TouchableOpacity
+                  style={styles.reviewButton}
+                  onPress={handleReview}
+                >
+                  <Star size={18} color={colors.primary} />
+                  <Text style={styles.reviewButtonText}>Değerlendir</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
@@ -683,23 +760,58 @@ const styles = StyleSheet.create({
     backgroundColor: glassFallback.border,
   },
 
-  // Review Button
-  reviewButton: {
+  // Action Buttons Row
+  actionButtonsRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    width: "100%",
+  },
+
+  // Follow Button
+  followButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    gap: spacing.xs,
+  },
+  followButtonText: {
+    color: colors.white,
+    fontWeight: "600",
+    fontSize: fontSize.sm,
+  },
+  followingButton: {
+    backgroundColor: glassFallback.background,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+  },
+  followingButtonText: {
+    color: colors.text,
+    fontWeight: "600",
+    fontSize: fontSize.sm,
+  },
+
+  // Review Button
+  reviewButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: spacing.md,
     backgroundColor: glassFallback.background,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: `${colors.primary}30`,
-    width: "100%",
+    gap: spacing.xs,
   },
   reviewButtonText: {
     color: colors.primary,
     fontWeight: "600",
-    marginLeft: spacing.sm,
+    fontSize: fontSize.sm,
   },
 
   // Tabs

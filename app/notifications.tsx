@@ -29,6 +29,7 @@ const glassFallback = {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
+import Logo from "@/components/Logo";
 
 interface Notification {
   id: string;
@@ -182,6 +183,7 @@ export default function NotificationsScreen() {
             >
               <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
+            <Logo size={24} />
             <Text style={styles.headerTitle}>Bildirimler</Text>
             <View style={styles.headerRight} />
           </View>
@@ -204,6 +206,7 @@ export default function NotificationsScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
+          <Logo size={24} />
           <Text style={styles.headerTitle}>Bildirimler</Text>
           {hasUnread ? (
             <TouchableOpacity

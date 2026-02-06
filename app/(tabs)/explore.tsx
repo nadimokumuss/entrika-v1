@@ -7,11 +7,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Search, MapPin, AlertTriangle } from "lucide-react-native";
+import { Search, MapPin, UserPlus, Crown, Sparkles } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
+import Logo from "@/components/Logo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFollow } from "@/contexts/FollowContext";
 
 const glassFallback = {
   background: "rgba(22, 22, 31, 0.6)",
@@ -24,191 +30,238 @@ import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-interface ShadowProfileView {
+type ExploreTab = "suggested" | "new" | "nearby";
+
+interface UserProfile {
   id: string;
-  target_name: string;
-  city: string | null;
-  avg_score: number;
-  total_reviews: number;
-  tags: string[];
+  username: string;
+  avatar_url: string;
+  reputation_score: number;
+  created_at: string;
+  is_verified?: boolean;
 }
 
-function ShadowProfileCard({ profile }: { profile: ShadowProfileView }) {
+function UserProfileCard({
+  profile,
+  isFollowing,
+  onFollowToggle,
+}: {
+  profile: UserProfile;
+  isFollowing: boolean;
+  onFollowToggle: () => void;
+}) {
+  const router = useRouter();
   const getScoreColor = (score: number) => {
-    if (score <= 2) return colors.danger;
-    if (score <= 4) return colors.warning;
-    if (score <= 6) return "#EAB308";
-    return colors.success;
+    if (score >= 8) return colors.success;
+    if (score >= 6) return "#EAB308";
+    if (score >= 4) return colors.warning;
+    return colors.danger;
   };
 
-  const scoreColor = getScoreColor(profile.avg_score);
+  const scoreColor = getScoreColor(profile.reputation_score);
 
   return (
     <GlassCard style={styles.profileCard}>
-      <View style={styles.profileContent}>
-        {/* Sol - Bilgiler */}
-        <View style={styles.profileInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.profileName}>{profile.target_name}</Text>
-            {profile.avg_score <= 2 && (
-              <AlertTriangle size={16} color={colors.danger} style={styles.warningIcon} />
-            )}
+      <TouchableOpacity
+        onPress={() => router.push(`/user-profile/${profile.id}`)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.profileContent}>
+          {/* Avatar with gradient ring */}
+          <View style={styles.avatarContainer}>
+            <LinearGradient
+              colors={gradients.premiumShimmer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatarRing}
+            >
+              <Image
+                source={{ uri: profile.avatar_url || "https://api.dicebear.com/7.x/lorelei/png?seed=default" }}
+                style={styles.avatar}
+              />
+            </LinearGradient>
+            <View style={[styles.scoreBadge, { backgroundColor: scoreColor }]}>
+              <Text style={styles.scoreBadgeText}>
+                {profile.reputation_score.toFixed(1)}
+              </Text>
+            </View>
           </View>
 
-          {profile.city && (
-            <View style={styles.locationRow}>
-              <MapPin size={14} color={colors.textMuted} />
-              <Text style={styles.locationText}>{profile.city}</Text>
+          {/* Info */}
+          <View style={styles.profileInfo}>
+            <View style={styles.nameRow}>
+              <Text style={styles.username}>@{profile.username}</Text>
+              {profile.is_verified && (
+                <Sparkles size={14} color={colors.primary} style={styles.verifiedIcon} />
+              )}
             </View>
-          )}
 
-          {/* Etiketler */}
-          {profile.tags.length > 0 && (
-            <View style={styles.tagsContainer}>
-              {profile.tags.map((tag, index) => (
-                <View key={index} style={styles.tagChip}>
-                  <Text style={styles.tagText}>{tag}</Text>
-                </View>
-              ))}
+            <View style={styles.statsRow}>
+              <Text style={styles.statText}>
+                Puan: <Text style={[styles.statValue, { color: scoreColor }]}>{profile.reputation_score.toFixed(1)}</Text>
+              </Text>
             </View>
-          )}
 
-          <Text style={styles.reviewCount}>{profile.total_reviews} değerlendirme</Text>
-        </View>
-
-        {/* Sag - Puan */}
-        <View style={styles.scoreContainer}>
-          <View style={[styles.scoreCircle, { backgroundColor: `${scoreColor}15` }]}>
-            <Text style={[styles.scoreText, { color: scoreColor }]}>
-              {profile.avg_score.toFixed(1)}
+            <Text style={styles.joinDate}>
+              Katılma: {new Date(profile.created_at).toLocaleDateString("tr-TR", { month: "short", year: "numeric" })}
             </Text>
           </View>
-          <Text style={styles.scoreLabel}>puan</Text>
+
+          {/* Follow Button */}
+          <TouchableOpacity
+            style={[
+              styles.followButton,
+              isFollowing && styles.followingButton,
+            ]}
+            onPress={onFollowToggle}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            {isFollowing ? (
+              <Text style={styles.followingButtonText}>Takip</Text>
+            ) : (
+              <>
+                <UserPlus size={14} color={colors.primary} />
+                <Text style={styles.followButtonText}>Takip Et</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     </GlassCard>
   );
 }
 
 export default function ExploreScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { followUser, unfollowUser, isFollowing: checkIsFollowing } = useFollow();
+
+  const [activeTab, setActiveTab] = useState<ExploreTab>("suggested");
   const [searchQuery, setSearchQuery] = useState("");
-  const [profiles, setProfiles] = useState<ShadowProfileView[]>([]);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfiles = useCallback(async (query?: string) => {
+  const fetchProfiles = useCallback(async (tab: ExploreTab, query?: string) => {
+    if (!user) return;
+
     try {
-      // Fetch shadow profiles with their reviews aggregated
-      let shadowQuery = supabase
-        .from("shadow_profiles")
-        .select("id, target_name, city, identifier_hash");
+      setLoading(true);
 
-      if (query && query.trim()) {
-        // Search by name or city using ilike
-        shadowQuery = shadowQuery.or(
-          `target_name.ilike.%${query.trim()}%,city.ilike.%${query.trim()}%`
-        );
-      }
+      // Get users that current user is NOT following
+      const { data: followingData } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", user.id);
 
-      const { data: shadowData, error: shadowError } = await shadowQuery
+      const followingIds = new Set((followingData || []).map((f) => f.following_id));
+      followingIds.add(user.id); // Don't show current user
+
+      let queryBuilder = supabase
+        .from("profiles")
+        .select("id, username, avatar_url, reputation_score, created_at")
+        .not("id", "in", `(${Array.from(followingIds).join(",")})`)
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (shadowError) throw shadowError;
-      if (!shadowData || shadowData.length === 0) {
-        setProfiles([]);
-        return;
-      }
-
-      const profileIds = shadowData.map((sp) => sp.id);
-
-      // Fetch reviews for all shadow profiles
-      const { data: reviewsData } = await supabase
-        .from("shadow_reviews")
-        .select("shadow_profile_id, score, tags")
-        .in("shadow_profile_id", profileIds);
-
-      // Aggregate reviews per profile
-      const reviewsMap: Record<string, { scores: number[]; tags: string[] }> = {};
-      (reviewsData || []).forEach((r) => {
-        if (!reviewsMap[r.shadow_profile_id]) {
-          reviewsMap[r.shadow_profile_id] = { scores: [], tags: [] };
-        }
-        reviewsMap[r.shadow_profile_id].scores.push(r.score);
-        if (r.tags) {
-          r.tags.forEach((tag: string) => {
-            if (!reviewsMap[r.shadow_profile_id].tags.includes(tag)) {
-              reviewsMap[r.shadow_profile_id].tags.push(tag);
-            }
-          });
-        }
-      });
-
-      const result: ShadowProfileView[] = shadowData.map((sp) => {
-        const reviews = reviewsMap[sp.id] || { scores: [], tags: [] };
-        const avgScore =
-          reviews.scores.length > 0
-            ? reviews.scores.reduce((a, b) => a + b, 0) / reviews.scores.length
-            : 5.0;
-
-        return {
-          id: sp.id,
-          target_name: sp.target_name,
-          city: sp.city,
-          avg_score: avgScore,
-          total_reviews: reviews.scores.length,
-          tags: reviews.tags,
-        };
-      });
-
-      // If searching by tag, filter client-side
+      // Apply search filter
       if (query && query.trim()) {
-        const q = query.trim().toLowerCase();
-        const filtered = result.filter(
-          (p) =>
-            p.target_name.toLowerCase().includes(q) ||
-            (p.city && p.city.toLowerCase().includes(q)) ||
-            p.tags.some((t) => t.toLowerCase().includes(q))
-        );
-        setProfiles(filtered);
-      } else {
-        setProfiles(result);
+        queryBuilder = queryBuilder.ilike("username", `%${query.trim()}%`);
       }
+
+      const { data: profilesData, error: profilesError } = await queryBuilder;
+
+      if (profilesError) throw profilesError;
+
+      // Filter by tab type
+      let filteredProfiles = profilesData || [];
+
+      if (tab === "new") {
+        // Sort by newest (already done by order)
+        filteredProfiles = filteredProfiles.slice(0, 20);
+      } else if (tab === "suggested") {
+        // Sort by reputation score (highest first)
+        filteredProfiles = [...filteredProfiles].sort((a, b) => b.reputation_score - a.reputation_score).slice(0, 20);
+      }
+      // "nearby" would require location data - for now showing newest
+
+      setProfiles(filteredProfiles);
     } catch (error) {
-      console.error("Error fetching shadow profiles:", error);
+      console.error("Error fetching profiles:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    fetchProfiles();
-  }, [fetchProfiles]);
+    fetchProfiles(activeTab);
+  }, [fetchProfiles, activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setLoading(true);
-      fetchProfiles(searchQuery);
+      fetchProfiles(activeTab, searchQuery);
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, fetchProfiles]);
+  }, [searchQuery, activeTab, fetchProfiles]);
+
+  const handleFollowToggle = (profileId: string) => {
+    if (checkIsFollowing(profileId)) {
+      unfollowUser(profileId);
+    } else {
+      followUser(profileId);
+    }
+  };
 
   return (
     <GradientBackground variant="screen">
       <SafeAreaView style={styles.container} edges={["top"]}>
         {/* Header */}
         <AnimatedHeader>
-          <Text style={styles.headerTitle}>Keşfet</Text>
+          <View style={styles.headerTop}>
+            <Logo size={24} />
+            <Text style={styles.headerTitle}>Keşfet</Text>
+          </View>
 
           {/* Arama */}
           <View style={styles.searchContainer}>
             <Search size={20} color={colors.textMuted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="İsim, şehir veya etiket ara..."
+              placeholder="Kullanıcı ara..."
               placeholderTextColor={colors.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
+          </View>
+
+          {/* Tabs */}
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "suggested" && styles.tabActive]}
+              onPress={() => setActiveTab("suggested")}
+            >
+              <Crown size={16} color={activeTab === "suggested" ? colors.primary : colors.textMuted} />
+              <Text style={[styles.tabText, activeTab === "suggested" && styles.tabTextActive]}>
+                Önerilen
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "new" && styles.tabActive]}
+              onPress={() => setActiveTab("new")}
+            >
+              <Sparkles size={16} color={activeTab === "new" ? colors.primary : colors.textMuted} />
+              <Text style={[styles.tabText, activeTab === "new" && styles.tabTextActive]}>
+                Yeni Üyeler
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "nearby" && styles.tabActive]}
+              onPress={() => setActiveTab("nearby")}
+            >
+              <MapPin size={16} color={activeTab === "nearby" ? colors.primary : colors.textMuted} />
+              <Text style={[styles.tabText, activeTab === "nearby" && styles.tabTextActive]}>
+                Yakınım
+              </Text>
+            </TouchableOpacity>
           </View>
         </AnimatedHeader>
 
@@ -218,23 +271,25 @@ export default function ExploreScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Uyari Banner */}
-          <View style={styles.warningBanner}>
-            <Text style={styles.warningBannerText}>
-              {"Profiller kullanıcı yorumlarına dayanır.\nBilgiler doğrulanmamış olabilir."}
-            </Text>
-          </View>
-
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
           ) : profiles.length > 0 ? (
             profiles.map((profile) => (
-              <ShadowProfileCard key={profile.id} profile={profile} />
+              <UserProfileCard
+                key={profile.id}
+                profile={profile}
+                isFollowing={checkIsFollowing(profile.id)}
+                onFollowToggle={() => handleFollowToggle(profile.id)}
+              />
             ))
           ) : (
-            <EmptyState type="explore" />
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {searchQuery ? "Sonuç bulunamadı" : "Keşfetmek için yeni üyeler yok"}
+              </Text>
+            </View>
           )}
 
           <View style={styles.bottomSpacer} />
@@ -249,11 +304,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "transparent",
   },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   headerTitle: {
     color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "bold",
-    marginBottom: spacing.lg,
   },
   searchContainer: {
     flexDirection: "row",
@@ -271,6 +331,32 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
     fontSize: fontSize.md,
   },
+  tabsContainer: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    backgroundColor: glassFallback.backgroundLight,
+    borderRadius: borderRadius.md,
+  },
+  tabActive: {
+    backgroundColor: `${colors.primary}20`,
+  },
+  tabText: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
+    fontWeight: "600",
+  },
+  tabTextActive: {
+    color: colors.primary,
+  },
   scrollView: {
     flex: 1,
     paddingHorizontal: spacing.lg,
@@ -279,31 +365,59 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xl,
   },
-  warningBanner: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  warningBannerText: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
-    textAlign: "center",
-    lineHeight: 20,
-  },
   loadingContainer: {
     alignItems: "center",
     paddingVertical: 48,
   },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    textAlign: "center",
+  },
   profileCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   profileContent: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
+  },
+  avatarContainer: {
+    position: "relative",
+    marginRight: spacing.md,
+  },
+  avatarRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.borderLight,
+  },
+  scoreBadge: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  scoreBadgeText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: "bold",
   },
   profileInfo: {
     flex: 1,
@@ -312,72 +426,53 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  profileName: {
+  username: {
     color: colors.text,
-    fontSize: fontSize.lg,
+    fontSize: fontSize.md,
     fontWeight: "600",
   },
-  warningIcon: {
-    marginLeft: spacing.sm,
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.xs,
-  },
-  locationText: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
+  verifiedIcon: {
     marginLeft: spacing.xs,
   },
-  tagsContainer: {
+  statsRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
   },
-  tagChip: {
-    backgroundColor: `${colors.danger}15`,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  tagText: {
-    color: colors.danger,
-    fontSize: fontSize.xs,
-    fontWeight: "500",
-  },
-  reviewCount: {
+  statText: {
     color: colors.textMuted,
     fontSize: fontSize.xs,
-    marginTop: spacing.md,
   },
-  scoreContainer: {
-    alignItems: "center",
+  statValue: {
+    fontWeight: "600",
   },
-  scoreCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scoreText: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-  },
-  scoreLabel: {
+  joinDate: {
     color: colors.textMuted,
     fontSize: fontSize.xs,
     marginTop: spacing.xs,
   },
-  emptyState: {
+  followButton: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 48,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: `${colors.primary}15`,
   },
-  emptyStateText: {
+  followButtonText: {
+    color: colors.primary,
+    fontSize: fontSize.xs,
+    fontWeight: "600",
+  },
+  followingButton: {
+    backgroundColor: glassFallback.background,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+  },
+  followingButtonText: {
     color: colors.textMuted,
-    textAlign: "center",
+    fontSize: fontSize.xs,
+    fontWeight: "600",
   },
   bottomSpacer: {
     height: 80,

@@ -20,6 +20,7 @@ import {
   type BookmarkWithPost,
 } from "@/lib/bookmarks";
 import { useRouter } from "expo-router";
+import Logo from "@/components/Logo";
 import * as Haptics from "expo-haptics";
 import {
   colors,
@@ -139,6 +140,7 @@ export default function BookmarksScreen() {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
+          <Logo size={24} />
           <Bookmark size={24} color={colors.primary} />
           <Text style={styles.headerTitle}>Kaydedilenler</Text>
         </View>
@@ -156,6 +158,7 @@ export default function BookmarksScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
+        <Logo size={24} />
         <Bookmark size={24} color={colors.primary} />
         <Text style={styles.headerTitle}>Kaydedilenler</Text>
         <Text style={styles.headerCount}>{bookmarks.length}</Text>

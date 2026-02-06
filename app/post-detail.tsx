@@ -25,6 +25,7 @@ import {
   Flag,
   ShieldBan,
   User,
+  Flame,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import {
@@ -50,6 +51,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { blockUser } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
+import Logo from "@/components/Logo";
 import GlassCard from "@/components/ui/GlassCard";
 
 interface PostDetail {
@@ -91,7 +93,7 @@ function formatTimeAgo(dateStr: string): string {
 export default function PostDetailScreen() {
   const router = useRouter();
   const { postId } = useLocalSearchParams<{ postId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [reactions, setReactions] = useState<
@@ -227,6 +229,22 @@ export default function PostDetailScreen() {
     setInputText("");
     setSending(true);
 
+    // OPTIMISTIC: Add comment immediately to UI
+    const tempComment: CommentItem = {
+      id: `temp-${Date.now()}`,
+      post_id: postId,
+      author_id: user.id,
+      content: text,
+      is_anonymous: isAnonymous,
+      created_at: new Date().toISOString(),
+      profiles: isAnonymous ? null : {
+        username: profile?.username || user.email?.split('@')[0] || "Sen",
+        avatar_url: profile?.avatar_url || "",
+      },
+    };
+
+    setComments(prev => [...prev, tempComment]);
+
     try {
       const { error } = await supabase.from("comments").insert({
         post_id: postId,
@@ -237,11 +255,17 @@ export default function PostDetailScreen() {
 
       if (error) {
         console.error("Comment error:", error);
-        Alert.alert("Hata", "Yorum gönderilemedi.");
+        // Remove temp comment on error
+        setComments(prev => prev.filter(c => c.id !== tempComment.id));
         setInputText(text);
+        Alert.alert("Hata", "Yorum gönderilemedi.");
       }
+      // If successful, realtime will sync the real comment
+      // We could replace the temp comment with the real one if needed
     } catch (e) {
       console.error("Comment error:", e);
+      // Remove temp comment on error
+      setComments(prev => prev.filter(c => c.id !== tempComment.id));
       setInputText(text);
     }
     setSending(false);
@@ -249,6 +273,11 @@ export default function PostDetailScreen() {
 
   const handleLongPress = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowReactions(true);
+  };
+
+  const handleReactionButtonPress = () => {
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
     setShowReactions(true);
   };
 
@@ -404,7 +433,8 @@ export default function PostDetailScreen() {
             {/* Content */}
             <View style={styles.postContent}>
               <View style={styles.postTextContainer}>
-                {post.is_spoiler && !revealed ? (
+                {/* Spoiler warning only for non-anonymous posts with is_spoiler=true */}
+                {post.is_spoiler && !post.is_anonymous && !revealed ? (
                   <TouchableOpacity
                     onPress={() => setRevealed(true)}
                     activeOpacity={0.8}
@@ -463,6 +493,14 @@ export default function PostDetailScreen() {
                     <Text style={styles.reactionCount}>{reaction.count}</Text>
                   </View>
                 ))}
+                {/* Reaction Button */}
+                <TouchableOpacity
+                  style={styles.reactionButton}
+                  onPress={handleReactionButtonPress}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Flame size={16} color={colors.textMuted} />
+                </TouchableOpacity>
               </View>
               <View style={styles.commentsInfo}>
                 <MessageCircle size={16} color={colors.textMuted} />
@@ -522,6 +560,7 @@ export default function PostDetailScreen() {
             >
               <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
+            <Logo size={24} />
             <Text style={styles.headerTitle}>Paylaşım</Text>
           </View>
           <View style={styles.loadingContainer}>
@@ -543,6 +582,7 @@ export default function PostDetailScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
+          <Logo size={24} />
           <Text style={styles.headerTitle}>Paylaşım</Text>
         </View>
 
@@ -836,6 +876,16 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     fontSize: fontSize.xs,
     marginLeft: spacing.xs,
+  },
+  reactionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: glassFallback.background,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
   },
   commentsInfo: {
     flexDirection: "row",

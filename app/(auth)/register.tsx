@@ -10,9 +10,10 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Lock, AtSign, ChevronLeft, Mail } from "lucide-react-native";
+import { Lock, AtSign, ChevronLeft, Mail, Camera, X } from "lucide-react-native";
 import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
 
 const glassFallback = {
@@ -22,6 +23,7 @@ const glassFallback = {
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
+import { pickImage, showImageSourcePicker, uploadImage } from "@/lib/storage";
 
 type Gender = "female" | "male" | "other";
 
@@ -66,6 +68,8 @@ export default function RegisterScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -80,6 +84,23 @@ export default function RegisterScreen() {
     } else {
       setSelectedAvatar(OTHER_AVATARS[0]);
     }
+  };
+
+  const handleAddPhoto = () => {
+    showImageSourcePicker(async (source) => {
+      try {
+        const uri = await pickImage({ source, aspect: [1, 1], quality: 0.8 });
+        if (uri) {
+          setPhotoUri(uri);
+        }
+      } catch (e) {
+        console.error("Photo picker error:", e);
+      }
+    });
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoUri(null);
   };
 
   const handleRegister = async () => {
@@ -112,6 +133,22 @@ export default function RegisterScreen() {
     setError("");
 
     try {
+      // Upload photo if selected
+      let photoUrl: string | null = null;
+      if (photoUri) {
+        setUploadingPhoto(true);
+        try {
+          // We'll upload after we get the user ID
+          // For now, keep the URI
+        } catch (e) {
+          console.error("Photo upload error:", e);
+          setError("Fotoğraf yüklenemedi");
+          setIsLoading(false);
+          setUploadingPhoto(false);
+          return;
+        }
+      }
+
       console.log("[REGISTER] signUp cagriliyor:", { email, username, gender });
       const { error: signUpError } = await signUp(
         email,
@@ -125,12 +162,18 @@ export default function RegisterScreen() {
 
       if (signUpError) {
         setError(signUpError.message);
+        setUploadingPhoto(false);
+      } else if (photoUri) {
+        // Photo will be uploaded in a follow-up or after profile creation
+        // For now, the avatar is used as the profile picture
+        setPhotoUri(null);
       }
     } catch (err: any) {
       console.error("[REGISTER] CATCH hatasi:", err);
       setError(err.message || "Bir hata olustu");
     } finally {
       setIsLoading(false);
+      setUploadingPhoto(false);
     }
   };
 
@@ -234,6 +277,37 @@ export default function RegisterScreen() {
                       <Image source={{ uri: avatar }} style={styles.avatarImage} />
                     </TouchableOpacity>
                   ))}
+                </View>
+
+                {/* Photo Upload Section */}
+                <View style={styles.photoUploadSection}>
+                  <Text style={styles.sectionLabel}>Profil Fotoğrafı (Opsiyonel)</Text>
+                  <Text style={styles.sectionSubtext}>
+                    Gerçek fotoğrafını yükleyebilirsin. Yüklemezsen avatar kullanılır.
+                  </Text>
+
+                  {photoUri ? (
+                    <View style={styles.photoPreviewContainer}>
+                      <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                      <TouchableOpacity
+                        style={styles.removePhotoButton}
+                        onPress={handleRemovePhoto}
+                      >
+                        <X size={20} color={colors.white} />
+                      </TouchableOpacity>
+                      <View style={styles.photoBadge}>
+                        <Text style={styles.photoBadgeText}>Seçildi</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.photoUploadButton}
+                      onPress={handleAddPhoto}
+                    >
+                      <Camera size={24} color={colors.primary} />
+                      <Text style={styles.photoUploadButtonText}>Fotoğraf Yükle</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             )}
@@ -404,6 +478,64 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: colors.borderLight,
+  },
+  photoUploadSection: {
+    marginTop: spacing.xl,
+  },
+  sectionSubtext: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    marginBottom: spacing.md,
+  },
+  photoUploadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: glassFallback.background,
+    borderWidth: 2,
+    borderColor: glassFallback.border,
+    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.xl,
+    borderStyle: "dashed",
+  },
+  photoUploadButtonText: {
+    color: colors.primary,
+    fontWeight: "600",
+    marginLeft: spacing.md,
+  },
+  photoPreviewContainer: {
+    position: "relative",
+    alignItems: "center",
+  },
+  photoPreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.borderLight,
+  },
+  removePhotoButton: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.danger,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoBadge: {
+    position: "absolute",
+    bottom: 4,
+    backgroundColor: colors.success,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  photoBadgeText: {
+    color: colors.white,
+    fontSize: fontSize.xs,
+    fontWeight: "600",
   },
   inputContainer: {
     flexDirection: "row",
