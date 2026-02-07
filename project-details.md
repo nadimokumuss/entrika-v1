@@ -1,7 +1,32 @@
 # Entrika - Project Details
 
 > Son güncelleme: 2026-02-07
-> Versiyon: 0.2.0 (Beta)
+> Versiyon: 0.2.1 (Beta)
+
+---
+
+## Test Yöntemleri
+
+### 1. Mobil Test (Expo Go)
+```bash
+cd "C:\Users\reiss\Desktop\Entrika v1\entrika"
+npx expo start --tunnel
+```
+- QR kodu tara
+- Expo Go ile aç
+- Test listesini kontrol et
+
+### 2. Web Deploy (Vercel)
+```bash
+npx vercel --prod
+```
+- https://entrika.vercel.app
+- Sadece final check
+
+### 3. Web Geliştirme (Gelecek)
+- Yeni proje: `entrika-web/`
+- Next.js ile sıfırdan
+- Ayrı UI/UX
 
 ---
 

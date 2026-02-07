@@ -61,6 +61,53 @@ Kullanıcı "sync-end" dediğinde:
 - Mobile geliştirme: `npx expo start --tunnel` (telefonda test)
 - Web deploy: `npx vercel --prod` (mobile test sonrası)
 
+### Test Listesi (2026-02-07)
+Kullanıcı her değişiklik sonrası bu listeyi kontrol etmelidir:
+
+**Feed Ekranı (app/(tabs)/index.tsx):**
+- [ ] Logo üst kısımda görünüyor
+- [ ] Tab'ler çalışıyor: Tümü / Tanıdıklar / Tanımadıklar
+- [ ] "Tanıdıklar" boşsa özel empty state gösteriliyor
+- [ ] Post paylaşımı çalışıyor (anonim/isimli)
+- [ ] Yorum ekleyince kalıcı olarak ekleniyor (optimistic update düzgün)
+- [ ] Reaction picker düzgün arka planla gösteriliyor
+- [ ] Kendi postunu menüden silebiliyor musun?
+
+**Post Detay (app/post-detail.tsx):**
+- [ ] Yorumlara tepki verilebiliyor (emoji + sayı)
+- [ ] Kendi yorumunu silebiliyor musun?
+- [ ] Yorum reactions yükleniyor mu hata olmadan?
+
+**Match Ekranı (app/(tabs)/match.tsx):**
+- [ ] Blokladığın kullanıcılar kartlarda görünmüyor
+- [ ] İlişki durumu profil kartında gösteriliyor
+- [ ] Refresh butonu (rotate icon) çalışıyor
+- [ ] Profile card swipe edilebiliyor
+
+**Explore (app/(tabs)/explore.tsx):**
+- [ ] Takip butonu tıklanınca anında güncelleniyor
+- [ ] Follow/Unfollow gerçek zamanlı çalışıyor
+- [ ] Hata durumunda ErrorState + Retry görünüyor
+
+**Profil (app/(tabs)/profile.tsx):**
+- [ ] Avatar yükleme başarılı olunca güncelleniyor
+- [ ] Avatar yükleme hata olursa Alert gösteriliyor
+- [ ] Dating profil'de ilişki durumu seçilebiliyor
+
+**Notifications (app/notifications.tsx):**
+- [ ] Bildirimler listeleniyor
+- [ ] Bildirim tıklanınca ilgili sayfaya yönlendiriyor
+- [ ] Hata durumunda ErrorState görünüyor
+
+**Conversations (app/conversations.tsx):**
+- [ ] Sohbetler listeleniyor
+- [ ] Hata durumunda ErrorState + Retry görünüyor
+
+**Genel:**
+- [ ] İnternet kesilince "Network error" hatası gösteriliyor
+- [ ] Retry butonuna basınca tekrar deneniyor
+- [ ] Uygulama crash vermeden hataları yönetiyor
+
 ### Hedef Kitle
 - Hem kadınlar hem erkekler
 - Dating öncesi güvenlik arayanlar
