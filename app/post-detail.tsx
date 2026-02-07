@@ -74,6 +74,8 @@ interface CommentItem {
   is_anonymous: boolean;
   created_at: string;
   profiles: { username: string; avatar_url: string } | null;
+  reactions?: { type: ReactionType; count: number }[];
+  userReaction?: ReactionType | null;
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -165,13 +167,57 @@ export default function PostDetailScreen() {
       return;
     }
 
+    const commentList = (data || []).map((c) => ({
+      ...c,
+      profiles: c.profiles as any,
+    }));
+
+    // Fetch comment reactions for all comments
+    const commentIds = commentList.map((c) => c.id);
+    let commentReactionsData: any[] | null = null;
+    let userReactionsData: any[] | null = null;
+
+    try {
+      const [reactionsResult, userReactionsResult] = await Promise.all([
+        supabase
+          .from("comment_reactions")
+          .select("comment_id, reaction_type")
+          .in("comment_id", commentIds),
+        user ? supabase
+          .from("comment_reactions")
+          .select("comment_id, reaction_type")
+          .eq("user_id", user.id)
+          .in("comment_id", commentIds) : Promise.resolve({ data: null }),
+      ]);
+      commentReactionsData = reactionsResult.data;
+      userReactionsData = userReactionsResult.data;
+    } catch (e) {
+      console.log("Comment reactions table not available yet");
+    }
+
+    // Build reactions map for each comment
+    const reactionsMap: Record<string, Record<string, number>> = {};
+    (commentReactionsData || []).forEach((cr: any) => {
+      if (!reactionsMap[cr.comment_id]) reactionsMap[cr.comment_id] = {};
+      reactionsMap[cr.comment_id][cr.reaction_type] = (reactionsMap[cr.comment_id][cr.reaction_type] || 0) + 1;
+    });
+
+    // Build user reaction map
+    const userReactionMap: Record<string, ReactionType> = {};
+    (userReactionsData || []).forEach((ur: any) => {
+      userReactionMap[ur.comment_id] = ur.reaction_type;
+    });
+
     setComments(
-      (data || []).map((c) => ({
+      commentList.map((c) => ({
         ...c,
-        profiles: c.profiles as any,
+        reactions: Object.entries(reactionsMap[c.id] || {})
+          .map(([type, count]) => ({ type: type as ReactionType, count }))
+          .sort((a, b) => b.count - a.count),
+        userReaction: userReactionMap[c.id] || null,
       }))
     );
-  }, [postId]);
+  }, [postId, user?.id]);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -210,7 +256,26 @@ export default function PostDetailScreen() {
           }
 
           setComments((prev) => {
-            if (prev.some((c) => c.id === newComment.id)) return prev;
+            // Check if there's a temp comment that matches this new comment (same author and content)
+            const tempIndex = prev.findIndex(c =>
+              c.author_id === newComment.author_id &&
+              c.content === newComment.content &&
+              c.id.startsWith("temp-")
+            );
+
+            if (tempIndex >= 0) {
+              // Replace temp comment with real one
+              const updated = [...prev];
+              updated[tempIndex] = { ...newComment, profiles };
+              return updated;
+            }
+
+            // Check if comment already exists (prevent duplicates)
+            if (prev.some((c) => c.id === newComment.id)) {
+              return prev;
+            }
+
+            // Add new comment
             return [...prev, { ...newComment, profiles }];
           });
         }
@@ -269,6 +334,85 @@ export default function PostDetailScreen() {
       setInputText(text);
     }
     setSending(false);
+  };
+
+  const handleCommentReaction = async (commentId: string, type: ReactionType) => {
+    if (!user) return;
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
+
+    try {
+      // Check if user already reacted with this type
+      const comment = comments.find(c => c.id === commentId);
+      if (comment?.userReaction === type) {
+        // Remove reaction
+        await supabase
+          .from("comment_reactions")
+          .delete()
+          .eq("comment_id", commentId)
+          .eq("user_id", user.id);
+
+        setComments(prev => prev.map(c => {
+          if (c.id === commentId) {
+            return {
+              ...c,
+              reactions: (c.reactions || []).map(r => {
+                if (r.type === type) {
+                  return { ...r, count: Math.max(0, r.count - 1) };
+                }
+                return r;
+              }).filter(r => r.count > 0),
+              userReaction: null,
+            };
+          }
+          return c;
+        }));
+      } else {
+        // Add or update reaction
+        await supabase.from("comment_reactions").upsert(
+          { comment_id: commentId, user_id: user.id, reaction_type: type },
+          { onConflict: "comment_id,user_id" }
+        );
+
+        setComments(prev => prev.map(c => {
+          if (c.id === commentId) {
+            const oldReaction = c.userReaction;
+            const reactions = [...(c.reactions || [])];
+
+            // Remove count from old reaction if exists
+            if (oldReaction) {
+              const oldIdx = reactions.findIndex(r => r.type === oldReaction);
+              if (oldIdx >= 0) {
+                if (reactions[oldIdx].count <= 1) {
+                  reactions.splice(oldIdx, 1);
+                } else {
+                  reactions[oldIdx].count--;
+                }
+              }
+            }
+
+            // Add or update new reaction count
+            const newIdx = reactions.findIndex(r => r.type === type);
+            if (newIdx >= 0) {
+              reactions[newIdx].count++;
+            } else {
+              reactions.push({ type, count: 1 });
+            }
+
+            // Sort by count
+            reactions.sort((a, b) => b.count - a.count);
+
+            return {
+              ...c,
+              reactions,
+              userReaction: type,
+            };
+          }
+          return c;
+        }));
+      }
+    } catch (e) {
+      console.error("Comment reaction error:", e);
+    }
   };
 
   const handleLongPress = () => {
@@ -393,6 +537,46 @@ export default function PostDetailScreen() {
             </Text>
           </View>
           <Text style={styles.commentContent}>{item.content}</Text>
+
+          {/* Comment Reactions */}
+          <View style={styles.commentReactionsRow}>
+            {(item.reactions || []).slice(0, 3).map((reaction) => {
+              const isUserReaction = item.userReaction === reaction.type;
+              return (
+                <TouchableOpacity
+                  key={reaction.type}
+                  style={[
+                    styles.commentReactionChip,
+                    isUserReaction && styles.commentReactionChipActive,
+                  ]}
+                  onPress={() => handleCommentReaction(item.id, reaction.type)}
+                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                >
+                  <Text style={styles.commentReactionEmoji}>
+                    {REACTIONS[reaction.type].emoji}
+                  </Text>
+                  <Text style={[
+                    styles.commentReactionCount,
+                    isUserReaction && styles.commentReactionCountActive,
+                  ]}>
+                    {reaction.count}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            {/* Add reaction button */}
+            <TouchableOpacity
+              style={styles.commentAddReactionButton}
+              onPress={() => {
+                // For now, just add the first reaction type (heart/like)
+                // In a full implementation, this would open a reaction picker
+                handleCommentReaction(item.id, "fire");
+              }}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Flame size={14} color={item.userReaction ? colors.primary : colors.textMuted} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -904,7 +1088,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -50 }],
   },
   reactionPicker: {
-    backgroundColor: glassFallback.background,
+    backgroundColor: "rgba(30, 30, 42, 0.95)",
     borderWidth: 1,
     borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,
@@ -976,6 +1160,50 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: fontSize.base,
     lineHeight: 20,
+  },
+  commentReactionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.sm,
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  commentReactionChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: glassFallback.background,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  commentReactionChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}15`,
+  },
+  commentReactionEmoji: {
+    fontSize: fontSize.xs,
+  },
+  commentReactionCount: {
+    color: colors.textMuted,
+    fontSize: 10,
+    marginLeft: spacing.xs,
+  },
+  commentReactionCountActive: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  commentAddReactionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: glassFallback.background,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    marginLeft: spacing.xs,
   },
   emptyComments: {
     alignItems: "center",

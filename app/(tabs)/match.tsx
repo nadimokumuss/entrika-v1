@@ -57,6 +57,16 @@ import { Filter as FilterIcon, RotateCcw, Zap, Crown } from "lucide-react-native
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 
+const RELATIONSHIP_STATUS_LABELS: Record<string, string> = {
+  single: "Bekar",
+  dating: "İlişkide",
+  complicated: "Karmaşık",
+  married: "Evli",
+  divorced: "Boşanmış",
+  widowed: "Dul",
+  rather_not_say: "Söylemek İstemiyorum",
+};
+
 interface DatingProfileView {
   id: string;
   user_id: string;
@@ -68,6 +78,7 @@ interface DatingProfileView {
   interests: string[];
   job: string | null;
   education: string | null;
+  relationship_status: string | null;
   communityScore: number;
   reviewCount: number;
   verifiedProfile: boolean;
@@ -259,6 +270,13 @@ const ProfileCard = memo(function ProfileCard({
               </>
             )}
           </View>
+          {profile.relationship_status && (
+            <View style={styles.relationshipStatusBadge}>
+              <Text style={styles.relationshipStatusText}>
+                {RELATIONSHIP_STATUS_LABELS[profile.relationship_status] || profile.relationship_status}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -439,6 +457,7 @@ export default function MatchScreen() {
           interests: dp.interests || [],
           job: dp.job,
           education: dp.education,
+          relationship_status: dp.relationship_status || "single",
           communityScore: profileInfo?.reputation_score || 5.0,
           reviewCount: 0,
           verifiedProfile: profileInfo?.is_verified || false,
@@ -1037,6 +1056,19 @@ const styles = StyleSheet.create({
   locationDivider: {
     color: colors.white,
     marginHorizontal: spacing.sm,
+  },
+  relationshipStatusBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: `${colors.accent}40`,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.xs,
+  },
+  relationshipStatusText: {
+    color: colors.white,
+    fontSize: fontSize.xs,
+    fontWeight: "600",
   },
   details: {
     padding: spacing.lg,

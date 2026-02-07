@@ -47,6 +47,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EditPostModal } from "@/components/ui/EditPostModal";
 import { isPostBookmarked, toggleBookmark } from "@/lib/bookmarks";
 import Logo from "@/components/Logo";
+import { useFollow } from "@/contexts/FollowContext";
+import { Users, Globe } from "lucide-react-native";
 
 interface FeedPost {
   id: string;
@@ -392,6 +394,7 @@ const PostCard = memo(function PostCard({
 export default function FeedScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { followingIds } = useFollow();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -400,6 +403,7 @@ export default function FeedScreen() {
   const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
+  const [feedFilter, setFeedFilter] = useState<'all' | 'following' | 'discover'>('all');
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
@@ -434,6 +438,31 @@ export default function FeedScreen() {
       // Filter out blocked users' posts
       if (blockedIds.length > 0) {
         query = query.not("author_id", "in", `(${blockedIds.join(",")})`);
+      }
+
+      // Apply feed filter
+      if (feedFilter === 'following') {
+        const ids = Array.from(followingIds);
+        if (ids.length > 0) {
+          query = query.in('author_id', ids);
+        } else {
+          // No follows yet, return empty
+          setPosts([]);
+          setError(null);
+          setLoading(false);
+          setRefreshing(false);
+          return;
+        }
+      } else if (feedFilter === 'discover') {
+        const ids = Array.from(followingIds);
+        if (user && ids.length > 0) {
+          // Exclude self and followed users
+          const excludeIds = [user.id, ...ids];
+          query = query.not("author_id", "in", `(${excludeIds.join(",")})`);
+        } else if (user) {
+          // Just exclude self
+          query = query.not("author_id", `(${user.id})`);
+        }
       }
 
       const { data: postsData, error: postsError } = await query;
@@ -580,7 +609,7 @@ export default function FeedScreen() {
     useCallback(() => {
       fetchPosts();
       fetchUnreadCount();
-    }, [fetchPosts, fetchUnreadCount])
+    }, [fetchPosts, fetchUnreadCount, feedFilter])
   );
 
   // Realtime subscriptions for posts, reactions, and comments
@@ -844,6 +873,37 @@ export default function FeedScreen() {
           </View>
         </AnimatedHeader>
 
+        {/* Feed Filter Tabs */}
+        <View style={styles.feedTabsContainer}>
+          <TouchableOpacity
+            style={[styles.feedTab, feedFilter === 'all' && styles.feedTabActive]}
+            onPress={() => setFeedFilter('all')}
+          >
+            <Globe size={16} color={feedFilter === 'all' ? colors.primary : colors.textMuted} />
+            <Text style={[styles.feedTabText, feedFilter === 'all' && styles.feedTabTextActive]}>
+              Tümü
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.feedTab, feedFilter === 'following' && styles.feedTabActive]}
+            onPress={() => setFeedFilter('following')}
+          >
+            <Users size={16} color={feedFilter === 'following' ? colors.primary : colors.textMuted} />
+            <Text style={[styles.feedTabText, feedFilter === 'following' && styles.feedTabTextActive]}>
+              Tanıdıklar
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.feedTab, feedFilter === 'discover' && styles.feedTabActive]}
+            onPress={() => setFeedFilter('discover')}
+          >
+            <Sparkles size={16} color={feedFilter === 'discover' ? colors.primary : colors.textMuted} />
+            <Text style={[styles.feedTabText, feedFilter === 'discover' && styles.feedTabTextActive]}>
+              Tanımadıklar
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Kategori Filtre */}
         <ScrollView
           horizontal
@@ -967,6 +1027,36 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 9,
     fontWeight: "bold",
+  },
+  feedTabsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    backgroundColor: glassFallback.background,
+    borderBottomWidth: 1,
+    borderBottomColor: glassFallback.border,
+  },
+  feedTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    backgroundColor: glassFallback.backgroundLight,
+    borderRadius: borderRadius.md,
+  },
+  feedTabActive: {
+    backgroundColor: `${colors.primary}20`,
+  },
+  feedTabText: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
+    fontWeight: "600",
+  },
+  feedTabTextActive: {
+    color: colors.primary,
   },
   filterBar: {
     flexGrow: 0,
@@ -1222,7 +1312,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -50 }],
   },
   reactionPicker: {
-    backgroundColor: glassFallback.background,
+    backgroundColor: "rgba(30, 30, 42, 0.95)",
     borderWidth: 1,
     borderColor: glassFallback.border,
     borderRadius: borderRadius.xl,

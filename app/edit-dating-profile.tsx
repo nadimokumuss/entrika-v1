@@ -54,6 +54,16 @@ const LOOKING_FOR_OPTIONS = [
   { value: "both", label: "Her ikisi" },
 ];
 
+const RELATIONSHIP_STATUS_OPTIONS = [
+  { value: "single", label: "Bekar" },
+  { value: "dating", label: "İlişkide" },
+  { value: "complicated", label: "Karmaşık" },
+  { value: "married", label: "Evli" },
+  { value: "divorced", label: "Boşanmış" },
+  { value: "widowed", label: "Dul" },
+  { value: "rather_not_say", label: "Söylemek İstemiyorum" },
+];
+
 const MAX_PHOTOS = 6;
 const PHOTO_COLUMNS = 3;
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -80,6 +90,7 @@ export default function EditDatingProfileScreen() {
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [lookingFor, setLookingFor] = useState("both");
+  const [relationshipStatus, setRelationshipStatus] = useState("single");
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
@@ -108,6 +119,7 @@ export default function EditDatingProfileScreen() {
         setBio(data.bio || "");
         setInterests(data.interests || []);
         setLookingFor(data.looking_for || "both");
+        setRelationshipStatus(data.relationship_status || "single");
         setIsActive(data.is_active ?? true);
         setPhotos(data.photos || []);
       }
@@ -190,6 +202,7 @@ export default function EditDatingProfileScreen() {
         bio: bio.trim(),
         interests,
         looking_for: lookingFor,
+        relationship_status: relationshipStatus,
         is_active: isActive,
         photos,
       };
@@ -416,6 +429,35 @@ export default function EditDatingProfileScreen() {
               </View>
             </View>
 
+            {/* Relationship Status */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>İlişki Durumu</Text>
+              <View style={styles.relationshipStatusContainer}>
+                {RELATIONSHIP_STATUS_OPTIONS.map((option) => {
+                  const isSelected = relationshipStatus === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      onPress={() => setRelationshipStatus(option.value)}
+                      style={[
+                        styles.relationshipStatusButton,
+                        isSelected && styles.relationshipStatusButtonSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.relationshipStatusText,
+                          isSelected && styles.relationshipStatusTextSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
             {/* Is Active */}
             <View style={styles.fieldContainer}>
               <View style={styles.switchRow}>
@@ -604,6 +646,32 @@ const styles = StyleSheet.create({
   },
   lookingForTextSelected: {
     color: colors.accent,
+    fontWeight: "600",
+  },
+  relationshipStatusContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  relationshipStatusButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: glassFallback.border,
+    backgroundColor: glassFallback.background,
+  },
+  relationshipStatusButtonSelected: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+    backgroundColor: `${colors.primary}15`,
+  },
+  relationshipStatusText: {
+    fontSize: fontSize.sm,
+    color: colors.textLight,
+  },
+  relationshipStatusTextSelected: {
+    color: colors.primary,
     fontWeight: "600",
   },
   switchRow: {

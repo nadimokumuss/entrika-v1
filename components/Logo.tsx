@@ -1,40 +1,22 @@
 import React from "react";
-import { View, StyleSheet, Image, ImageStyle } from "react-native";
+import { View, StyleSheet } from "react-native";
 
-interface LogoProps {
-  size?: number;
-  style?: ImageStyle;
-}
-
-export default function Logo({ size = 24, style }: LogoProps) {
+export default function Logo({ size = 20 }: { size?: number }) {
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      {/* Text-based logo for now since we don't have a logo image */}
-      <View style={[styles.textLogo, { width: size, height: size }]}>
-        <View style={styles.logoInner}>
-          <View style={[styles.logoBar, { backgroundColor: "#A855F7" }]} />
-          <View style={[styles.logoBar, { backgroundColor: "#F472B6" }]} />
-          <View style={[styles.logoBar, { backgroundColor: "#8B5CF6" }]} />
-        </View>
-      </View>
+    <View style={styles.container}>
+      <View style={[styles.bar, { backgroundColor: "#A855F7", width: size }]} />
+      <View style={[styles.bar, { backgroundColor: "#F472B6", width: size }]} />
+      <View style={[styles.bar, { backgroundColor: "#8B5CF6", width: size }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    gap: 3,
     alignItems: "center",
-    justifyContent: "center",
   },
-  textLogo: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoInner: {
-    gap: 2,
-  },
-  logoBar: {
-    width: "100%",
+  bar: {
     height: 3,
     borderRadius: 2,
   },
