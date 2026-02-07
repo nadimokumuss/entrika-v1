@@ -29,6 +29,8 @@ Kullanıcı "sync-end" dediğinde:
 - Tinder benzeri eşleşme sistemi AMA eşleşmeden önce karşı tarafın topluluk puanını görebiliyorsun
 - Anonim paylaşımlar (itiraf, ifşa, red flag, yılanlık, dolandırıcılık, tavsiye)
 - Herkese açık kayıt (davetiye sistemi kaldırıldı)
+- Takip sistemi (Follow) - kullanıcıları takip edebilirsin
+- Feed filtreleme - Tümü / Tanıdıklar / Tanımadıklar
 
 ### Hedef Kitle
 - Hem kadınlar hem erkekler
@@ -79,7 +81,7 @@ entrika/
 │   │   └── register.tsx # Kayıt (cinsiyet + avatar)
 │   ├── (tabs)/          # Ana tab ekranları
 │   │   ├── _layout.tsx
-│   │   ├── index.tsx    # Feed (Supabase)
+│   │   ├── index.tsx    # Feed (Supabase) + Feed Filter Tabs
 │   │   ├── match.tsx    # Eşleşme (Supabase)
 │   │   ├── explore.tsx  # Keşfet (Supabase)
 │   │   └── profile.tsx  # Profil (Supabase)
@@ -87,30 +89,29 @@ entrika/
 │   │   └── [matchId].tsx # Chat ekrani (Supabase realtime)
 │   ├── _layout.tsx      # Root layout
 │   ├── new-post.tsx     # Yeni paylaşım (Supabase insert)
-│   ├── edit-dating-profile.tsx # Dating profil duzenleme
+│   ├── edit-dating-profile.tsx # Dating profil duzenleme + Relationship Status
 │   ├── conversations.tsx # Sohbet listesi
 │   ├── notifications.tsx # Bildirim ekrani (in-app)
+│   ├── post-detail.tsx  # Post detay + yorumlar + yorum reaksiyonları
 │   └── review-user.tsx  # Kullanici degerlendirme formu (modal)
+├── components/
+│   ├── Logo.tsx         # Basit logo component (3 bar)
+│   ├── ui/              # UI bileşenleri
+│   └── ...
 ├── constants/
 │   ├── theme.ts         # Renk ve spacing sabitleri
 │   └── categories.ts   # Kategori ve reaksiyon sabitleri
 ├── contexts/
-│   └── AuthContext.tsx  # Auth state yönetimi (production)
-├── data/
-│   └── mockData.ts      # Re-export (geriye uyumluluk)
-├── components/
-│   └── MessageBubble.tsx # Mesaj baloncugu bileşeni
+│   ├── AuthContext.tsx  # Auth state yönetimi (production)
+│   └── FollowContext.tsx # Follow state yönetimi
 ├── lib/
 │   ├── supabase.ts      # Supabase client + type definitions
-│   └── messaging.ts     # Mesajlasma yardimci fonksiyonlari
+│   ├── following.ts     # Follow fonksiyonları
+│   └── ...
 └── supabase/
     ├── schema.sql              # Orijinal şema
     ├── schema-v2.sql           # Güncel tam şema
-    ├── profile-trigger.sql     # Profil auto-create trigger
-    ├── setup-missing-tables.sql # Eksik tablo kurulumu
-    ├── user-reviews.sql        # Kullanici degerlendirme tablosu
-    ├── notifications.sql       # Bildirim tablosu (in-app notifications)
-    └── reputation-trigger.sql  # reputation_score otomatik guncelleme trigger'i
+    └── update-relationship-status.sql # Relationship status + comment reactions
 ```
 
 ---
@@ -122,6 +123,7 @@ entrika/
 - [x] Kayıt ekranı (cinsiyet seçimi, cinsiyete göre avatar, email, username, şifre)
 - [x] Giriş ekranı
 - [x] Feed (Supabase: posts + reactions + comments)
+- [x] Feed Filter Tabs: Tümü / Tanıdıklar / Tanımadıklar
 - [x] Match tab (Supabase: dating_profiles + swipes)
 - [x] Explore tab (Supabase: shadow_profiles + shadow_reviews)
 - [x] Profile sayfası (Supabase: profil + postlar + değerlendirmeler)
@@ -131,6 +133,9 @@ entrika/
 - [x] Otomatik profil oluşturma trigger (handle_new_user)
 - [x] Otomatik match oluşturma trigger (check_and_create_match)
 - [x] useFocusEffect ile tab geçişlerinde veri yenileme
+- [x] Takip sistemi (Follow)
+- [x] İlişki durumu seçimi (Dating Profile)
+- [x] Yorum reaksiyonları (Comment Reactions)
 
 ### Yapılacaklar (Öncelik Sırasına Göre)
 1. [x] Mesajlaşma sistemi (eşleşmeler arası)
@@ -142,19 +147,24 @@ entrika/
 7. [x] Şifremi unuttum akışı
 8. [x] reputation_score otomatik guncelleme (user_reviews trigger)
 9. [x] Bildirim ekrani (in-app notifications + bell badge)
+10. [x] Feed filter tabs (Tümü/Tanıdıklar/Tanımadıklar)
+11. [x] İlişki durumu UI
+12. [x] Yorum reaksiyonları UI
 
 ### Siradaki Ozellikler
-1. [x] Profil duzenleme (username, bio, avatar degistirme)
-2. [ ] Post silme / duzenleme
-3. [ ] Feed'de realtime guncellemeler
-4. [ ] Gelismis filtreleme (match'te yas, lokasyon)
-5. [ ] Premium ozellikler
+1. [ ] Post silme / duzenleme
+2. [ ] Gelismis filtreleme (match'te yas, lokasyon)
+3. [ ] Premium ozellikler
+4. [ ] Profil detay sayfasında ilişki durumu gösterimi
+5. [ ] Feed'de algorithm optimization
 
 ### Tamamlanan Ek Ozellikler
 - [x] Web deploy (Vercel) - https://entrika.vercel.app
 - [x] Platform kontrolleri (Haptics, Notifications, SecureStore, ImagePicker)
 - [x] SSR hydration fix (isClient pattern)
 - [x] Template dosyalari temizlendi (two.tsx kaldirildi)
+- [x] Logo component yeniden yazıldı (basit ve güvenilir)
+- [x] Reaction picker arka planı düzeltildi (transparent -> solid)
 
 ---
 
@@ -170,14 +180,14 @@ entrika/
 7. **Web deploy Vercel uzerinden** - Static rendering + rewrites ile SPA routing
 8. **Davetiye sistemi kaldirildi** - Uygulama herkese acik, gatekeeper yerine karsilama ekrani
 9. **Turkce karakter duzeltmeleri** - Tum UI metinlerinde ö, ü, ş, ç, ğ, ı, İ, Ş, Ç karakterleri duzeltildi
+10. **Takip sistemi eklendi** - FollowContext, follows tablosu, kullanıcı takip edebilir
 
 ### Dikkat Edilecekler
 - Expo Go ile test edilebilir (development build gerekmez)
 - Port 8081 meşgulse `--port 8082` kullan
 - Supabase Dashboard: Authentication > Providers > Email > Confirm email = OFF olmali
 - Yeni tablo eklenirse `supabase/setup-missing-tables.sql` guncellenmeli
-- `supabase/user-reviews.sql` Supabase SQL Editor'de calistirilmali (user_reviews tablosu)
-- `supabase/notifications.sql` Supabase SQL Editor'de calistirildi (notifications tablosu)
+- `supabase/update-relationship-status.sql` Supabase SQL Editor'de calistirilmali (EN ÖNCE!)
 
 ### Web Deploy Notlari
 - **Vercel URL:** https://entrika.vercel.app
@@ -188,14 +198,16 @@ entrika/
 - **Hydration fix:** `_layout.tsx`'te `isClient` state pattern - SSR'da bos View render edilir, client mount sonrasi gercek icerik
 - **SecureStore:** Web'de `require('expo-secure-store')` yerine `localStorage` kullanilir
 - **Auth storage:** Web'de localStorage, native'de SecureStore
-- **Glass degiskeni fix (TAMAMLANDI):** Artık glass import edilmiyor. Tum dosyalarda inline glassFallback kullaniliyor:
-  ```typescript
-  const glassFallback = {
-    background: "rgba(22, 22, 31, 0.6)",
-    border: "rgba(255, 255, 255, 0.08)",
-    borderHighlight: "rgba(168, 85, 247, 0.2)",
-  };
-  ```
+
+### Glass Degiskeni
+Artık glass import edilmiyor. Tum dosyalarda inline glassFallback kullaniliyor:
+```typescript
+const glassFallback = {
+  background: "rgba(22, 22, 31, 0.6)",
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHighlight: "rgba(168, 85, 247, 0.2)",
+};
+```
 
 ### Proje Yapisi
 - **Repo Root:** `C:\Users\reiss\Desktop\Entrika v1\entrika\`

@@ -1,7 +1,7 @@
 # Entrika - Project Details
 
-> Son güncelleme: 2026-02-05
-> Versiyon: 0.1.0 (MVP Development)
+> Son güncelleme: 2026-02-07
+> Versiyon: 0.2.0 (Beta)
 
 ---
 
@@ -21,6 +21,8 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - Anonim deneyim paylaşımı
 - Eşleşmeden önce karşı tarafın "sicilini" görme
 - Herkese açık kayıt sistemi
+- Takip sistemi - kullanıcıları takip edebilme
+- Feed filtreleme - Tanıdıklar / Tanımadıklar
 
 ---
 
@@ -30,11 +32,9 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - Herkese açık kayıt (davetiye sistemi kaldırıldı)
 - Cinsiyet seçimi (Kadın/Erkek)
 - Cinsiyete göre avatar seçenekleri
-  - Kadın: Lorelei avatar stili
-  - Erkek: Avataaars stili
 - Email + username + şifre
 
-### 3. Feed (Akış)
+### 2. Feed (Akış)
 **Kategoriler:**
 | Kategori | Emoji | Açıklama |
 |----------|-------|----------|
@@ -45,41 +45,46 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 | Dolandırıcılık | 💸 | Dolandırıcı uyarıları |
 | Tavsiye | 💅 | Genel tavsiyeler |
 
+**Feed Filter Tabs:**
+- **Tümü** - Tüm paylaşımlar
+- **Tanıdıklar** - Sadece takip edilenlerin paylaşımları
+- **Tanımadıklar** - Takip edilmeyenlerin paylaşımları
+
 **Özellikler:**
 - Anonim veya isimli paylaşım seçeneği
-- Spoiler/hassas içerik filtresi (ifşa, red flag, dolandırıcılık için otomatik)
+- Spoiler/hassas içerik filtresi
 - Reaksiyon sistemi: 🔥 Olay, 🫂 Yanındayım, 🐍 Yılan, 😱 Şok, 👏 Helal
 - Yorum sistemi
+- Yorum reaksiyonları
 
-### 4. Match (Eşleşme)
-**Tinder benzeri swipe sistemi AMA:**
+### 3. Match (Eşleşme)
+**Tinder benzeri swipe sistemi:**
 - Her kartta topluluk puanı görünür
+- İlişki durumu gösterimi (Bekar, İlişkide, vb.)
 - Düşük puanlı profillerde (<4) uyarı işareti
-- Pozitif/negatif etiketler görünür
-- Fotoğraf galerisi (birden fazla fotoğraf)
-- Bio, ilgi alanları, meslek, eğitim bilgileri
+- Fotoğraf galerisi, bio, ilgi alanları, meslek, eğitim
 
 **Aksiyonlar:**
 - ❌ Pass (sola kaydır)
 - ⭐ Super Like (yukarı)
 - ❤️ Like (sağa kaydır)
 
-**Eşleşme:**
-- İki taraf da like verdiğinde eşleşme oluşur
-- Eşleşme sonrası mesajlaşma açılır
-
-### 5. Explore (Keşfet)
+### 4. Explore (Keşfet)
 - Shadow profil arama (isim, şehir, etiket)
 - Topluluk değerlendirmesi görme
-- Puan ortalaması ve değerlendirme sayısı
 - Negatif etiketler: Aldatıcı, Yalancı, Ghosting, Manipülatif, vb.
 
-### 6. Profile (Profil)
+### 5. Profile (Profil)
 - Avatar ve kullanıcı adı
-- İtibar puanı (diğer kullanıcıların verdiği)
+- İtibar puanı
 - İstatistikler: Paylaşım sayısı, değerlendirme sayısı
 - Kendi paylaşımları
 - Değerlendirmeler sekmesi
+
+### 6. Takip Sistemi
+- Kullanıcıları takip etme/takibi bırakma
+- Takipçi sayısı
+- Feed'de filtreleme
 
 ---
 
@@ -105,6 +110,14 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 #### comments
 - id, post_id, author_id, content, is_anonymous
 
+#### comment_reactions (2026-02-07 eklendi)
+- id, comment_id, user_id, reaction_type
+- UNIQUE(comment_id, user_id)
+
+#### follows (2026-02-07 eklendi)
+- id, follower_id, following_id
+- UNIQUE(follower_id, following_id)
+
 #### shadow_profiles
 - id, target_name, identifier_hash, city, created_by
 
@@ -112,7 +125,9 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - id, shadow_profile_id, reviewer_id, score (1-10), content, tags[], is_anonymous
 
 #### dating_profiles
-- id, user_id, bio, photos[], interests[], job, education, city, age, is_active, looking_for
+- id, user_id, bio, photos[], interests[], job, education, city, age, is_active
+- looking_for (TEXT: 'female' | 'male' | 'both')
+- **relationship_status** (TEXT: 'single' | 'dating' | 'complicated' | 'married' | 'divorced' | 'widowed' | 'rather_not_say') - 2026-02-07 eklendi
 
 #### swipes
 - id, swiper_id, swiped_id, is_like, is_super_like
@@ -124,14 +139,11 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - id, match_id, sender_id, content, is_read
 
 #### notifications
-- id (UUID, PK), user_id (FK auth.users), type, title, body, data (JSONB), is_read, created_at
-- RLS: kullanicilar kendi bildirimlerini okuyup guncelleyebilir
-- Partial index: okunmamis bildirimler icin hizli sorgu
+- id, user_id, type, title, body, data (JSONB), is_read, created_at
 
 #### user_reviews
-- id, target_user_id (FK profiles), reviewer_id (FK profiles), score (1-10), content, tags[], is_anonymous
+- id, target_user_id, reviewer_id, score (1-10), content, tags[], is_anonymous
 - UNIQUE(target_user_id, reviewer_id)
-- RLS: herkes okuyabilir, sadece reviewer insert/update yapabilir
 
 #### reports
 - id, reporter_id, reported_user_id, reported_post_id, reason, status
@@ -143,117 +155,72 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 ### 2026-01-26 - İlk Versiyon
 - Proje oluşturuldu (Expo SDK 53)
 - Temel ekranlar tamamlandı
-- Light mode tema uygulandı
-- Supabase entegrasyonu hazırlandı (mock modda)
-- Cinsiyet seçimi ve avatar sistemi eklendi
-- GitHub'a ilk push yapıldı
 
 ### 2026-01-28 - Supabase Aktivasyonu
-- Tum 5 ekran Supabase'e baglanildi (Feed, New Post, Explore, Profile, Match)
-- 10 eksik tablo icin SQL olusturuldu ve Supabase'de calistirildi
-- Mock data kaldirildi, constants/categories.ts'e tasindi
-- Auth akisi duzeltildi (e-posta dogrulama kapatildi, session yonetimi)
-- Profil sayfasina cikis yap butonu eklendi
-- useFocusEffect ile tab gecislerinde otomatik veri yenileme eklendi
-- signUp fonksiyonuna detayli hata loglama eklendi
-- Test edildi: kayit, giris, post olusturma, profil goruntuleme calisiyor
+- Tum 5 ekran Supabase'e baglanildi
 
 ### 2026-01-30 - Mesajlasma + Dating Profil + Kullanici Degerlendirme
-- Mesajlasma sistemi eklendi (conversations.tsx, chat/[matchId].tsx, MessageBubble, lib/messaging.ts)
-- Dating profil duzenleme ekrani eklendi (edit-dating-profile.tsx)
-- Match ekrani guncellendi (app/(tabs)/match.tsx)
-- Kullanici degerlendirme sistemi eklendi:
-  - user_reviews tablosu (supabase/user-reviews.sql)
-  - UserReview interface (lib/supabase.ts)
-  - Degerlendirme formu (app/review-user.tsx) - 1-10 puan, etiketler, yorum, anonim toggle
-  - Chat header'a yildiz butonu ile degerlendirme erisimi
-  - Profil'e "Degerlendirmeler" sekmesi - alinan yorumlari gosterir
+- Mesajlasma sistemi eklendi
+- Dating profil duzenleme ekrani eklendi
+- Kullanici degerlendirme sistemi eklendi
 
 ### 2026-02-02 - Bildirim Ekrani
-- `notifications` tablosu olusturuldu (supabase/notifications.sql)
-  - UUID PK, user_id, type, title, body, data (JSONB), is_read, created_at
-  - Partial index (okunmamis bildirimler icin)
-  - RLS: kullanicilar kendi bildirimlerini okuyup guncelleyebilir
-- Edge function (send-push-notification) guncellendi:
-  - Her bildirimde `notifications` tablosuna INSERT eklendi
-  - Match icin iki kullaniciya ayri kayit (sendToRecipient icinde de INSERT)
-- `app/notifications.tsx` ekrani eklendi:
-  - Bildirim listesi (FlatList, pull-to-refresh)
-  - Tip bazli ikon/renk (message, match, reaction, comment, review)
-  - Okunmamis kartlar highlight ile gosterilir
-  - Tiklaninca ilgili sayfaya yonlendirme + okundu isaretleme
-  - "Tumu okundu" butonu
-  - Bos state (Bell ikonu + aciklama)
-- `app/_layout.tsx` guncellendi: notifications route eklendi (slide_from_right)
-- `app/(tabs)/index.tsx` guncellendi:
-  - Feed header'a Bell ikonu eklendi
-  - Okunmamis bildirim sayisi badge (9+ gosterimi)
-  - useFocusEffect ile her tab'a donuste unread count guncellenir
+- `notifications` tablosu olusturuldu
+- Bildirim ekrani eklendi
 
 ### 2026-02-04 - Web Deploy (Vercel)
-- Web'e deploy icin Platform kontrolleri eklendi:
-  - **Haptics**: 7 dosyada `Platform.OS !== 'web'` check (GradientButton, GradientTabBar, AnimatedPressable, index, post-detail, match, chat)
-  - **Notifications**: `lib/notifications.ts` ve `hooks/usePushNotifications.ts` - web'de atlanir
-  - **SecureStore**: `lib/supabase.ts` - conditional require, web'de localStorage
-  - **ImagePicker**: `lib/storage.ts` - web'de izin isteme atlanir
-  - **SplashScreen**: `app/_layout.tsx` - web'de preventAutoHide/hideAsync atlanir
-- SSR hydration fix: `_layout.tsx`'te `isClient` state pattern ile hydration mismatch onlendi
-- Vercel yapilandirmasi:
-  - `vercel.json`: `rewrites` (routes degil!) + buildCommand ile `.env` olusturma
-  - `package.json`: `build:web` script (`expo export --platform web --clear`)
-  - Vercel env vars: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` (production scope)
-- Template dosyasi `app/(tabs)/two.tsx` silindi, tab layout'tan referansi kaldirildi
-- Onemli bug fix: `vercel.json`'da `routes` yerine `rewrites` - routes tum istekleri (JS bundle dahil) index.html'e yonlendiriyordu
-- Davetiye kodu dogrulama'ya console logging eklendi (debug icin)
+- Platform kontrolleri eklendi
+- SSR hydration fix
 - Site canli: https://entrika.vercel.app
 
-### 2026-02-04 - Davetiye Sistemi Kaldirma + Turkce Karakter Duzeltmeleri
-- **Davetiye sistemi tamamen kaldirildi:**
-  - Gatekeeper ekrani karsilama ekranina donusturuldu (Hesap Olustur / Giris Yap)
-  - `app/(auth)/index.tsx` - WelcomeScreen olarak yeniden yazildi
-  - `app/(auth)/register.tsx` - inviteCode state, AsyncStorage, uyari kutusu kaldirildi
-  - `contexts/AuthContext.tsx` - validateInviteCode, generateInviteCode, signUp'tan invite dogrulama kaldirildi
-  - `app/(tabs)/profile.tsx` - Davetiye/Referans istatistikleri ve referanslar sekmesi kaldirildi
-  - `app/settings.tsx` - Davetiye bolumu tamamen kaldirildi
-  - `lib/supabase.ts` - InviteCode interface'i ve Profile'dan invite alanlari kaldirildi
-- **Turkce karakter duzeltmeleri (21+ dosya, ~150+ duzeltme):**
-  - Tum UI metinlerinde ö, ü, ş, ç, ğ, ı, İ, Ş, Ç karakterleri duzeltildi
-  - Kategori etiketleri (Itiraf→İtiraf, Ifsa→İfşa, Yilanlik→Yılanlık, Dolandiricilik→Dolandırıcılık)
-  - Reaksiyon etiketleri (Yanindayim→Yanındayım, Yilan→Yılan, Sok→Şok)
-  - Degerlendirme etiketleri (Guvenilir→Güvenilir, Durst→Dürüst, Saygili→Saygılı, vb.)
-  - Auth ekranlari, profil, ayarlar, chat, explore, match, bildirimler, raporlama tum ekranlar duzeltildi
-- **Not:** Veritabaninda eski etiket degerleriyle kaydedilmis degerlendirmeler varsa migration gerekebilir
+### 2026-02-04 - Davetiye Sistemi Kaldirma
+- Gatekeeper ekrani karsilama ekranina donusturuldu
+- Turkce karakter duzeltmeleri
 
 ### 2026-02-05 - Profil Duzenleme
-- Profil duzenleme ozelligi tamamlandi:
-  - `app/edit-profile.tsx` - Username ve bio duzenleme ekrani
-  - Username validasyonlari (3-20 karakter, unique kontrol, harf/rakam/_ only)
-  - Bio 150 karakter limiti
-  - `app/(tabs)/profile.tsx` - Avatar degistirme (kamera/galeri secimi)
-  - Avatar upload Supabase Storage ile yapiliyor
-  - Eski avatar otomatik siliniyor
+- Username ve bio duzenleme eklendi
+- Avatar degistirme eklendi
 
-### 2026-02-05 - Web Build Fix (glass is not defined) - TAMAMLANDI
-- Vercel web build'de "glass is not defined" hatasi tamamen duzeltildi:
-  - TUM dosyalardan glass import kaldirildi
-  - Her dosyada inline glassFallback tanimi yapildi
-  - 50+ dosya duzeltildi
-- **Sorun:** StyleSheet.create icerisinde import edilen glass degiskeni web build sirasinda module resolution sorunu yaratıyordu
-- **Cozum:** glass artık import edilmiyor, her dosyada inline glassFallback kullaniliyor
+### 2026-02-05 - Web Build Fix (glass is not defined)
+- Tum dosyalarda inline glassFallback kullaniliyor
 
 ### 2026-02-06 - Proje Yapısı Temizligi
-- `entrika/entrika/` duplika klasoru tamamen silindi (85 dosya, -26,242 satır)
-- Proje yapısı temizlendi ve tek bir yapıya indirgendi
-- Dosya duzenlemeleri artik sorunsuz calisiyor
-- Repo root: `C:\Users\reiss\Desktop\Entrika v1\entrika\`
+- Duplika klasor silindi
 
-### Sonraki Oturum Icin Notlar
-- Post silme / duzenleme
-- Feed'de realtime guncellemeler
-- Gelismis filtreleme (match'te yas, lokasyon)
-- Premium ozellikler
-- Web'de UI iyilestirmeleri (responsive tasarim, web-specific stiller)
-- Veritabanindaki eski etiket degerlerini (Guvenilir, Durst vb.) yeni Turkce karakterli hallerine migrate etme
+### 2026-02-07 - Feed Tabs + Relationship Status + Comment Reactions
+- **Logo component yeniden yazıldı** (basit ve güvenilir)
+- **Reaction picker arka planı düzeltildi** (transparent -> solid)
+- **Yorum optimistic update düzeltildi** (temp comment matching)
+- **Feed filter tabs eklendi**: Tümü / Tanıdıklar / Tanımadıklar
+  - `app/(tabs)/index.tsx`'e tab UI eklendi
+  - `useFollow()` hook ile followingIds kullanılıyor
+  - Post fetch'de filtreleme uygulanıyor
+- **İlişki durumu UI eklendi**:
+  - `dating_profiles` tablosuna `relationship_status` kolonu
+  - `app/edit-dating-profile.tsx`'e seçici eklendi
+  - `app/(tabs)/match.tsx`'te gösterim eklendi
+- **Yorum reaksiyonları UI eklendi**:
+  - `comment_reactions` tablosu oluşturuldu
+  - `app/post-detail.tsx`'e tepki butonları eklendi
+  - Tepki sayısı ve kullanıcı tepki rengi gösteriliyor
+
+---
+
+## Bilinen Sorunlar ve Eksiklikler
+
+### Kritik Sorunlar
+1. **Post silme/düzenleme yok** - Kullanıcılar paylaşımını silemiyor
+2. **Realtime feed güncellemesi yok** - Yeni postlar için refresh gerekiyor
+3. **Profil detayında ilişki durumu görünmüyor** - Sadece match ekranında var
+
+### UI/UX Sorunları
+1. **Feed algoritması yetersiz** - Engagement bazalı sıralama yok
+2. **Match filtreleme sınırlı** - Yaş ve şehir filtresi yok
+3. **Notification types eksik** - Bazı aksiyonlar bildirim gelmiyor
+
+### Performance
+1. **Pagination yok** - Tüm postlar aynı anda çekiliyor
+2. **Image optimization eksik** - Large images sorun olabilir
 
 ---
 
@@ -265,48 +232,36 @@ Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kull
 - `signOut()`
 
 ### Posts
-- `getPosts(category?, limit, offset)`
+- `getPosts(category?, feedFilter?, limit, offset)`
 - `createPost(content, category, isAnonymous, isSpoiler, imageUrl?)`
 - `addReaction(postId, reactionType)`
 - `removeReaction(postId)`
+
+### Comments
+- `addComment(postId, content, isAnonymous)`
+- `addCommentReaction(commentId, reactionType)`
+- `removeCommentReaction(commentId)`
 
 ### Dating
 - `getDatingProfiles(filters)`
 - `swipe(targetUserId, isLike, isSuperLike)`
 - `getMatches()`
-- `sendMessage(matchId, content)`
-- `getMessages(matchId)`
+- `updateDatingProfile(data)`
 
-### Shadow Profiles
-- `searchShadowProfiles(query, city?)`
-- `createShadowProfile(targetName, identifier, city)`
-- `addReview(shadowProfileId, score, content, tags)`
+### Follow
+- `followUser(targetUserId)`
+- `unfollowUser(targetUserId)`
+- `getFollowingIds()`
+- `isFollowing(targetUserId)`
 
 ---
 
 ## Güvenlik Notları
 
-1. **RLS (Row Level Security)** aktif - kullanıcılar sadece kendi verilerine erişebilir
-2. **Identifier hash** - telefon/instagram bilgileri hashlenip saklanır
-3. **Anonim paylaşımlar** - author bilgisi frontend'de gizlenir ama veritabanında var (moderasyon için)
-4. **Rate limiting** - spam önleme (Supabase Edge Functions ile)
-
----
-
-## Performans Notları
-
-- Lazy loading için pagination kullan
-- Resimler için CDN (Supabase Storage)
-- Match algoritması için edge function
-- Realtime mesajlaşma için Supabase Realtime
-
----
-
-## Bilinen Sorunlar
-
-1. ~~NativeWind Node.js 24 ile çalışmıyor~~ → StyleSheet'e geçildi
-2. Port 8081 bazen meşgul → 8082 kullan
-3. Expo Go'da bazı native modüller çalışmayabilir → Development build gerekebilir
+1. **RLS (Row Level Security)** aktif
+2. **Identifier hash** - telefon/instagram bilgileri hashlenir
+3. **Anonim paylaşımlar** - author bilgisi frontend'de gizlenir
+4. **Rate limiting** - spam önleme
 
 ---
 
