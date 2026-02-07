@@ -26,6 +26,7 @@ import {
   ShieldBan,
   User,
   Flame,
+  Trash2,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import {
@@ -415,6 +416,43 @@ export default function PostDetailScreen() {
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+
+    Alert.alert(
+      "Yorumu Sil",
+      "Bu yorumu silmek istediğine emin misin?",
+      [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from("comments")
+                .delete()
+                .eq("id", commentId)
+                .eq("author_id", user.id);
+
+              if (error) throw error;
+
+              // Remove from local state
+              setComments(prev => prev.filter(c => c.id !== commentId));
+
+              if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            } catch (e) {
+              console.error("Delete comment error:", e);
+              Alert.alert("Hata", "Yorum silinemedi.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleLongPress = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowReactions(true);
@@ -522,19 +560,30 @@ export default function PostDetailScreen() {
         )}
         <View style={styles.commentBody}>
           <View style={styles.commentHeader}>
-            {authorTappable ? (
+            <View style={styles.commentHeaderLeft}>
+              {authorTappable ? (
+                <TouchableOpacity
+                  onPress={() => handleAuthorPress(item.author_id)}
+                  activeOpacity={0.7}
+                >
+                  {authorNameContent}
+                </TouchableOpacity>
+              ) : (
+                authorNameContent
+              )}
+              <Text style={styles.commentTime}>
+                {formatTimeAgo(item.created_at)}
+              </Text>
+            </View>
+            {item.author_id === user?.id && (
               <TouchableOpacity
-                onPress={() => handleAuthorPress(item.author_id)}
-                activeOpacity={0.7}
+                onPress={() => handleDeleteComment(item.id)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.deleteCommentButton}
               >
-                {authorNameContent}
+                <Trash2 size={14} color={colors.textMuted} />
               </TouchableOpacity>
-            ) : (
-              authorNameContent
             )}
-            <Text style={styles.commentTime}>
-              {formatTimeAgo(item.created_at)}
-            </Text>
           </View>
           <Text style={styles.commentContent}>{item.content}</Text>
 
@@ -1144,7 +1193,17 @@ const styles = StyleSheet.create({
   commentHeader: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.xs,
+  },
+  commentHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  deleteCommentButton: {
+    padding: spacing.xs,
+    marginLeft: spacing.sm,
   },
   commentAuthor: {
     color: colors.textLight,

@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
 
 interface EmptyStateProps {
-  type: "feed" | "match" | "explore" | "notifications" | "messages" | "profile";
+  type: "feed" | "match" | "explore" | "notifications" | "messages" | "profile" | "following";
   style?: any;
 }
 
@@ -51,6 +51,13 @@ const EMPTY_STATES = {
     description: "Kendini tanıt, değerlendirmeleri al",
     actionText: "Profili Düzenle",
     actionRoute: "/edit-profile",
+  },
+  following: {
+    emoji: "👥",
+    title: "Henüz kimseyi takip etmiyorsun",
+    description: "İlgi çekici kullanıcıları keşfet ve takip et",
+    actionText: "Keşfet",
+    actionRoute: "/explore",
   },
 };
 

@@ -30,6 +30,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Logo from "@/components/Logo";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface Notification {
   id: string;
@@ -69,21 +70,30 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
+      setError(null);
+      const { data, error: err } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (err) throw err;
       setNotifications(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching notifications:", error);
+      if (error?.message?.includes("fetch") || error?.message?.includes("network")) {
+        setError({ type: "network" });
+      } else if (error?.code?.startsWith("5")) {
+        setError({ type: "server" });
+      } else {
+        setError({ type: "general", message: error?.message });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -171,6 +181,27 @@ export default function NotificationsScreen() {
       </TouchableOpacity>
     );
   };
+
+  if (error) {
+    return (
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <ArrowLeft size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Logo size={24} />
+            <Text style={styles.headerTitle}>Bildirimler</Text>
+            <View style={styles.headerRight} />
+          </View>
+          <ErrorState type={error.type} message={error.message} onRetry={() => fetchNotifications()} />
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
 
   if (loading) {
     return (

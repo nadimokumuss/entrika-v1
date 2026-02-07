@@ -28,6 +28,7 @@ import {
 import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Logo from "@/components/Logo";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -59,10 +60,12 @@ export default function ConversationsScreen() {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
 
   const loadConversations = useCallback(async () => {
     if (!user) return;
     try {
+      setError(null);
       const data = await fetchConversations(user.id);
       // Filter out conversations with blocked users
       const blockedIds = await getBlockedUserIds(user.id);
@@ -70,8 +73,15 @@ export default function ConversationsScreen() {
         (conv) => !blockedIds.includes(conv.otherUserId)
       );
       setConversations(filtered);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading conversations:", error);
+      if (error?.message?.includes("fetch") || error?.message?.includes("network")) {
+        setError({ type: "network" });
+      } else if (error?.code?.startsWith("5")) {
+        setError({ type: "server" });
+      } else {
+        setError({ type: "general", message: error?.message });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,6 +106,27 @@ export default function ConversationsScreen() {
     setRefreshing(true);
     loadConversations();
   };
+
+  if (error) {
+    return (
+      <GradientBackground variant="screen">
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <ArrowLeft size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Logo size={24} />
+            <Text style={styles.headerTitle}>Mesajlar</Text>
+            <View style={styles.headerRight} />
+          </View>
+          <ErrorState type={error.type} message={error.message} onRetry={() => loadConversations()} />
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
 
   if (loading) {
     return (

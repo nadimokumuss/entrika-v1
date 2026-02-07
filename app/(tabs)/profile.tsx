@@ -29,6 +29,7 @@ import { CATEGORIES, type PostCategory } from "@/data/mockData";
 import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, deleteImage } from "@/lib/storage";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Logo from "@/components/Logo";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 type TabType = "paylaşımlar" | "degerlendirmeler";
 
@@ -76,10 +77,12 @@ export default function ProfileScreen() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
 
   const fetchUserData = useCallback(async () => {
     if (!user) return;
     try {
+      setError(null);
       const { data: postsData, error: postsError } = await supabase
         .from("posts")
         .select("id, content, category, created_at, is_anonymous")
@@ -118,8 +121,15 @@ export default function ProfileScreen() {
       if (badgesData) {
         setBadges(badgesData.map((ub: any) => ub.badges).filter(Boolean));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user data:", error);
+      if (error?.message?.includes("fetch") || error?.message?.includes("network")) {
+        setError({ type: "network" });
+      } else if (error?.code?.startsWith("5")) {
+        setError({ type: "server" });
+      } else {
+        setError({ type: "general", message: error?.message });
+      }
     } finally {
       setLoading(false);
     }
@@ -150,13 +160,20 @@ export default function ProfileScreen() {
 
         const publicUrl = await uploadImage("avatars", user.id, uri);
 
-        await supabase
+        if (!publicUrl) {
+          throw new Error("Avatar yüklenemedi.");
+        }
+
+        const { error: updateError } = await supabase
           .from("profiles")
           .update({ avatar_url: publicUrl })
           .eq("id", user.id);
 
+        if (updateError) throw updateError;
+
         await refreshProfile();
       } catch (error: any) {
+        console.error("Avatar upload error:", error);
         Alert.alert("Hata", error.message || "Avatar yüklenemedi.");
       } finally {
         setUploadingAvatar(false);
@@ -381,7 +398,13 @@ export default function ProfileScreen() {
 
           {/* Icerik */}
           <View style={styles.contentSection}>
-            {activeTab === "paylaşımlar" ? (
+            {error ? (
+              <ErrorState
+                type={error.type}
+                message={error.message}
+                onRetry={() => fetchUserData()}
+              />
+            ) : activeTab === "paylaşımlar" ? (
               loading ? (
                 <View style={styles.loadingContent}>
                   <ActivityIndicator size="small" color={colors.primary} />

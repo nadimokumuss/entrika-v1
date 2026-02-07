@@ -25,6 +25,7 @@ import {
   ChevronRight,
   MessageCircle,
   Flag,
+  RotateCcw,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -48,6 +49,7 @@ import { getBlockedUserIds } from "@/lib/blocking";
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { MatchModal } from "@/components/ui/MatchModal";
 import { FilterModal } from "@/components/ui/FilterModal";
 import type { FilterOptions } from "@/components/ui/FilterModal";
@@ -273,7 +275,7 @@ const ProfileCard = memo(function ProfileCard({
           {profile.relationship_status && (
             <View style={styles.relationshipStatusBadge}>
               <Text style={styles.relationshipStatusText}>
-                {RELATIONSHIP_STATUS_LABELS[profile.relationship_status] || profile.relationship_status}
+                {RELATIONSHIP_STATUS_LABELS[profile.relationship_status] || "Bekar"}
               </Text>
             </View>
           )}
@@ -384,12 +386,14 @@ export default function MatchScreen() {
   });
   const [lastSwipedProfile, setLastSwipedProfile] = useState<DatingProfileView | null>(null);
   const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | null>(null);
+  const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
 
   const fetchProfiles = useCallback(async () => {
     if (!user) return;
     try {
+      setError(null);
       // Get already swiped user IDs
       const { data: swipedData } = await supabase
         .from("swipes")
@@ -414,8 +418,18 @@ export default function MatchScreen() {
         .order("created_at", { ascending: false })
         .limit(20);
 
-      if (swipedIds.length > 0) {
-        query = query.not("user_id", "in", `(${swipedIds.join(",")})`);
+      // Get blocked user IDs
+      const blockedIds = user ? await getBlockedUserIds(user.id) : [];
+
+      // Exclude swiped users
+      const excludeIds = [...swipedIds];
+      // Also exclude blocked users
+      if (blockedIds.length > 0) {
+        excludeIds.push(...blockedIds);
+      }
+
+      if (excludeIds.length > 0) {
+        query = query.not("user_id", "in", `(${excludeIds.join(",")})`);
       }
 
       // Apply filters
@@ -467,8 +481,15 @@ export default function MatchScreen() {
       });
 
       setProfiles(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching dating profiles:", error);
+      if (error?.message?.includes("fetch") || error?.message?.includes("network")) {
+        setError({ type: "network" });
+      } else if (error?.code?.startsWith("5")) {
+        setError({ type: "server" });
+      } else {
+        setError({ type: "general", message: error?.message });
+      }
     } finally {
       setLoading(false);
     }
@@ -681,7 +702,15 @@ export default function MatchScreen() {
             </View>
           </AnimatedHeader>
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            {error ? (
+              <ErrorState
+                type={error.type}
+                message={error.message}
+                onRetry={() => fetchProfiles()}
+              />
+            ) : (
+              <ActivityIndicator size="large" color={colors.primary} />
+            )}
           </View>
         </SafeAreaView>
       </GradientBackground>
@@ -701,6 +730,13 @@ export default function MatchScreen() {
             </View>
           </View>
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => fetchProfiles()}
+              disabled={loading}
+            >
+              <RotateCcw size={24} color={loading ? colors.textMuted : colors.primary} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => setFilterModal(true)}
@@ -728,7 +764,17 @@ export default function MatchScreen() {
 
         {/* Cards */}
         <View style={styles.cardsContainer}>
-          {profiles.length > 0 ? (
+          {error ? (
+            <ErrorState
+              type={error.type}
+              message={error.message}
+              onRetry={() => fetchProfiles()}
+            />
+          ) : loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : profiles.length > 0 ? (
             profiles
               .slice(0, 2)
               .reverse()

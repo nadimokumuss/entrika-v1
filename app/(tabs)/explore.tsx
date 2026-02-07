@@ -29,6 +29,7 @@ import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 type ExploreTab = "suggested" | "new" | "nearby";
 
@@ -43,14 +44,18 @@ interface UserProfile {
 
 function UserProfileCard({
   profile,
-  isFollowing,
   onFollowToggle,
 }: {
   profile: UserProfile;
-  isFollowing: boolean;
+  isFollowing?: boolean; // Optional, deprecated - component now uses FollowContext directly
   onFollowToggle: () => void;
 }) {
   const router = useRouter();
+  const { isFollowing: checkIsFollowing } = useFollow();
+
+  // Use FollowContext directly for real-time sync
+  const isCurrentlyFollowing = checkIsFollowing(profile.id);
+
   const getScoreColor = (score: number) => {
     if (score >= 8) return colors.success;
     if (score >= 6) return "#EAB308";
@@ -111,12 +116,12 @@ function UserProfileCard({
           <TouchableOpacity
             style={[
               styles.followButton,
-              isFollowing && styles.followingButton,
+              isCurrentlyFollowing && styles.followingButton,
             ]}
             onPress={onFollowToggle}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            {isFollowing ? (
+            {isCurrentlyFollowing ? (
               <Text style={styles.followingButtonText}>Takip</Text>
             ) : (
               <>
@@ -140,12 +145,14 @@ export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
 
   const fetchProfiles = useCallback(async (tab: ExploreTab, query?: string) => {
     if (!user) return;
 
     try {
       setLoading(true);
+      setError(null);
 
       // Get users that current user is NOT following
       const { data: followingData } = await supabase
@@ -185,8 +192,16 @@ export default function ExploreScreen() {
       // "nearby" would require location data - for now showing newest
 
       setProfiles(filteredProfiles);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching profiles:", error);
+      // Determine error type
+      if (error?.message?.includes("fetch") || error?.message?.includes("network")) {
+        setError({ type: "network" });
+      } else if (error?.code?.startsWith("5")) {
+        setError({ type: "server" });
+      } else {
+        setError({ type: "general", message: error?.message });
+      }
     } finally {
       setLoading(false);
     }
@@ -271,7 +286,13 @@ export default function ExploreScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {loading ? (
+          {error ? (
+            <ErrorState
+              type={error.type}
+              message={error.message}
+              onRetry={() => fetchProfiles(activeTab, searchQuery)}
+            />
+          ) : loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
@@ -280,7 +301,6 @@ export default function ExploreScreen() {
               <UserProfileCard
                 key={profile.id}
                 profile={profile}
-                isFollowing={checkIsFollowing(profile.id)}
                 onFollowToggle={() => handleFollowToggle(profile.id)}
               />
             ))

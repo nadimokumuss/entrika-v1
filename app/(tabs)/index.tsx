@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark, Flame } from "lucide-react-native";
+import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark, Flame, Trash2 } from "lucide-react-native";
 import {
   CATEGORIES,
   REACTIONS,
@@ -90,10 +90,12 @@ const PostCard = memo(function PostCard({
   post,
   onRefresh,
   onEdit,
+  onDelete,
 }: {
   post: FeedPost;
   onRefresh: () => void;
   onEdit: (post: FeedPost) => void;
+  onDelete?: (postId: string) => void;
 }) {
   const [revealed, setRevealed] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
@@ -352,6 +354,31 @@ const PostCard = memo(function PostCard({
                 >
                   <Sparkles size={20} color={colors.primary} />
                   <Text style={styles.menuItemText}>Düzenle</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setShowMenu(false);
+                    if (onDelete) {
+                      Alert.alert(
+                        "Gönderiyi Sil",
+                        "Bu gönderiyi silmek istediğine emin misin?",
+                        [
+                          { text: "İptal", style: "cancel" },
+                          {
+                            text: "Sil",
+                            style: "destructive",
+                            onPress: () => onDelete(post.id),
+                          },
+                        ]
+                      );
+                    }
+                  }}
+                >
+                  <Trash2 size={20} color={colors.danger} />
+                  <Text style={[styles.menuItemText, { color: colors.danger }]}>
+                    Sil
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
                   <Flag size={20} color={colors.warning} />
@@ -777,6 +804,28 @@ export default function FeedScreen() {
     setEditModalVisible(true);
   }, []);
 
+  const handleDeletePost = useCallback(async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId)
+        .eq("author_id", user?.id);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setPosts(prev => prev.filter(p => p.id !== postId));
+
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (e) {
+      console.error("Delete post error:", e);
+      Alert.alert("Hata", "Gönderi silinemedi.");
+    }
+  }, [user?.id]);
+
   const handleCloseEditModal = useCallback(() => {
     setEditModalVisible(false);
     setSelectedPost(null);
@@ -963,10 +1012,10 @@ export default function FeedScreen() {
         >
           {filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} />
+              <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} onDelete={handleDeletePost} />
             ))
           ) : (
-            <EmptyState type={selectedCategory ? "feed" : "feed"} />
+            <EmptyState type={feedFilter === 'following' ? 'following' : 'feed'} />
           )}
           <View style={styles.bottomSpacer} />
         </ScrollView>
