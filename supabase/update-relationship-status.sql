@@ -22,27 +22,33 @@ CREATE INDEX IF NOT EXISTS idx_comment_reactions_user_id ON comment_reactions(us
 -- Enable RLS
 ALTER TABLE comment_reactions ENABLE ROW LEVEL SECURITY;
 
+-- Drop policies if they exist
+DROP POLICY IF EXISTS "Comment reactions are viewable by everyone" ON comment_reactions;
+DROP POLICY IF EXISTS "Users can insert their own comment reactions" ON comment_reactions;
+DROP POLICY IF EXISTS "Users can update their own comment reactions" ON comment_reactions;
+DROP POLICY IF EXISTS "Users can delete their own comment reactions" ON comment_reactions;
+
 -- Policy: Users can see all comment reactions
-CREATE POLICY IF NOT EXISTS "Comment reactions are viewable by everyone"
+CREATE POLICY "Comment reactions are viewable by everyone"
   ON comment_reactions FOR SELECT
   TO authenticated
   USING (true);
 
 -- Policy: Users can insert their own reactions
-CREATE POLICY IF NOT EXISTS "Users can insert their own comment reactions"
+CREATE POLICY "Users can insert their own comment reactions"
   ON comment_reactions FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can update their own reactions
-CREATE POLICY IF NOT EXISTS "Users can update their own comment reactions"
+CREATE POLICY "Users can update their own comment reactions"
   ON comment_reactions FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can delete their own reactions
-CREATE POLICY IF NOT EXISTS "Users can delete their own comment reactions"
+CREATE POLICY "Users can delete their own comment reactions"
   ON comment_reactions FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);

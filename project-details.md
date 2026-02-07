@@ -11,6 +11,31 @@
 
 Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kullanıcılar, tanışmadan önce karşı taraf hakkında topluluk değerlendirmelerini görebilir, deneyimlerini anonim olarak paylaşabilir ve güvenli bir şekilde eşleşebilir.
 
+### Platform Stratejisi (X Modeli)
+Ayrı codebase'ler, aynı backend.
+
+```
+┌────────────────────────────────────────────────────────┐
+│                    BACKEND (Supabase)                  │
+│  - Database, Auth, Storage, Realtime                  │
+└──────────────┬─────────────────────────────────────────┘
+               │
+       ┌───────┴────────┐
+       ▼                ▼
+┌──────────────┐  ┌──────────────────┐
+│  MOBILE APP  │  │   WEB SITE       │
+│  (Expo/RN)   │  │   (Next.js)      │
+│              │  │                  │
+│  - Native UI │  │  - Web UI        │
+│  - Tab bar   │  │  - Sidebar nav   │
+│  - Swipe     │  │  - Hover states  │
+│  - Gestures  │  │  - Keyboard nav  │
+└──────────────┘  └──────────────────┘
+```
+
+- **Mobile**: `entrika/` - React Native (Expo SDK 54) - Mevcut proje
+- **Web**: `entrika-web/` - Next.js (yeni proje, başlanmadı)
+
 ### Problem
 - Dating uygulamalarında karşılaşılan kişiler hakkında önceden bilgi edinme imkanı yok
 - Kötü deneyimler (aldatma, dolandırıcılık, manipülasyon) yaşandıktan sonra öğreniliyor

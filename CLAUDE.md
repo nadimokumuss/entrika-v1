@@ -32,6 +32,35 @@ Kullanıcı "sync-end" dediğinde:
 - Takip sistemi (Follow) - kullanıcıları takip edebilirsin
 - Feed filtreleme - Tümü / Tanıdıklar / Tanımadıklar
 
+### Platform Stratejisi (2026-02-07 güncellendi)
+**X (Twitter) modeli:** Ayrı codebase'ler, aynı backend.
+
+```
+┌────────────────────────────────────────────────────────┐
+│                    BACKEND (Supabase)                  │
+│  - Database, Auth, Storage, Realtime                  │
+└──────────────┬─────────────────────────────────────────┘
+               │
+       ┌───────┴────────┐
+       ▼                ▼
+┌──────────────┐  ┌──────────────────┐
+│  MOBILE APP  │  │   WEB SITE       │
+│  (Expo/RN)   │  │   (Next.js)      │
+│              │  │                  │
+│  - Native UI │  │  - Web UI        │
+│  - Tab bar   │  │  - Sidebar nav   │
+│  - Swipe     │  │  - Hover states  │
+│  - Gestures  │  │  - Keyboard nav  │
+└──────────────┘  └──────────────────┘
+```
+
+- **Mobile**: `entrika/` - React Native (Expo SDK 54) - Mevcut proje
+- **Web**: `entrika-web/` - Next.js (yeni proje, başlanmadı)
+
+**Development Stratejisi:**
+- Mobile geliştirme: `npx expo start --tunnel` (telefonda test)
+- Web deploy: `npx vercel --prod` (mobile test sonrası)
+
 ### Hedef Kitle
 - Hem kadınlar hem erkekler
 - Dating öncesi güvenlik arayanlar
