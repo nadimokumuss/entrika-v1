@@ -403,12 +403,6 @@ export default function MatchScreen() {
       // Also exclude own profile
       swipedIds.push(user.id);
 
-      // Exclude blocked users
-      const blockedIds = await getBlockedUserIds(user.id);
-      blockedIds.forEach((id) => {
-        if (!swipedIds.includes(id)) swipedIds.push(id);
-      });
-
       // Fetch active dating profiles, excluding already swiped ones
       let query = supabase
         .from("dating_profiles")
