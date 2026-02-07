@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ChevronLeft, ShieldOff, UserX } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import GradientBackground from "@/components/ui/GradientBackground";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -37,6 +33,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function BlockedUsersScreen() {
+  const { colors, glass } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUserWithProfile[]>([]);
@@ -74,6 +71,105 @@ export default function BlockedUsersScreen() {
       ]
     );
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    backButton: {
+      padding: spacing.sm,
+    },
+    headerTitle: {
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: spacing.xxl,
+    },
+    emptyTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
+    emptySubtitle: {
+      color: colors.textMuted,
+      fontSize: fontSize.md,
+      textAlign: "center",
+      marginTop: spacing.sm,
+    },
+    list: {
+      flex: 1,
+    },
+    userCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.borderLight,
+    },
+    userInfo: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    username: {
+      color: colors.text,
+      fontSize: fontSize.base,
+      fontWeight: "600",
+    },
+    dateText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    unblockButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: `${colors.danger}15`,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+      gap: spacing.xs,
+    },
+    unblockText: {
+      color: colors.danger,
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+    },
+    bottomSpacer: {
+      height: 60,
+    },
+  }), [colors, glass]);
 
   return (
     <GradientBackground variant="screen">
@@ -128,102 +224,3 @@ export default function BlockedUsersScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  headerTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xxl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    marginTop: spacing.lg,
-  },
-  emptySubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
-    textAlign: "center",
-    marginTop: spacing.sm,
-  },
-  list: {
-    flex: 1,
-  },
-  userCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.borderLight,
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  username: {
-    color: colors.text,
-    fontSize: fontSize.base,
-    fontWeight: "600",
-  },
-  dateText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  unblockButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: `${colors.danger}15`,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    gap: spacing.xs,
-  },
-  unblockText: {
-    color: colors.danger,
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-  },
-  bottomSpacer: {
-    height: 60,
-  },
-});

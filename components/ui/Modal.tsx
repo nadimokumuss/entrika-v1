@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,11 +11,8 @@ import {
   Dimensions,
 } from "react-native";
 import { X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
-
-const glassFallback = {
-  border: "rgba(255, 255, 255, 0.08)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ModalProps {
   visible: boolean;
@@ -27,6 +24,8 @@ interface ModalProps {
   showCloseButton?: boolean;
 }
 
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+
 export function Modal({
   visible,
   onClose,
@@ -36,9 +35,58 @@ export function Modal({
   animationType = "slide",
   showCloseButton = true,
 }: ModalProps) {
+  const { colors, glass, isDark } = useTheme();
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.xl,
+    },
+    container: {
+      width: "100%",
+      maxHeight: SCREEN_HEIGHT * 0.8,
+      backgroundColor: colors.card,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: glass.border,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.3,
+          shadowRadius: 20,
+        },
+        android: {
+          elevation: 10,
+        },
+      }),
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+  }), [colors, glass]);
 
   useEffect(() => {
     if (visible) {
@@ -132,7 +180,7 @@ export function Modal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <StatusBar backgroundColor="transparent" barStyle="light-content" />
+      <StatusBar backgroundColor="transparent" barStyle={isDark ? "light-content" : "dark-content"} />
       <Animated.View style={[styles.overlay, overlayStyle]}>
         <Animated.View style={[styles.container, contentStyle, style]}>
           {/* Header */}
@@ -154,52 +202,3 @@ export function Modal({
     </RNModal>
   );
 }
-
-const SCREEN_HEIGHT = Dimensions.get("window").height;
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.xl,
-  },
-  container: {
-    width: "100%",
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-});

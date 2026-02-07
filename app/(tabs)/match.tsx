@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, memo } from "react";
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from "react";
 import {
   View,
   Text,
@@ -29,15 +29,10 @@ import {
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  backgroundLight: "rgba(22, 22, 31, 0.4)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchTotalUnreadCount,
@@ -72,6 +67,7 @@ interface DatingProfileView {
   id: string;
   user_id: string;
   name: string;
+  username: string;
   age: number | null;
   city: string | null;
   bio: string | null;
@@ -105,6 +101,7 @@ const ProfileCard = memo(function ProfileCard({
   onSwipeRight: () => void;
   onReport: (profile: DatingProfileView) => void;
 }) {
+  const { colors, glass } = useTheme();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const getScoreColor = useCallback((score: number) => {
@@ -112,7 +109,7 @@ const ProfileCard = memo(function ProfileCard({
     if (score >= 6) return "#EAB308";
     if (score >= 4) return colors.warning;
     return colors.danger;
-  }, []);
+  }, [colors]);
 
   const scoreColor = getScoreColor(profile.communityScore);
 
@@ -160,6 +157,267 @@ const ProfileCard = memo(function ProfileCard({
       setCurrentPhotoIndex(currentPhotoIndex - 1);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    cardContainer: {
+      position: "absolute",
+      width: SCREEN_WIDTH - spacing.md * 2,
+    },
+    card: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    photoContainer: {
+      height: 340,
+      position: "relative",
+    },
+    photo: {
+      width: "100%",
+      height: "100%",
+      backgroundColor: colors.borderLight,
+    },
+    photoNavigation: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      flexDirection: "row",
+    },
+    photoNavButton: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    photoIndicators: {
+      position: "absolute",
+      top: spacing.md,
+      left: spacing.md,
+      right: spacing.md,
+      flexDirection: "row",
+      gap: spacing.xs,
+    },
+    photoIndicator: {
+      flex: 1,
+      height: 3,
+      backgroundColor: "rgba(255,255,255,0.4)",
+      borderRadius: 2,
+    },
+    photoIndicatorActive: {
+      backgroundColor: colors.white,
+    },
+    reportFlag: {
+      position: "absolute",
+      top: spacing.md + 12,
+      right: spacing.md,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 10,
+    },
+    gradientOverlay: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 140,
+    },
+    stamp: {
+      position: "absolute",
+      top: 60,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderWidth: 3,
+      borderRadius: borderRadius.lg,
+      gap: spacing.xs,
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: `${colors.card}90`,
+    },
+    likeStamp: {
+      right: spacing.lg,
+      borderColor: colors.success,
+      transform: [{ rotate: "15deg" }],
+    },
+    nopeStamp: {
+      left: spacing.lg,
+      borderColor: colors.danger,
+      transform: [{ rotate: "-15deg" }],
+    },
+    likeStampText: {
+      color: colors.success,
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+    },
+    nopeStampText: {
+      color: colors.danger,
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+    },
+    glow: {
+      position: "absolute",
+      top: -10,
+      left: -10,
+      right: -10,
+      bottom: -10,
+      borderRadius: 20,
+    },
+    likeGlow: {
+      backgroundColor: colors.success,
+    },
+    nopeGlow: {
+      backgroundColor: colors.danger,
+    },
+    photoInfo: {
+      position: "absolute",
+      bottom: spacing.lg,
+      left: spacing.lg,
+      right: spacing.lg,
+    },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    name: {
+      color: colors.white,
+      fontSize: 28,
+      fontWeight: "bold",
+    },
+    verifiedIcon: {
+      marginLeft: spacing.sm,
+    },
+    locationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.xs,
+    },
+    location: {
+      color: colors.white,
+      fontSize: fontSize.sm,
+      marginLeft: spacing.xs,
+    },
+    locationDivider: {
+      color: colors.white,
+      marginHorizontal: spacing.sm,
+    },
+    relationshipStatusBadge: {
+      alignSelf: "flex-start",
+      backgroundColor: `${colors.accent}40`,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.sm,
+      marginTop: spacing.xs,
+    },
+    relationshipStatusText: {
+      color: colors.white,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    details: {
+      padding: spacing.lg,
+      backgroundColor: glass.background,
+    },
+    scoreSection: {
+      marginBottom: spacing.md,
+    },
+    scoreHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.sm,
+    },
+    scoreTitle: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      fontWeight: "500",
+    },
+    warningBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: `${colors.danger}15`,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    warningText: {
+      color: colors.danger,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+      marginLeft: spacing.xs,
+    },
+    scoreRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    scoreBadge: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+    },
+    scoreValue: {
+      fontSize: fontSize.xxl,
+      fontWeight: "bold",
+    },
+    scoreMax: {
+      fontSize: fontSize.sm,
+      fontWeight: "500",
+    },
+    reviewCount: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
+      marginLeft: spacing.md,
+    },
+    tagsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    tag: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    tagText: {
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    bio: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      lineHeight: 22,
+      marginBottom: spacing.md,
+    },
+    interestsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    interestChip: {
+      backgroundColor: `${colors.primary}15`,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+    },
+    interestText: {
+      color: colors.primary,
+      fontSize: fontSize.sm,
+      fontWeight: "500",
+    },
+  }), [colors, glass]);
 
   const renderCard = () => (
     <View style={styles.card}>
@@ -365,6 +623,7 @@ const ProfileCard = memo(function ProfileCard({
 export default function MatchScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { colors, glass } = useTheme();
   const [profiles, setProfiles] = useState<DatingProfileView[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -457,6 +716,7 @@ export default function MatchScreen() {
           id: dp.id,
           user_id: dp.user_id,
           name: profileInfo?.username || "Kullanıcı",
+          username: profileInfo?.username || "kullanici",
           age: dp.age,
           city: dp.city,
           bio: dp.bio,
@@ -486,7 +746,7 @@ export default function MatchScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, filters]);
 
   useEffect(() => {
     fetchProfiles();
@@ -515,36 +775,7 @@ export default function MatchScreen() {
     };
   }, [loadUnreadCount]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, { dx, dy, y0 }) => {
-        swipe.setValue({ x: dx, y: dy });
-        tiltSign.setValue(y0 > SCREEN_HEIGHT / 2 ? 1 : -1);
-      },
-      onPanResponderRelease: (_, { dx, dy }) => {
-        const isActionActive = Math.abs(dx) > SWIPE_THRESHOLD;
-
-        if (isActionActive) {
-          const direction = dx > 0 ? 1 : -1;
-          const isLike = direction > 0;
-          Animated.timing(swipe, {
-            toValue: { x: direction * SCREEN_WIDTH * 1.5, y: dy },
-            duration: 300,
-            useNativeDriver: true,
-          }).start(() => {
-            handleSwipeComplete(isLike, false);
-          });
-        } else {
-          Animated.spring(swipe, {
-            toValue: { x: 0, y: 0 },
-            friction: 5,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
+  const handleSwipeCompleteRef = useRef<(isLike: boolean, isSuperLike: boolean) => void>(() => {});
 
   const handleSwipeComplete = async (isLike: boolean, isSuperLike: boolean) => {
     if (!user || profiles.length === 0) return;
@@ -590,6 +821,41 @@ export default function MatchScreen() {
     setProfiles((prev) => prev.slice(1));
     swipe.setValue({ x: 0, y: 0 });
   };
+
+  useEffect(() => {
+    handleSwipeCompleteRef.current = handleSwipeComplete;
+  });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, { dx, dy, y0 }) => {
+        swipe.setValue({ x: dx, y: dy });
+        tiltSign.setValue(y0 > SCREEN_HEIGHT / 2 ? 1 : -1);
+      },
+      onPanResponderRelease: (_, { dx, dy }) => {
+        const isActionActive = Math.abs(dx) > SWIPE_THRESHOLD;
+
+        if (isActionActive) {
+          const direction = dx > 0 ? 1 : -1;
+          const isLike = direction > 0;
+          Animated.timing(swipe, {
+            toValue: { x: direction * SCREEN_WIDTH * 1.5, y: dy },
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            handleSwipeCompleteRef.current(isLike, false);
+          });
+        } else {
+          Animated.spring(swipe, {
+            toValue: { x: 0, y: 0 },
+            friction: 5,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   const handleRewind = async () => {
     // For now, show premium modal for rewind
@@ -656,6 +922,163 @@ export default function MatchScreen() {
       },
     });
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    iconButton: {
+      padding: spacing.sm,
+      position: "relative",
+    },
+    filterBadge: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.accent,
+    },
+    messageButton: {
+      padding: spacing.sm,
+      position: "relative",
+    },
+    badge: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      backgroundColor: colors.accent,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: spacing.xs,
+    },
+    badgeText: {
+      color: colors.white,
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+    },
+    headerSubtitle: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
+      marginTop: spacing.xs,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cardsContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: spacing.md,
+    },
+    emptyState: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: spacing.xxl,
+    },
+    emptyTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
+    emptySubtitle: {
+      color: colors.textMuted,
+      fontSize: fontSize.md,
+      textAlign: "center",
+      marginTop: spacing.sm,
+    },
+    actions: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: spacing.xl,
+      paddingBottom: 100,
+      gap: spacing.lg,
+    },
+    actionButton: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    nopeButton: {
+      borderWidth: 2,
+      borderColor: colors.danger,
+    },
+    superLikeButton: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
+    likeButton: {
+      borderWidth: 2,
+      borderColor: colors.success,
+      ...shadows.glow,
+    },
+    premiumActions: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingBottom: spacing.xxl,
+    },
+    premiumButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    premiumButtonActive: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}15`,
+    },
+    premiumButtonInactive: {
+      opacity: 0.5,
+    },
+  }), [colors, glass]);
 
   if (loading) {
     return (
@@ -862,424 +1285,8 @@ export default function MatchScreen() {
         onClose={() => setPremiumModal(false)}
         onUpgrade={(plan) => {
           // TODO: Implement payment flow
-          console.log("Upgrade to:", plan);
         }}
       />
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  iconButton: {
-    padding: spacing.sm,
-    position: "relative",
-  },
-  filterBadge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accent,
-  },
-  messageButton: {
-    padding: spacing.sm,
-    position: "relative",
-  },
-  badge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: colors.accent,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.xs,
-  },
-  badgeText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-  },
-  headerSubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-    marginTop: spacing.xs,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardsContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
-  },
-  cardContainer: {
-    position: "absolute",
-    width: SCREEN_WIDTH - spacing.md * 2,
-  },
-  card: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  photoContainer: {
-    height: 340,
-    position: "relative",
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: colors.borderLight,
-  },
-  photoNavigation: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: "row",
-  },
-  photoNavButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  photoIndicators: {
-    position: "absolute",
-    top: spacing.md,
-    left: spacing.md,
-    right: spacing.md,
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-  photoIndicator: {
-    flex: 1,
-    height: 3,
-    backgroundColor: "rgba(255,255,255,0.4)",
-    borderRadius: 2,
-  },
-  photoIndicatorActive: {
-    backgroundColor: colors.white,
-  },
-  reportFlag: {
-    position: "absolute",
-    top: spacing.md + 12,
-    right: spacing.md,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-  },
-  gradientOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 140,
-  },
-  stamp: {
-    position: "absolute",
-    top: 60,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 3,
-    borderRadius: borderRadius.lg,
-    gap: spacing.xs,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: `${colors.card}90`,
-  },
-  likeStamp: {
-    right: spacing.lg,
-    borderColor: colors.success,
-    transform: [{ rotate: "15deg" }],
-  },
-  nopeStamp: {
-    left: spacing.lg,
-    borderColor: colors.danger,
-    transform: [{ rotate: "-15deg" }],
-  },
-  likeStampText: {
-    color: colors.success,
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-  },
-  nopeStampText: {
-    color: colors.danger,
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-  },
-  glow: {
-    position: "absolute",
-    top: -10,
-    left: -10,
-    right: -10,
-    bottom: -10,
-    borderRadius: 20,
-  },
-  likeGlow: {
-    backgroundColor: colors.success,
-  },
-  nopeGlow: {
-    backgroundColor: colors.danger,
-  },
-  photoInfo: {
-    position: "absolute",
-    bottom: spacing.lg,
-    left: spacing.lg,
-    right: spacing.lg,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  name: {
-    color: colors.white,
-    fontSize: 28,
-    fontWeight: "bold",
-  },
-  verifiedIcon: {
-    marginLeft: spacing.sm,
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.xs,
-  },
-  location: {
-    color: colors.white,
-    fontSize: fontSize.sm,
-    marginLeft: spacing.xs,
-  },
-  locationDivider: {
-    color: colors.white,
-    marginHorizontal: spacing.sm,
-  },
-  relationshipStatusBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: `${colors.accent}40`,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    marginTop: spacing.xs,
-  },
-  relationshipStatusText: {
-    color: colors.white,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  details: {
-    padding: spacing.lg,
-    backgroundColor: glassFallback.background,
-  },
-  scoreSection: {
-    marginBottom: spacing.md,
-  },
-  scoreHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-  },
-  scoreTitle: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    fontWeight: "500",
-  },
-  warningBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: `${colors.danger}15`,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  warningText: {
-    color: colors.danger,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-    marginLeft: spacing.xs,
-  },
-  scoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  scoreBadge: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-  },
-  scoreValue: {
-    fontSize: fontSize.xxl,
-    fontWeight: "bold",
-  },
-  scoreMax: {
-    fontSize: fontSize.sm,
-    fontWeight: "500",
-  },
-  reviewCount: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-    marginLeft: spacing.md,
-  },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  tag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  tagText: {
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  bio: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    lineHeight: 22,
-    marginBottom: spacing.md,
-  },
-  interestsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  interestChip: {
-    backgroundColor: `${colors.primary}15`,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  interestText: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
-    fontWeight: "500",
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xxl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    marginTop: spacing.lg,
-  },
-  emptySubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
-    textAlign: "center",
-    marginTop: spacing.sm,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-    paddingBottom: 100,
-    gap: spacing.lg,
-  },
-  actionButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  nopeButton: {
-    borderWidth: 2,
-    borderColor: colors.danger,
-  },
-  superLikeButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  likeButton: {
-    borderWidth: 2,
-    borderColor: colors.success,
-    ...shadows.glow,
-  },
-  premiumActions: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
-  premiumButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  premiumButtonActive: {
-    borderColor: colors.primary,
-    backgroundColor: `${colors.primary}15`,
-  },
-  premiumButtonInactive: {
-    opacity: 0.5,
-  },
-});

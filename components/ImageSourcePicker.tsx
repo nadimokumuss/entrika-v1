@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Platform, Pressable } from "react-native";
 import { ActionSheetIOS } from "react-native";
 import { Camera, Image as ImageIcon } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type ImageSource = "gallery" | "camera";
 type Callback = (source: ImageSource) => void;
@@ -33,6 +34,83 @@ export function showImageSourcePicker(callback: Callback): void {
 }
 
 export default function ImageSourcePicker({ visible, onClose, onSelect }: ImageSourcePickerProps) {
+  const { colors, glass } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.6)",
+      justifyContent: "flex-end",
+    },
+    container: {
+      backgroundColor: colors.cardElevated,
+      borderTopLeftRadius: borderRadius.xxl,
+      borderTopRightRadius: borderRadius.xxl,
+      paddingBottom: Platform.OS === "web" ? spacing.xl : spacing.lg,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    header: {
+      alignItems: "center",
+      marginBottom: spacing.lg,
+    },
+    title: {
+      fontSize: fontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    subtitle: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    options: {
+      flexDirection: "row",
+      gap: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    option: {
+      flex: 1,
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      padding: spacing.lg,
+      alignItems: "center",
+    },
+    optionIconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: `${colors.primary}15`,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: spacing.md,
+    },
+    optionText: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    optionSubtext: {
+      fontSize: fontSize.xs,
+      color: colors.textLight,
+      textAlign: "center",
+    },
+    cancelButton: {
+      backgroundColor: colors.borderLight,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.xl,
+      alignItems: "center",
+    },
+    cancelButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+  }), [colors, glass]);
+
   // iOS uses native ActionSheet
   if (Platform.OS === "ios") {
     return null;
@@ -91,78 +169,3 @@ export default function ImageSourcePicker({ visible, onClose, onSelect }: ImageS
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "flex-end",
-  },
-  container: {
-    backgroundColor: colors.cardElevated,
-    borderTopLeftRadius: borderRadius.xxl,
-    borderTopRightRadius: borderRadius.xxl,
-    paddingBottom: Platform.OS === "web" ? spacing.xl : spacing.lg,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  title: {
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  options: {
-    flexDirection: "row",
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  option: {
-    flex: 1,
-    backgroundColor: "rgba(22, 22, 31, 0.6)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    alignItems: "center",
-  },
-  optionIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: `${colors.primary}15`,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
-  },
-  optionText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  optionSubtext: {
-    fontSize: fontSize.xs,
-    color: colors.textLight,
-    textAlign: "center",
-  },
-  cancelButton: {
-    backgroundColor: colors.borderLight,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.xl,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-});

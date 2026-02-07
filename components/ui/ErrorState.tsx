@@ -1,14 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { AlertOctagon, RefreshCw, WifiOff, ServerCrash } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-};
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ErrorStateProps {
   type: "network" | "server" | "auth" | "not-found" | "general";
@@ -20,40 +16,41 @@ interface ErrorStateProps {
 const ERROR_STATES = {
   network: {
     icon: WifiOff,
-    title: "Bağlantı Hatası",
-    description: "İnternet bağlantını kontrol et ve tekrar dene",
+    title: "Ba\u011Flant\u0131 Hatas\u0131",
+    description: "\u0130nternet ba\u011Flant\u0131n\u0131 kontrol et ve tekrar dene",
     actionText: "Tekrar Dene",
   },
   server: {
     icon: ServerCrash,
-    title: "Sunucu Hatası",
-    description: "Bir şeyler ters gitti. Tekrar deneyelim mi?",
+    title: "Sunucu Hatas\u0131",
+    description: "Bir \u015Feyler ters gitti. Tekrar deneyelim mi?",
     actionText: "Tekrar Dene",
   },
   auth: {
     icon: AlertOctagon,
-    title: "Oturum Süresi Doldu",
-    description: "Güvenliğini sağlamak için tekrar giriş yapmalısın",
-    actionText: "Giriş Yap",
+    title: "Oturum S\u00FCresi Doldu",
+    description: "G\u00FCvenli\u011Fini sa\u011Flamak i\u00E7in tekrar giri\u015F yapmal\u0131s\u0131n",
+    actionText: "Giri\u015F Yap",
     actionRoute: "/(auth)/login",
   },
   "not-found": {
     icon: AlertOctagon,
-    title: "Sayfa Bulunamadı",
-    description: "Aradığın sayfa mevcut değil",
+    title: "Sayfa Bulunamad\u0131",
+    description: "Arad\u0131\u011F\u0131n sayfa mevcut de\u011Fil",
     actionText: "Ana Sayfaya Git",
     actionRoute: "/",
   },
   general: {
     icon: AlertOctagon,
-    title: "Bir Hata Oluştu",
-    description: "Beklenmeden bir sorunla karşılaştık",
+    title: "Bir Hata Olu\u015Ftu",
+    description: "Beklenmeden bir sorunla kar\u015F\u0131la\u015Ft\u0131k",
     actionText: "Tekrar Dene",
   },
 };
 
 export function ErrorState({ type, message, onRetry, style }: ErrorStateProps) {
   const router = useRouter();
+  const { colors, gradients, glass } = useTheme();
   const config = ERROR_STATES[type];
   const Icon = config.icon;
 
@@ -64,6 +61,87 @@ export function ErrorState({ type, message, onRetry, style }: ErrorStateProps) {
       router.push(config.actionRoute);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: spacing.xl,
+      minHeight: 400,
+    },
+    errorGlowContainer: {
+      position: "absolute",
+      width: 200,
+      height: 200,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    errorGlow: {
+      width: 150,
+      height: 150,
+      borderRadius: 75,
+      backgroundColor: `${colors.danger}10`,
+      borderWidth: 1,
+      borderColor: `${colors.danger}20`,
+    },
+    iconContainer: {
+      marginBottom: spacing.xl,
+    },
+    iconRing: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+      textAlign: "center",
+      marginBottom: spacing.sm,
+    },
+    description: {
+      fontSize: fontSize.md,
+      color: colors.textLight,
+      textAlign: "center",
+      marginBottom: spacing.xl,
+      lineHeight: 22,
+    },
+    retryButton: {
+      borderRadius: borderRadius.lg,
+      overflow: "hidden",
+      ...shadows.md,
+    },
+    retryGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    retryIcon: {
+      marginRight: spacing.xs,
+    },
+    retryText: {
+      color: colors.white,
+      fontSize: fontSize.md,
+      fontWeight: "600",
+    },
+    errorCodeContainer: {
+      position: "absolute",
+      bottom: spacing.xl,
+    },
+    errorCode: {
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      fontFamily: "monospace",
+    },
+  }), [colors, glass]);
 
   return (
     <View style={[styles.container, style]}>
@@ -111,84 +189,3 @@ export function ErrorState({ type, message, onRetry, style }: ErrorStateProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-    minHeight: 400,
-  },
-  errorGlowContainer: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorGlow: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: `${colors.danger}10`,
-    borderWidth: 1,
-    borderColor: `${colors.danger}20`,
-  },
-  iconContainer: {
-    marginBottom: spacing.xl,
-  },
-  iconRing: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-    textAlign: "center",
-    marginBottom: spacing.sm,
-  },
-  description: {
-    fontSize: fontSize.md,
-    color: colors.textLight,
-    textAlign: "center",
-    marginBottom: spacing.xl,
-    lineHeight: 22,
-  },
-  retryButton: {
-    borderRadius: borderRadius.lg,
-    overflow: "hidden",
-    ...shadows.md,
-  },
-  retryGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  retryIcon: {
-    marginRight: spacing.xs,
-  },
-  retryText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-  },
-  errorCodeContainer: {
-    position: "absolute",
-    bottom: spacing.xl,
-  },
-  errorCode: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    fontFamily: "monospace",
-  },
-});

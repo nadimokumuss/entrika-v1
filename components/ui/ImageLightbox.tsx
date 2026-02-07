@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,8 @@ import {
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -38,6 +39,7 @@ export function ImageLightbox({
   images,
   initialIndex = 0,
 }: ImageLightboxProps) {
+  const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -113,7 +115,7 @@ export function ImageLightbox({
       }
     } catch (error) {
       console.error("Image save error:", error);
-      Alert.alert("Hata", "Fotoğraf açılamadı.");
+      Alert.alert("Hata", "Fotograf acilamadi.");
     }
   };
 
@@ -122,7 +124,7 @@ export function ImageLightbox({
       if (Platform.OS === "web") {
         // Web: Copy link to clipboard
         await navigator.clipboard.writeText(currentImage);
-        Alert.alert("Başarılı", "Fotoğraf linki kopyalandı!");
+        Alert.alert("Basarili", "Fotograf linki kopyalandi!");
       } else {
         // Native: Open share options
         await Linking.openURL(currentImage);
@@ -133,11 +135,82 @@ export function ImageLightbox({
       }
     } catch (error) {
       console.error("Share error:", error);
-      Alert.alert("Hata", "Paylaşım başarısız oldu.");
+      Alert.alert("Hata", "Paylasim basarisiz oldu.");
     }
   };
 
   const currentImage = images[currentIndex];
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.95)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    container: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xl,
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      paddingTop: spacing.xl,
+    },
+    navButton: {
+      padding: spacing.sm,
+    },
+    counter: {
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+      color: colors.white,
+    },
+    closeButton: {
+      position: "absolute",
+      top: spacing.xl,
+      right: spacing.xl,
+      padding: spacing.sm,
+    },
+    imageContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    imageWrapper: {
+      width: "100%",
+      height: "100%",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    image: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
+    },
+    footer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xl,
+      position: "absolute",
+      bottom: spacing.xl,
+      left: 0,
+      right: 0,
+    },
+    footerButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  }), [colors]);
 
   if (!currentImage) return null;
 
@@ -247,74 +320,3 @@ export function ImageLightbox({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.95)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xl,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: spacing.xl,
-  },
-  navButton: {
-    padding: spacing.sm,
-  },
-  counter: {
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-  closeButton: {
-    position: "absolute",
-    top: spacing.xl,
-    right: spacing.xl,
-    padding: spacing.sm,
-  },
-  imageContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imageWrapper: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  image: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-  },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xl,
-    position: "absolute",
-    bottom: spacing.xl,
-    left: 0,
-    right: 0,
-  },
-  footerButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

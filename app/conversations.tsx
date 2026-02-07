@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, MessageCircle } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchConversations,
@@ -43,7 +38,7 @@ function formatTime(dateStr: string | null): string {
       minute: "2-digit",
     });
   }
-  if (diffDays === 1) return "Dün";
+  if (diffDays === 1) return "Dun";
   if (diffDays < 7) {
     const days = ["Paz", "Pzt", "Sal", "Car", "Per", "Cum", "Cmt"];
     return days[date.getDay()];
@@ -57,6 +52,7 @@ function formatTime(dateStr: string | null): string {
 export default function ConversationsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors, glass } = useTheme();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -106,6 +102,129 @@ export default function ConversationsScreen() {
     setRefreshing(true);
     loadConversations();
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerTitle: {
+      flex: 1,
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      textAlign: "center",
+    },
+    headerRight: {
+      width: 40,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: spacing.xxl,
+    },
+    emptyTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
+    emptySubtitle: {
+      color: colors.textMuted,
+      fontSize: fontSize.md,
+      textAlign: "center",
+      marginTop: spacing.sm,
+    },
+    list: {
+      flex: 1,
+    },
+    conversationCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.borderLight,
+    },
+    conversationInfo: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    topRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: spacing.xs,
+    },
+    username: {
+      color: colors.text,
+      fontSize: fontSize.base,
+      fontWeight: "500",
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    usernameBold: {
+      fontWeight: "700",
+    },
+    time: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    bottomRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    preview: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    previewUnread: {
+      color: colors.text,
+      fontWeight: "600",
+    },
+    unreadBadge: {
+      backgroundColor: colors.accent,
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: spacing.sm,
+    },
+    unreadText: {
+      color: colors.white,
+      fontSize: fontSize.xs,
+      fontWeight: "bold",
+    },
+  }), [colors, glass]);
 
   if (error) {
     return (
@@ -170,9 +289,9 @@ export default function ConversationsScreen() {
         {conversations.length === 0 ? (
           <View style={styles.emptyState}>
             <MessageCircle size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Henüz eşleşmeniz yok</Text>
+            <Text style={styles.emptyTitle}>Henuz eslesmeniz yok</Text>
             <Text style={styles.emptySubtitle}>
-              Eşleşme yaptıktan sonra mesajlaşmaya başlayabilirsiniz.
+              Eslesme yaptiktan sonra mesajlasmaya baslayabilirsiniz.
             </Text>
           </View>
         ) : (
@@ -220,7 +339,7 @@ export default function ConversationsScreen() {
                       ]}
                       numberOfLines={1}
                     >
-                      {conv.lastMessage || "Henüz mesaj yok"}
+                      {conv.lastMessage || "Henuz mesaj yok"}
                     </Text>
                     {conv.unreadCount > 0 && (
                       <View style={styles.unreadBadge}>
@@ -239,126 +358,3 @@ export default function ConversationsScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  headerRight: {
-    width: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xxl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    marginTop: spacing.lg,
-  },
-  emptySubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
-    textAlign: "center",
-    marginTop: spacing.sm,
-  },
-  list: {
-    flex: 1,
-  },
-  conversationCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.borderLight,
-  },
-  conversationInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.xs,
-  },
-  username: {
-    color: colors.text,
-    fontSize: fontSize.base,
-    fontWeight: "500",
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  usernameBold: {
-    fontWeight: "700",
-  },
-  time: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  preview: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  previewUnread: {
-    color: colors.text,
-    fontWeight: "600",
-  },
-  unreadBadge: {
-    backgroundColor: colors.accent,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-  },
-  unreadText: {
-    color: colors.white,
-    fontSize: fontSize.xs,
-    fontWeight: "bold",
-  },
-});

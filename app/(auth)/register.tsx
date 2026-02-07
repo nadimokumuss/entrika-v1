@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,12 +14,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock, AtSign, ChevronLeft, Mail, Camera, X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
@@ -63,6 +59,7 @@ const OTHER_AVATARS = [
 export default function RegisterScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
+  const { colors, glass } = useTheme();
   const [gender, setGender] = useState<Gender | null>(null);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -133,23 +130,6 @@ export default function RegisterScreen() {
     setError("");
 
     try {
-      // Upload photo if selected
-      let photoUrl: string | null = null;
-      if (photoUri) {
-        setUploadingPhoto(true);
-        try {
-          // We'll upload after we get the user ID
-          // For now, keep the URI
-        } catch (e) {
-          console.error("Photo upload error:", e);
-          setError("Fotoğraf yüklenemedi");
-          setIsLoading(false);
-          setUploadingPhoto(false);
-          return;
-        }
-      }
-
-      console.log("[REGISTER] signUp cagriliyor:", { email, username, gender });
       const { error: signUpError } = await signUp(
         email,
         password,
@@ -158,24 +138,196 @@ export default function RegisterScreen() {
         selectedAvatar
       );
 
-      console.log("[REGISTER] signUp sonucu:", signUpError ? signUpError.message : "basarili");
-
       if (signUpError) {
         setError(signUpError.message);
-        setUploadingPhoto(false);
-      } else if (photoUri) {
-        // Photo will be uploaded in a follow-up or after profile creation
-        // For now, the avatar is used as the profile picture
-        setPhotoUri(null);
       }
     } catch (err: any) {
-      console.error("[REGISTER] CATCH hatasi:", err);
       setError(err.message || "Bir hata olustu");
     } finally {
       setIsLoading(false);
-      setUploadingPhoto(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingTop: 64,
+      paddingBottom: spacing.lg,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.xxxl,
+    },
+    titleContainer: {
+      marginBottom: spacing.xxxl,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    subtitle: {
+      color: colors.textLight,
+      marginTop: spacing.sm,
+    },
+    genderSection: {
+      marginBottom: spacing.xxl,
+    },
+    genderOptions: {
+      flexDirection: "row",
+      gap: spacing.md,
+    },
+    genderOption: {
+      flex: 1,
+      backgroundColor: glass.background,
+      borderWidth: 2,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      paddingVertical: spacing.xl,
+      alignItems: "center",
+    },
+    genderOptionSelected: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}15`,
+    },
+    genderEmoji: {
+      fontSize: 32,
+      marginBottom: spacing.sm,
+    },
+    genderText: {
+      color: colors.textLight,
+      fontWeight: "600",
+      fontSize: fontSize.md,
+    },
+    genderTextSelected: {
+      color: colors.primary,
+    },
+    avatarSection: {
+      marginBottom: spacing.xxl,
+    },
+    sectionLabel: {
+      color: colors.textLight,
+      marginBottom: spacing.lg,
+      fontWeight: "500",
+    },
+    avatarGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: spacing.md,
+    },
+    avatarOption: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      overflow: "hidden",
+      borderWidth: 3,
+      borderColor: "transparent",
+    },
+    avatarSelected: {
+      borderColor: colors.primary,
+    },
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+      backgroundColor: colors.borderLight,
+    },
+    photoUploadSection: {
+      marginTop: spacing.xl,
+    },
+    sectionSubtext: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
+      marginBottom: spacing.md,
+    },
+    photoUploadButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: glass.background,
+      borderWidth: 2,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      paddingVertical: spacing.xl,
+      borderStyle: "dashed",
+    },
+    photoUploadButtonText: {
+      color: colors.primary,
+      fontWeight: "600",
+      marginLeft: spacing.md,
+    },
+    photoPreviewContainer: {
+      position: "relative",
+      alignItems: "center",
+    },
+    photoPreview: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: colors.borderLight,
+    },
+    removePhotoButton: {
+      position: "absolute",
+      top: 4,
+      right: 4,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.danger,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    photoBadge: {
+      position: "absolute",
+      bottom: 4,
+      backgroundColor: colors.success,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    photoBadgeText: {
+      color: colors.white,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      marginLeft: spacing.md,
+      fontSize: fontSize.md,
+    },
+    errorText: {
+      color: colors.danger,
+      textAlign: "center",
+      marginBottom: spacing.lg,
+    },
+  }), [colors, glass]);
 
   return (
     <GradientBackground variant="auth">
@@ -379,184 +531,3 @@ export default function RegisterScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingTop: 64,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.xxxl,
-  },
-  titleContainer: {
-    marginBottom: spacing.xxxl,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  subtitle: {
-    color: colors.textLight,
-    marginTop: spacing.sm,
-  },
-  genderSection: {
-    marginBottom: spacing.xxl,
-  },
-  genderOptions: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  genderOption: {
-    flex: 1,
-    backgroundColor: glassFallback.background,
-    borderWidth: 2,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    paddingVertical: spacing.xl,
-    alignItems: "center",
-  },
-  genderOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: `${colors.primary}15`,
-  },
-  genderEmoji: {
-    fontSize: 32,
-    marginBottom: spacing.sm,
-  },
-  genderText: {
-    color: colors.textLight,
-    fontWeight: "600",
-    fontSize: fontSize.md,
-  },
-  genderTextSelected: {
-    color: colors.primary,
-  },
-  avatarSection: {
-    marginBottom: spacing.xxl,
-  },
-  sectionLabel: {
-    color: colors.textLight,
-    marginBottom: spacing.lg,
-    fontWeight: "500",
-  },
-  avatarGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: spacing.md,
-  },
-  avatarOption: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    overflow: "hidden",
-    borderWidth: 3,
-    borderColor: "transparent",
-  },
-  avatarSelected: {
-    borderColor: colors.primary,
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: colors.borderLight,
-  },
-  photoUploadSection: {
-    marginTop: spacing.xl,
-  },
-  sectionSubtext: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-    marginBottom: spacing.md,
-  },
-  photoUploadButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 2,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    paddingVertical: spacing.xl,
-    borderStyle: "dashed",
-  },
-  photoUploadButtonText: {
-    color: colors.primary,
-    fontWeight: "600",
-    marginLeft: spacing.md,
-  },
-  photoPreviewContainer: {
-    position: "relative",
-    alignItems: "center",
-  },
-  photoPreview: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.borderLight,
-  },
-  removePhotoButton: {
-    position: "absolute",
-    top: 4,
-    right: 4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.danger,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  photoBadge: {
-    position: "absolute",
-    bottom: 4,
-    backgroundColor: colors.success,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  photoBadgeText: {
-    color: colors.white,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  input: {
-    flex: 1,
-    color: colors.text,
-    marginLeft: spacing.md,
-    fontSize: fontSize.md,
-  },
-  errorText: {
-    color: colors.danger,
-    textAlign: "center",
-    marginBottom: spacing.lg,
-  },
-});

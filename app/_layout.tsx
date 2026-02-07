@@ -3,13 +3,16 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { Platform, ActivityIndicator, View } from "react-native";
-import { StatusBar } from "expo-status-bar";
+import { Platform, ActivityIndicator, View, LogBox } from "react-native";
 import "react-native-reanimated";
+
+// Expo Go SDK 53+ push notification uyarısını sustur (production build'de sorun yok)
+LogBox.ignoreLogs(["expo-notifications"]);
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { FollowProvider } from "@/contexts/FollowContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { colors } from "@/constants/theme";
+import { lightColors } from "@/constants/theme";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -23,6 +26,7 @@ if (Platform.OS !== 'web') {
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { colors } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -45,7 +49,6 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -155,7 +158,7 @@ export default function RootLayout() {
   // Native: font yuklenene kadar bekle
   // Web: client mount olana kadar bekle (hydration icin bos div render et)
   if (!isClient) {
-    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+    return <View style={{ flex: 1, backgroundColor: lightColors.background }} />;
   }
 
   if (!loaded && Platform.OS !== 'web') {
@@ -163,10 +166,12 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <FollowProvider>
-        <RootLayoutNav />
-      </FollowProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <FollowProvider>
+          <RootLayoutNav />
+        </FollowProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

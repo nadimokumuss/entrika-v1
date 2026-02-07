@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ChevronLeft, AlertTriangle, CheckCircle } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import GradientBackground from "@/components/ui/GradientBackground";
 import { supabase, ReportType } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +31,7 @@ const REPORT_REASONS = [
 ];
 
 export default function ReportContentScreen() {
+  const { colors, glass } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { type, targetId, targetName } = useLocalSearchParams<{
@@ -81,6 +78,173 @@ export default function ReportContentScreen() {
       setSubmitting(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    backButton: {
+      padding: spacing.sm,
+    },
+    headerTitle: {
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    scrollView: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+    },
+    targetInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: `${colors.warning}15`,
+      padding: spacing.lg,
+      borderRadius: borderRadius.lg,
+      marginTop: spacing.lg,
+      gap: spacing.sm,
+    },
+    targetText: {
+      color: colors.textLight,
+      fontSize: fontSize.base,
+      flex: 1,
+    },
+    targetName: {
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+      marginTop: spacing.xl,
+      marginBottom: spacing.md,
+    },
+    reasonsContainer: {
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      overflow: "hidden",
+    },
+    reasonOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    reasonOptionSelected: {
+      backgroundColor: `${colors.primary}10`,
+    },
+    radioOuter: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      borderColor: colors.textMuted,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    radioOuterSelected: {
+      borderColor: colors.primary,
+    },
+    radioInner: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.primary,
+    },
+    reasonText: {
+      fontSize: fontSize.base,
+      color: colors.text,
+      marginLeft: spacing.md,
+    },
+    reasonTextSelected: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    detailsInput: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      padding: spacing.lg,
+      fontSize: fontSize.base,
+      color: colors.text,
+      minHeight: 100,
+    },
+    charCount: {
+      textAlign: "right",
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    submitButton: {
+      backgroundColor: colors.danger,
+      paddingVertical: spacing.lg,
+      borderRadius: borderRadius.xl,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: spacing.xl,
+    },
+    submitButtonDisabled: {
+      opacity: 0.5,
+    },
+    submitButtonText: {
+      color: colors.white,
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+    },
+    successContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: spacing.xxl,
+    },
+    successTitle: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+      marginTop: spacing.lg,
+    },
+    successText: {
+      fontSize: fontSize.base,
+      color: colors.textMuted,
+      textAlign: "center",
+      marginTop: spacing.md,
+      lineHeight: 22,
+    },
+    doneButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xxxl,
+      borderRadius: borderRadius.xl,
+      marginTop: spacing.xxl,
+    },
+    doneButtonText: {
+      color: colors.white,
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+    },
+    bottomSpacer: {
+      height: 60,
+    },
+  }), [colors, glass]);
 
   if (submitted) {
     return (
@@ -196,170 +360,3 @@ export default function ReportContentScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  headerTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  targetInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: `${colors.warning}15`,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  targetText: {
-    color: colors.textLight,
-    fontSize: fontSize.base,
-    flex: 1,
-  },
-  targetName: {
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  reasonsContainer: {
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    overflow: "hidden",
-  },
-  reasonOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  reasonOptionSelected: {
-    backgroundColor: `${colors.primary}10`,
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.textMuted,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioOuterSelected: {
-    borderColor: colors.primary,
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  reasonText: {
-    fontSize: fontSize.base,
-    color: colors.text,
-    marginLeft: spacing.md,
-  },
-  reasonTextSelected: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  detailsInput: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    fontSize: fontSize.base,
-    color: colors.text,
-    minHeight: 100,
-  },
-  charCount: {
-    textAlign: "right",
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  submitButton: {
-    backgroundColor: colors.danger,
-    paddingVertical: spacing.lg,
-    borderRadius: borderRadius.xl,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: spacing.xl,
-  },
-  submitButtonDisabled: {
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-  },
-  successContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.xxl,
-  },
-  successTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-    marginTop: spacing.lg,
-  },
-  successText: {
-    fontSize: fontSize.base,
-    color: colors.textMuted,
-    textAlign: "center",
-    marginTop: spacing.md,
-    lineHeight: 22,
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xxxl,
-    borderRadius: borderRadius.xl,
-    marginTop: spacing.xxl,
-  },
-  doneButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-  },
-  bottomSpacer: {
-    height: 60,
-  },
-});

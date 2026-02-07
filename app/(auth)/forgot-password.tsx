@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Mail, ChevronLeft, KeyRound } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, gradients } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
@@ -26,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { colors, gradients, glass } = useTheme();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +52,87 @@ export default function ForgotPasswordScreen() {
       setIsLoading(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.xxxl,
+    },
+    header: {
+      paddingTop: 64,
+      paddingBottom: spacing.lg,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: 48,
+    },
+    logoCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: spacing.lg,
+      overflow: "hidden",
+    },
+    logoImage: {
+      width: 48,
+      height: 48,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    subtitle: {
+      color: colors.textLight,
+      marginTop: spacing.sm,
+      textAlign: "center",
+    },
+    formContainer: {
+      width: "100%",
+    },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      marginLeft: spacing.md,
+      fontSize: fontSize.md,
+    },
+    errorText: {
+      color: colors.danger,
+      textAlign: "center",
+      marginBottom: spacing.lg,
+    },
+    successContainer: {
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+    },
+    successText: {
+      color: colors.success,
+      textAlign: "center",
+      fontSize: fontSize.md,
+      lineHeight: 24,
+      marginBottom: spacing.xl,
+    },
+  }), [colors, glass]);
 
   return (
     <GradientBackground variant="auth">
@@ -137,84 +214,3 @@ export default function ForgotPasswordScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.xxxl,
-  },
-  header: {
-    paddingTop: 64,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 48,
-  },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.lg,
-    overflow: "hidden",
-  },
-  logoImage: {
-    width: 48,
-    height: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  subtitle: {
-    color: colors.textLight,
-    marginTop: spacing.sm,
-    textAlign: "center",
-  },
-  formContainer: {
-    width: "100%",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  input: {
-    flex: 1,
-    color: colors.text,
-    marginLeft: spacing.md,
-    fontSize: fontSize.md,
-  },
-  errorText: {
-    color: colors.danger,
-    textAlign: "center",
-    marginBottom: spacing.lg,
-  },
-  successContainer: {
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-  },
-  successText: {
-    color: colors.success,
-    textAlign: "center",
-    fontSize: fontSize.md,
-    lineHeight: 24,
-    marginBottom: spacing.xl,
-  },
-});

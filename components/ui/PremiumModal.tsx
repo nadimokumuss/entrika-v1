@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -20,13 +20,8 @@ import {
   Shield,
   X,
 } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, shadows, gradients } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface PremiumModalProps {
   visible: boolean;
@@ -38,26 +33,205 @@ interface PremiumModalProps {
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 const PREMIUM_FEATURES = [
-  { icon: Infinity, title: "Sınırsız Beğeni", description: "Günde 20 beğeni limiti yok" },
-  { icon: RotateCcw, title: "Geri Alma", description: "Yanlış swipe'ı geri al" },
-  { icon: Zap, title: "Boost", description: "30 dakika öne çıkma" },
-  { icon: Eye, title: "Kim Beğendi", description: "Günde 3 profil görüntüleme" },
+  { icon: Infinity, title: "Sinirsiz Begeni", description: "Gunde 20 begeni limiti yok" },
+  { icon: RotateCcw, title: "Geri Alma", description: "Yanlis swipe'i geri al" },
+  { icon: Zap, title: "Boost", description: "30 dakika one cikma" },
+  { icon: Eye, title: "Kim Begendi", description: "Gunde 3 profil goruntuleme" },
 ];
 
 const GOLD_FEATURES = [
   ...PREMIUM_FEATURES,
-  { icon: Star, title: "Super Match", description: "Günde 3 mesajlı eşleşme" },
-  { icon: Heart, title: "Profil Görüntüleme", description: "Kim profiline baktı" },
-  { icon: Shield, title: "Priority Matching", description: "Öncelikli eşleşme" },
+  { icon: Star, title: "Super Match", description: "Gunde 3 mesajli eslesme" },
+  { icon: Heart, title: "Profil Goruntuleme", description: "Kim profiline bakti" },
+  { icon: Shield, title: "Priority Matching", description: "Oncelikli eslesme" },
 ];
 
 export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free" }: PremiumModalProps) {
+  const { colors, gradients, glass } = useTheme();
+
   const handleUpgrade = (plan: "premium" | "gold") => {
     if (onUpgrade) {
       onUpgrade(plan);
     }
     onClose();
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.xl,
+    },
+    container: {
+      width: "100%",
+      maxHeight: SCREEN_WIDTH * 1.6,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.xxl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      ...shadows.lg,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      gap: spacing.md,
+    },
+    headerTextContainer: {
+      flex: 1,
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    subtitle: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: 2,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    content: {
+      flex: 1,
+    },
+    contentScroll: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    planCard: {
+      borderRadius: borderRadius.xl,
+      overflow: "hidden",
+      ...shadows.md,
+    },
+    planGradient: {
+      padding: spacing.lg,
+    },
+    planHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.lg,
+    },
+    goldHeaderContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    planName: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.primary,
+    },
+    goldText: {
+      color: colors.warning,
+    },
+    goldIcon: {},
+    planBadge: {
+      backgroundColor: `${colors.primary}30`,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+    },
+    goldBadge: {
+      backgroundColor: `${colors.warning}30`,
+    },
+    planBadgeText: {
+      fontSize: fontSize.sm,
+      fontWeight: "bold",
+      color: colors.primary,
+    },
+    popularBadge: {
+      position: "absolute",
+      top: spacing.lg,
+      right: spacing.lg,
+      backgroundColor: colors.accent,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    popularBadgeText: {
+      fontSize: fontSize.xs,
+      fontWeight: "bold",
+      color: colors.white,
+    },
+    featuresList: {
+      gap: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    featureItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    featureIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: `${colors.primary}20`,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    featureIconContainerGold: {
+      backgroundColor: `${colors.accent}20`,
+    },
+    featureTextContainer: {
+      flex: 1,
+    },
+    featureTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    featureDescription: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: 2,
+    },
+    newBadge: {
+      backgroundColor: colors.success,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    newBadgeText: {
+      fontSize: fontSize.xs,
+      fontWeight: "bold",
+      color: colors.white,
+    },
+    upgradeButton: {
+      borderRadius: borderRadius.lg,
+      overflow: "hidden",
+    },
+    upgradeGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.md,
+    },
+    upgradeButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+      color: colors.white,
+    },
+    infoBox: {
+      backgroundColor: `${colors.primary}10`,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+    },
+    infoText: {
+      fontSize: fontSize.xs,
+      color: colors.textLight,
+      lineHeight: 18,
+      textAlign: "center",
+    },
+  }), [colors, glass]);
 
   return (
     <Modal
@@ -74,7 +248,7 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
             <Crown size={32} color={colors.primary} />
             <View style={styles.headerTextContainer}>
               <Text style={styles.title}>ENTRIKA PREMIUM</Text>
-              <Text style={styles.subtitle}>Eşleşme şansını artır</Text>
+              <Text style={styles.subtitle}>Eslesme sansini artir</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <X size={24} color={colors.textLight} />
@@ -130,7 +304,7 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
                     end={{ x: 1, y: 0 }}
                     style={styles.upgradeGradient}
                   >
-                    <Text style={styles.upgradeButtonText}>Yükselt</Text>
+                    <Text style={styles.upgradeButtonText}>Yukselt</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </LinearGradient>
@@ -159,7 +333,7 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
                 </View>
 
                 <View style={styles.popularBadge}>
-                  <Text style={styles.popularBadgeText}>EN POPÜLER</Text>
+                  <Text style={styles.popularBadgeText}>EN POPULER</Text>
                 </View>
 
                 <View style={styles.featuresList}>
@@ -182,7 +356,7 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
                       </View>
                       {index >= PREMIUM_FEATURES.length && (
                         <View style={styles.newBadge}>
-                          <Text style={styles.newBadgeText}>YENİ</Text>
+                          <Text style={styles.newBadgeText}>YENI</Text>
                         </View>
                       )}
                     </View>
@@ -199,7 +373,7 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
                     end={{ x: 1, y: 0 }}
                     style={styles.upgradeGradient}
                   >
-                    <Text style={styles.upgradeButtonText}>Yükselt</Text>
+                    <Text style={styles.upgradeButtonText}>Yukselt</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </LinearGradient>
@@ -208,7 +382,7 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
             {/* Info */}
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>
-                Abonelik istediğin zaman iptal edilebilir. Premium özellikler abonelik süresi boyunca geçerlidir.
+                Abonelik istedigin zaman iptal edilebilir. Premium ozellikler abonelik suresi boyunca gecerlidir.
               </Text>
             </View>
           </ScrollView>
@@ -217,180 +391,3 @@ export function PremiumModal({ visible, onClose, onUpgrade, currentPlan = "free"
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.xl,
-  },
-  container: {
-    width: "100%",
-    maxHeight: SCREEN_WIDTH * 1.6,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    ...shadows.lg,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    gap: spacing.md,
-  },
-  headerTextContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-  content: {
-    flex: 1,
-  },
-  contentScroll: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  planCard: {
-    borderRadius: borderRadius.xl,
-    overflow: "hidden",
-    ...shadows.md,
-  },
-  planGradient: {
-    padding: spacing.lg,
-  },
-  planHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg,
-  },
-  goldHeaderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  planName: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.primary,
-  },
-  goldText: {
-    color: colors.warning,
-  },
-  goldIcon: {},
-  planBadge: {
-    backgroundColor: `${colors.primary}30`,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  goldBadge: {
-    backgroundColor: `${colors.warning}30`,
-  },
-  planBadgeText: {
-    fontSize: fontSize.sm,
-    fontWeight: "bold",
-    color: colors.primary,
-  },
-  popularBadge: {
-    position: "absolute",
-    top: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: colors.accent,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  popularBadgeText: {
-    fontSize: fontSize.xs,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-  featuresList: {
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  featureIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: `${colors.primary}20`,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  featureIconContainerGold: {
-    backgroundColor: `${colors.accent}20`,
-  },
-  featureTextContainer: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  featureDescription: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  newBadge: {
-    backgroundColor: colors.success,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  newBadgeText: {
-    fontSize: fontSize.xs,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-  upgradeButton: {
-    borderRadius: borderRadius.lg,
-    overflow: "hidden",
-  },
-  upgradeGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-  },
-  upgradeButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-  infoBox: {
-    backgroundColor: `${colors.primary}10`,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-  },
-  infoText: {
-    fontSize: fontSize.xs,
-    color: colors.textLight,
-    lineHeight: 18,
-    textAlign: "center",
-  },
-});

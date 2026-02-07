@@ -126,24 +126,33 @@ Kullanıcı her değişiklik sonrası bu listeyi kontrol etmelidir:
 - **Icons:** Lucide React Native
 - **Web Hosting:** Vercel (https://entrika.vercel.app)
 
-### Renk Paleti (Dark Premium)
+### Tema Sistemi (Light/Dark)
+**Default: Light tema.** Ayarlardan koyu temaya gecilebilir.
+
+**Mimari:**
+- `constants/theme.ts`: `lightColors`, `darkColors`, `lightGradients`, `darkGradients`, `lightGlass`, `darkGlass` + backward-compatible static exports
+- `contexts/ThemeContext.tsx`: `ThemeProvider` + `useTheme()` hook → `{ colors, gradients, glass, isDark, toggleTheme }`
+- Tercih: AsyncStorage (native) / localStorage (web)
+- StatusBar: ThemeProvider tarafindan yonetilir
+- 48 dosya `useTheme()` kullaniyor, `glassFallback` tamamen silindi
+
+**Light Renk Paleti:**
 ```typescript
-colors = {
-  background: "#0A0A0F",  // Derin koyu
-  card: "#16161F",
-  cardElevated: "#1E1E2A",
-  primary: "#A855F7",     // Mor
-  primaryLight: "#C084FC",
-  accent: "#F472B6",      // Pembe
-  danger: "#EF4444",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  text: "#F1F1F6",
-  textLight: "#A1A1B5",
-  textMuted: "#5A5A72",
-  border: "#2A2A3C",
+lightColors = {
+  background: "#F5FBE6",  primary: "#FF7F11",  accent: "#FF7F11",
+  card: "#E2E8CE",  text: "#262626",  border: "#ACBFA4",
 }
 ```
+
+**Dark Renk Paleti:**
+```typescript
+darkColors = {
+  background: "#0A0A0F",  primary: "#A855F7",  accent: "#F472B6",
+  card: "#16161F",  text: "#F1F1F6",  border: "#2A2A3C",
+}
+```
+
+**Logo:** Light'ta turuncu tonlari, dark'ta mor/pembe tonlari
 
 ### Klasör Yapısı
 ```
@@ -241,6 +250,7 @@ entrika/
 - [x] Template dosyalari temizlendi (two.tsx kaldirildi)
 - [x] Logo component yeniden yazıldı (basit ve güvenilir)
 - [x] Reaction picker arka planı düzeltildi (transparent -> solid)
+- [x] Light/Dark tema sistemi (ThemeContext + useTheme hook, 48 dosya migrate edildi)
 
 ---
 
@@ -248,7 +258,7 @@ entrika/
 
 ### Alınan Kararlar
 1. **Kadın-erkek ayrımı kaldırıldı** - Uygulama her iki cinsiyete de hitap edecek
-2. **Dark Premium tema** - Koyu arka plan (#0A0A0F), mor (#A855F7) ve pembe (#F472B6) vurgular
+2. **Light/Dark tema sistemi** - Default light (#F5FBE6 bg, #FF7F11 primary), dark (#0A0A0F bg, #A855F7 primary). ThemeContext + useTheme() hook, AsyncStorage persist
 3. **NativeWind kaldırıldı** - Node.js 24 ile ESM uyumsuzluğu nedeniyle StyleSheet kullanılıyor
 4. **Supabase production aktif** - MOCK_MODE = false, tum ekranlar gercek veri kullaniyor
 5. **Mock data temizlendi** - data/mockData.ts sadece re-export, asil sabitler constants/categories.ts'de
@@ -275,15 +285,12 @@ entrika/
 - **SecureStore:** Web'de `require('expo-secure-store')` yerine `localStorage` kullanilir
 - **Auth storage:** Web'de localStorage, native'de SecureStore
 
-### Glass Degiskeni
-Artık glass import edilmiyor. Tum dosyalarda inline glassFallback kullaniliyor:
-```typescript
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
-```
+### Tema Kullanimi
+- `useTheme()` hook'u kullan: `const { colors, gradients, glass, isDark } = useTheme()`
+- StyleSheet: `useMemo(() => StyleSheet.create({...}), [colors, glass])` ile component icinde
+- Memo'd sub-componentler kendi `useTheme()` cagrisi yapmali
+- ErrorBoundary class component → static import kullanir (`colors`, `glass` from theme.ts)
+- `app/_layout.tsx` pre-ThemeProvider loading icin `lightColors` import eder
 
 ### Proje Yapisi
 - **Repo Root:** `C:\Users\reiss\Desktop\Entrika v1\entrika\`

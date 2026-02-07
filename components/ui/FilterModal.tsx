@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,13 +14,8 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { X, Sliders, MapPin, ChevronDown, Check } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface FilterModalProps {
   visible: boolean;
@@ -52,6 +47,7 @@ export function FilterModal({
   onApply,
   currentFilters,
 }: FilterModalProps) {
+  const { colors, gradients, glass } = useTheme();
   const [ageMin, setAgeMin] = useState(currentFilters.ageMin);
   const [ageMax, setAgeMax] = useState(currentFilters.ageMax);
   const [city, setCity] = useState(currentFilters.city || "");
@@ -69,6 +65,181 @@ export function FilterModal({
   };
 
   const ageRange = ageMax - ageMin;
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      justifyContent: "flex-end",
+    },
+    container: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      borderWidth: 1,
+      borderColor: glass.border,
+      maxHeight: "80%",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    content: {
+      padding: spacing.xl,
+      maxHeight: 400,
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    sectionValue: {
+      fontSize: fontSize.md,
+      color: colors.primary,
+      fontWeight: "bold",
+    },
+    clearButton: {
+      padding: spacing.xs,
+    },
+    sliderContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    slider: {
+      flex: 1,
+    },
+    sliderLabel: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      width: 30,
+      textAlign: "center",
+    },
+    ageButtons: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    ageButton: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    ageButtonActive: {
+      backgroundColor: `${colors.primary}30`,
+      borderColor: colors.primary,
+    },
+    ageButtonText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    ageButtonTextActive: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    cityScroll: {
+      marginHorizontal: -spacing.lg,
+    },
+    cityScrollContent: {
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+    },
+    cityChip: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    cityChipActive: {
+      backgroundColor: `${colors.primary}20`,
+      borderColor: colors.primary,
+    },
+    cityChipText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    cityChipTextActive: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    infoBox: {
+      backgroundColor: `${colors.primary}10`,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginTop: spacing.md,
+    },
+    infoText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      lineHeight: 20,
+    },
+    footer: {
+      flexDirection: "row",
+      padding: spacing.xl,
+      gap: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    resetButton: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      alignItems: "center",
+    },
+    resetButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.textLight,
+    },
+    applyButton: {
+      flex: 1,
+      borderRadius: borderRadius.lg,
+      overflow: "hidden",
+    },
+    applyGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    applyButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+      color: colors.white,
+    },
+  }), [colors, glass]);
 
   return (
     <Modal
@@ -107,7 +278,7 @@ export function FilterModal({
                   step={1}
                   value={ageMin}
                   onValueChange={setAgeMin}
-                  minimumTrackTintColor={glassFallback.border}
+                  minimumTrackTintColor={glass.border}
                   maximumTrackTintColor={colors.primary}
                   thumbTintColor={colors.primary}
                 />
@@ -118,7 +289,7 @@ export function FilterModal({
                   step={1}
                   value={ageMax}
                   onValueChange={setAgeMax}
-                  minimumTrackTintColor={glassFallback.border}
+                  minimumTrackTintColor={glass.border}
                   maximumTrackTintColor={colors.primary}
                   thumbTintColor={colors.primary}
                 />
@@ -238,178 +409,3 @@ export function FilterModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "flex-end",
-  },
-  container: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    maxHeight: "80%",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-  content: {
-    padding: spacing.xl,
-    maxHeight: 400,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  sectionValue: {
-    fontSize: fontSize.md,
-    color: colors.primary,
-    fontWeight: "bold",
-  },
-  clearButton: {
-    padding: spacing.xs,
-  },
-  sliderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  slider: {
-    flex: 1,
-  },
-  sliderLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    width: 30,
-    textAlign: "center",
-  },
-  ageButtons: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  ageButton: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  ageButtonActive: {
-    backgroundColor: `${colors.primary}30`,
-    borderColor: colors.primary,
-  },
-  ageButtonText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  ageButtonTextActive: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  cityScroll: {
-    marginHorizontal: -spacing.lg,
-  },
-  cityScrollContent: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-  },
-  cityChip: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  cityChipActive: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  cityChipText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  cityChipTextActive: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  infoBox: {
-    backgroundColor: `${colors.primary}10`,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginTop: spacing.md,
-  },
-  infoText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    lineHeight: 20,
-  },
-  footer: {
-    flexDirection: "row",
-    padding: spacing.xl,
-    gap: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  resetButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    alignItems: "center",
-  },
-  resetButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.textLight,
-  },
-  applyButton: {
-    flex: 1,
-    borderRadius: borderRadius.lg,
-    overflow: "hidden",
-  },
-  applyGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  applyButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-});

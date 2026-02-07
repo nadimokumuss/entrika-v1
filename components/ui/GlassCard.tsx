@@ -1,13 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { colors, borderRadius, shadows } from "@/constants/theme";
-
-// Glass styles - inline for web build compatibility
-const glassStyles = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface GlassCardProps {
   children: ReactNode;
@@ -16,6 +10,22 @@ interface GlassCardProps {
 }
 
 export default function GlassCard({ children, style, highlight }: GlassCardProps) {
+  const { colors, glass } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    card: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      ...shadows.sm,
+      overflow: "hidden",
+    },
+    cardHighlight: {
+      borderColor: glass.borderHighlight,
+    },
+  }), [colors, glass]);
+
   return (
     <View
       style={[
@@ -28,17 +38,3 @@ export default function GlassCard({ children, style, highlight }: GlassCardProps
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: glassStyles.background,
-    borderWidth: 1,
-    borderColor: glassStyles.border,
-    borderRadius: borderRadius.xl,
-    ...shadows.sm,
-    overflow: "hidden",
-  },
-  cardHighlight: {
-    borderColor: glassStyles.borderHighlight,
-  },
-});

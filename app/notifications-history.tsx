@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -27,13 +27,9 @@ import {
 } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
@@ -109,6 +105,7 @@ function getNotificationIcon(type: NotificationType): typeof Heart {
 }
 
 export default function NotificationsHistoryScreen() {
+  const { colors, glass } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -224,6 +221,139 @@ export default function NotificationsHistoryScreen() {
       }
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    markAllButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: `${colors.primary}15`,
+      borderRadius: borderRadius.full,
+    },
+    markAllText: {
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+      color: colors.primary,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    filterBar: {
+      maxHeight: 50,
+    },
+    filterBarContent: {
+      paddingHorizontal: spacing.xl,
+      gap: spacing.sm,
+    },
+    filterChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    filterChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterChipText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      fontWeight: "500",
+    },
+    filterChipTextActive: {
+      color: colors.white,
+      fontWeight: "600",
+    },
+    notificationsList: {
+      flex: 1,
+    },
+    notificationsContent: {
+      padding: spacing.xl,
+      gap: spacing.sm,
+    },
+    notificationItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    notificationItemUnread: {
+      backgroundColor: `${colors.primary}10`,
+      borderColor: `${colors.primary}30`,
+    },
+    notificationIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: `${colors.primary}15`,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    notificationContent: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    notificationTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    notificationTitleUnread: {
+      color: colors.primary,
+    },
+    notificationBody: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: 2,
+    },
+    notificationTime: {
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      marginTop: spacing.xs,
+    },
+    notificationActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    unreadDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primary,
+    },
+    deleteButton: {
+      padding: spacing.xs,
+    },
+  }), [colors, glass]);
 
   if (loading) {
     return (
@@ -374,136 +504,3 @@ export default function NotificationsHistoryScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  markAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: `${colors.primary}15`,
-    borderRadius: borderRadius.full,
-  },
-  markAllText: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  filterBar: {
-    maxHeight: 50,
-  },
-  filterBarContent: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.sm,
-  },
-  filterChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  filterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterChipText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    fontWeight: "500",
-  },
-  filterChipTextActive: {
-    color: colors.white,
-    fontWeight: "600",
-  },
-  notificationsList: {
-    flex: 1,
-  },
-  notificationsContent: {
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  notificationItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  notificationItemUnread: {
-    backgroundColor: `${colors.primary}10`,
-    borderColor: `${colors.primary}30`,
-  },
-  notificationIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: `${colors.primary}15`,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  notificationContent: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  notificationTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  notificationTitleUnread: {
-    color: colors.primary,
-  },
-  notificationBody: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  notificationTime: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  notificationActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-  deleteButton: {
-    padding: spacing.xs,
-  },
-});

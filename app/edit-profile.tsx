@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,13 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Save } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, borderRadius, spacing, fontSize, gradients } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
@@ -33,6 +28,7 @@ const BIO_MAX_LENGTH = 150;
 export default function EditProfileScreen() {
   const router = useRouter();
   const { profile, user, refreshProfile } = useAuth();
+  const { colors, gradients, glass } = useTheme();
   const [username, setUsername] = useState(profile?.username || "");
   const [bio, setBio] = useState(profile?.bio || "");
   const [saving, setSaving] = useState(false);
@@ -41,11 +37,11 @@ export default function EditProfileScreen() {
   const bioCount = bio.length;
 
   const validateUsername = (value: string): string | null => {
-    if (!value.trim()) return "Kullanıcı adı boş olamaz";
+    if (!value.trim()) return "Kullanici adi bos olamaz";
     if (value.length < USERNAME_MIN_LENGTH) return `En az ${USERNAME_MIN_LENGTH} karakter`;
     if (value.length > USERNAME_MAX_LENGTH) return `En fazla ${USERNAME_MAX_LENGTH} karakter`;
     if (!/^[a-zA-Z0-9_]+$/.test(value)) return "Sadece harf, rakam ve _";
-    if (value.startsWith("_") || value.endsWith("_")) return "_ başta veya sonda olamaz";
+    if (value.startsWith("_") || value.endsWith("_")) return "_ basta veya sonda olamaz";
     return null;
   };
 
@@ -64,7 +60,7 @@ export default function EditProfileScreen() {
 
     setSaving(true);
     try {
-      // Username değişiyorsa unique kontrolü
+      // Username degisiyorsa unique kontrolu
       if (trimmedUsername !== profile?.username) {
         const { data: existingUser, error: checkError } = await supabase
           .from("profiles")
@@ -77,7 +73,7 @@ export default function EditProfileScreen() {
         }
 
         if (existingUser) {
-          setUsernameError("Bu kullanıcı adı zaten alınmış");
+          setUsernameError("Bu kullanici adi zaten alinmis");
           setSaving(false);
           return;
         }
@@ -98,11 +94,186 @@ export default function EditProfileScreen() {
       router.back();
     } catch (error: any) {
       console.error("Profile update error:", error);
-      Alert.alert("Hata", error.message || "Profil güncellenemedi.");
+      Alert.alert("Hata", error.message || "Profil guncellenemedi.");
     } finally {
       setSaving(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    keyboardContainer: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      color: colors.text,
+      marginLeft: spacing.md,
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.md,
+      backgroundColor: `${colors.primary}20`,
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
+    },
+    saveButtonText: {
+      color: colors.primary,
+      fontWeight: "600",
+      marginLeft: spacing.xs,
+      fontSize: fontSize.sm,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: spacing.xl,
+    },
+    avatarPreview: {
+      alignItems: "center",
+      marginBottom: spacing.xxl,
+    },
+    avatarRing: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarInner: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      overflow: "hidden",
+      backgroundColor: colors.background,
+    },
+    avatarPlaceholder: {
+      width: 72,
+      height: 72,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: glass.background,
+    },
+    avatarEmoji: {
+      fontSize: 36,
+    },
+    avatarNote: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.md,
+      textAlign: "center",
+    },
+    inputSection: {
+      marginBottom: spacing.xl,
+    },
+    inputLabel: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+      marginBottom: spacing.sm,
+    },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.md,
+      height: 50,
+    },
+    inputContainerError: {
+      borderColor: colors.danger,
+    },
+    atSymbol: {
+      color: colors.textMuted,
+      fontSize: fontSize.md,
+      marginRight: spacing.xs,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      fontSize: fontSize.md,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    hintText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    bioContainer: {
+      position: "relative",
+    },
+    bioInput: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      color: colors.text,
+      fontSize: fontSize.md,
+      minHeight: 100,
+      lineHeight: 22,
+    },
+    bioCount: {
+      position: "absolute",
+      bottom: spacing.sm,
+      right: spacing.md,
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    infoCard: {
+      flexDirection: "row",
+      backgroundColor: `${colors.primary}10`,
+      borderWidth: 1,
+      borderColor: `${colors.primary}30`,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+    },
+    infoDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.primary,
+      marginTop: 5,
+      marginRight: spacing.sm,
+    },
+    infoText: {
+      flex: 1,
+      color: colors.textLight,
+      fontSize: fontSize.xs,
+      lineHeight: 18,
+    },
+  }), [colors, glass]);
 
   if (!profile) {
     return (
@@ -132,7 +303,7 @@ export default function EditProfileScreen() {
             >
               <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Profili Düzenle</Text>
+            <Text style={styles.headerTitle}>Profili Duzenle</Text>
             <TouchableOpacity
               style={[styles.saveButton, saving && styles.saveButtonDisabled]}
               onPress={handleSave}
@@ -155,7 +326,7 @@ export default function EditProfileScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Avatar Önizleme */}
+            {/* Avatar Onizleme */}
             <View style={styles.avatarPreview}>
               <LinearGradient
                 colors={gradients.premiumShimmer}
@@ -172,13 +343,13 @@ export default function EditProfileScreen() {
                 </View>
               </LinearGradient>
               <Text style={styles.avatarNote}>
-                Avatarı değiştirmek için profil sayfasına git
+                Avatari degistirmek icin profil sayfasina git
               </Text>
             </View>
 
             {/* Username Input */}
             <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Kullanıcı Adı</Text>
+              <Text style={styles.inputLabel}>Kullanici Adi</Text>
               <View
                 style={[styles.inputContainer, usernameError && styles.inputContainerError]}
               >
@@ -206,7 +377,7 @@ export default function EditProfileScreen() {
 
             {/* Bio Input */}
             <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Hakkında</Text>
+              <Text style={styles.inputLabel}>Hakkinda</Text>
               <View style={styles.bioContainer}>
                 <TextInput
                   style={styles.bioInput}
@@ -223,16 +394,16 @@ export default function EditProfileScreen() {
                 <Text style={styles.bioCount}>{bioCount}/{BIO_MAX_LENGTH}</Text>
               </View>
               <Text style={styles.hintText}>
-                İlgilerini, hobilerini veya ne aradığını yazabilirsin.
+                Ilgilerini, hobilerini veya ne aradigini yazabilirsin.
               </Text>
             </View>
 
-            {/* Bilgi Kartı */}
+            {/* Bilgi Karti */}
             <View style={styles.infoCard}>
               <View style={styles.infoDot} />
               <Text style={styles.infoText}>
-                Kullanıcı adın herkes tarafından görülebilir. Bio alanı
-                profilinde ve değerlendirmelerinde gösterilir.
+                Kullanici adin herkes tarafindan gorulebilir. Bio alani
+                profilinde ve degerlendirmelerinde gosterilir.
               </Text>
             </View>
           </ScrollView>
@@ -241,178 +412,3 @@ export default function EditProfileScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  keyboardContainer: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    color: colors.text,
-    marginLeft: spacing.md,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: `${colors.primary}20`,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: colors.primary,
-    fontWeight: "600",
-    marginLeft: spacing.xs,
-    fontSize: fontSize.sm,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: spacing.xl,
-  },
-  avatarPreview: {
-    alignItems: "center",
-    marginBottom: spacing.xxl,
-  },
-  avatarRing: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarInner: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    overflow: "hidden",
-    backgroundColor: colors.background,
-  },
-  avatarPlaceholder: {
-    width: 72,
-    height: 72,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: glassFallback.background,
-  },
-  avatarEmoji: {
-    fontSize: 36,
-  },
-  avatarNote: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.md,
-    textAlign: "center",
-  },
-  inputSection: {
-    marginBottom: spacing.xl,
-  },
-  inputLabel: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-    marginBottom: spacing.sm,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    height: 50,
-  },
-  inputContainerError: {
-    borderColor: colors.danger,
-  },
-  atSymbol: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
-    marginRight: spacing.xs,
-  },
-  input: {
-    flex: 1,
-    color: colors.text,
-    fontSize: fontSize.md,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  hintText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  bioContainer: {
-    position: "relative",
-  },
-  bioInput: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    color: colors.text,
-    fontSize: fontSize.md,
-    minHeight: 100,
-    lineHeight: 22,
-  },
-  bioCount: {
-    position: "absolute",
-    bottom: spacing.sm,
-    right: spacing.md,
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-  infoCard: {
-    flexDirection: "row",
-    backgroundColor: `${colors.primary}10`,
-    borderWidth: 1,
-    borderColor: `${colors.primary}30`,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-  },
-  infoDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-    marginTop: 5,
-    marginRight: spacing.sm,
-  },
-  infoText: {
-    flex: 1,
-    color: colors.textLight,
-    fontSize: fontSize.xs,
-    lineHeight: 18,
-  },
-});

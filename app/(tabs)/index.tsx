@@ -22,19 +22,12 @@ import {
   REACTIONS,
   type PostCategory,
   type ReactionType,
-} from "@/data/mockData";
+} from "@/constants/categories";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 
-// Glass styles - inline for web build compatibility
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  backgroundLight: "rgba(22, 22, 31, 0.4)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-  blur: 20,
-};
 import { useAuth } from "@/contexts/AuthContext";
 import { getBlockedUserIds } from "@/lib/blocking";
 import { blockUser } from "@/lib/blocking";
@@ -97,6 +90,7 @@ const PostCard = memo(function PostCard({
   onEdit: (post: FeedPost) => void;
   onDelete?: (postId: string) => void;
 }) {
+  const { colors, glass } = useTheme();
   const [revealed, setRevealed] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -138,12 +132,14 @@ const PostCard = memo(function PostCard({
     setShowReactions(false);
     if (!user) return;
     try {
-      await supabase.from("post_reactions").upsert(
+      const { error } = await supabase.from("post_reactions").upsert(
         { post_id: post.id, user_id: user.id, reaction_type: type },
         { onConflict: "post_id,user_id" }
       );
+      if (error) throw error;
     } catch (e) {
       console.error("Reaction error:", e);
+      Alert.alert("Hata", "Reaksiyon eklenemedi. Lütfen tekrar deneyin.");
     }
   }, [post.id, user?.id]);
 
@@ -190,6 +186,261 @@ const PostCard = memo(function PostCard({
       params: { postId: post.id },
     });
   }, [post.id, router]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    postCardOuter: {
+      marginBottom: spacing.lg,
+    },
+    postCardInner: {
+      padding: spacing.lg,
+    },
+    postHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: spacing.md,
+    },
+    categoryBadge: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    categoryText: {
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    timeText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginLeft: "auto",
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    bookmarkButton: {
+      padding: spacing.xs,
+    },
+    menuButton: {
+      padding: spacing.xs,
+    },
+    postContent: {
+      flexDirection: "row",
+    },
+    postTextContainer: {
+      flex: 1,
+    },
+    postText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      lineHeight: 24,
+    },
+    spoilerBox: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+    },
+    spoilerText: {
+      color: colors.textLight,
+      textAlign: "center",
+      fontSize: fontSize.sm,
+    },
+    spoilerSubtext: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    thumbnailContainer: {
+      marginLeft: spacing.md,
+    },
+    thumbnail: {
+      width: 64,
+      height: 64,
+      borderRadius: borderRadius.lg,
+      backgroundColor: colors.borderLight,
+    },
+    authorRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    authorAvatar: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.borderLight,
+    },
+    authorName: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      marginLeft: spacing.sm,
+    },
+    reactionsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    reactionsList: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    reactionChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    reactionEmoji: {
+      fontSize: fontSize.sm,
+    },
+    reactionCount: {
+      color: colors.textLight,
+      fontSize: fontSize.xs,
+      marginLeft: spacing.xs,
+    },
+    reactionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    commentsContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    commentCount: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginLeft: spacing.xs,
+    },
+    topCommentPreview: {
+      flexDirection: "row",
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+      alignItems: "flex-start",
+      backgroundColor: `${colors.primary}08`,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+    },
+    topCommentHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      flex: 1,
+    },
+    topCommentIcon: {
+      fontSize: fontSize.sm,
+    },
+    topCommentAuthor: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    topCommentLikesBadge: {
+      backgroundColor: `${colors.primary}20`,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: 2,
+      borderRadius: borderRadius.sm,
+      marginLeft: "auto",
+    },
+    topCommentLikesText: {
+      color: colors.primary,
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    topCommentText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      lineHeight: 16,
+    },
+    reactionPickerOverlay: {
+      position: "absolute",
+      top: "50%",
+      left: spacing.lg,
+      right: spacing.lg,
+      transform: [{ translateY: -50 }],
+    },
+    reactionPicker: {
+      backgroundColor: "rgba(30, 30, 42, 0.95)",
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      padding: spacing.md,
+      flexDirection: "row",
+      justifyContent: "space-around",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    reactionOption: {
+      alignItems: "center",
+      padding: spacing.sm,
+    },
+    reactionOptionEmoji: {
+      fontSize: 24,
+    },
+    reactionOptionLabel: {
+      color: colors.textLight,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    // Menu modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: spacing.xxl,
+    },
+    menuContainer: {
+      width: "100%",
+      backgroundColor: colors.cardElevated,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      overflow: "hidden",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      gap: spacing.md,
+    },
+    menuItemText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "500",
+    },
+    menuDivider: {
+      height: 1,
+      backgroundColor: glass.border,
+    },
+  }), [colors, glass]);
 
   return (
     <Pressable
@@ -422,6 +673,7 @@ export default function FeedScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { followingIds } = useFollow();
+  const { colors, glass } = useTheme();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -839,6 +1091,136 @@ export default function FeedScreen() {
       : posts;
   }, [posts, selectedCategory]);
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+    headerContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginLeft: spacing.sm,
+      letterSpacing: 1,
+      flex: 1,
+    },
+    bellButton: {
+      padding: spacing.sm,
+      position: "relative",
+    },
+    bellBadge: {
+      position: "absolute",
+      top: 2,
+      right: 2,
+      backgroundColor: colors.accent,
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 3,
+    },
+    bellBadgeText: {
+      color: colors.white,
+      fontSize: 9,
+      fontWeight: "bold",
+    },
+    feedTabsContainer: {
+      flexDirection: "row",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    feedTab: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
+      backgroundColor: glass.backgroundLight,
+      borderRadius: borderRadius.md,
+    },
+    feedTabActive: {
+      backgroundColor: `${colors.primary}20`,
+    },
+    feedTabText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    feedTabTextActive: {
+      color: colors.primary,
+    },
+    filterBar: {
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    filterBarContent: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
+    },
+    filterChip: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    filterChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterChipText: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      fontWeight: "500",
+    },
+    filterChipTextActive: {
+      color: "#FFFFFF",
+    },
+    feed: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    feedContent: {
+      paddingBottom: spacing.xl,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: 64,
+    },
+    emptyStateTitle: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: "600",
+      marginBottom: spacing.sm,
+    },
+    emptyStateText: {
+      color: colors.textMuted,
+      fontSize: fontSize.md,
+    },
+    bottomSpacer: {
+      height: 80,
+    },
+  }), [colors, glass]);
+
   if (loading) {
     return (
       <GradientBackground variant="screen">
@@ -1037,385 +1419,3 @@ export default function FeedScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    marginLeft: spacing.sm,
-    letterSpacing: 1,
-    flex: 1,
-  },
-  bellButton: {
-    padding: spacing.sm,
-    position: "relative",
-  },
-  bellBadge: {
-    position: "absolute",
-    top: 2,
-    right: 2,
-    backgroundColor: colors.accent,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  bellBadgeText: {
-    color: colors.white,
-    fontSize: 9,
-    fontWeight: "bold",
-  },
-  feedTabsContainer: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  feedTab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    backgroundColor: glassFallback.backgroundLight,
-    borderRadius: borderRadius.md,
-  },
-  feedTabActive: {
-    backgroundColor: `${colors.primary}20`,
-  },
-  feedTabText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  feedTabTextActive: {
-    color: colors.primary,
-  },
-  filterBar: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  filterBarContent: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
-  },
-  filterChip: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  filterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterChipText: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    fontWeight: "500",
-  },
-  filterChipTextActive: {
-    color: "#FFFFFF",
-  },
-  feed: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  feedContent: {
-    paddingBottom: spacing.xl,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 64,
-  },
-  emptyStateTitle: {
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    marginBottom: spacing.sm,
-  },
-  emptyStateText: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
-  },
-  bottomSpacer: {
-    height: 80,
-  },
-  postCardOuter: {
-    marginBottom: spacing.lg,
-  },
-  postCardInner: {
-    padding: spacing.lg,
-  },
-  postHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  categoryBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  categoryText: {
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  timeText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginLeft: "auto",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    marginLeft: spacing.sm,
-  },
-  bookmarkButton: {
-    padding: spacing.xs,
-  },
-  menuButton: {
-    padding: spacing.xs,
-  },
-  postContent: {
-    flexDirection: "row",
-  },
-  postTextContainer: {
-    flex: 1,
-  },
-  postText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    lineHeight: 24,
-  },
-  spoilerBox: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-  },
-  spoilerText: {
-    color: colors.textLight,
-    textAlign: "center",
-    fontSize: fontSize.sm,
-  },
-  spoilerSubtext: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-  thumbnailContainer: {
-    marginLeft: spacing.md,
-  },
-  thumbnail: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.borderLight,
-  },
-  authorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  authorAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.borderLight,
-  },
-  authorName: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    marginLeft: spacing.sm,
-  },
-  reactionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  reactionsList: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  reactionChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  reactionEmoji: {
-    fontSize: fontSize.sm,
-  },
-  reactionCount: {
-    color: colors.textLight,
-    fontSize: fontSize.xs,
-    marginLeft: spacing.xs,
-  },
-  reactionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  commentsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  commentCount: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginLeft: spacing.xs,
-  },
-  topCommentPreview: {
-    flexDirection: "row",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-    alignItems: "flex-start",
-    backgroundColor: `${colors.primary}08`,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-  },
-  topCommentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    flex: 1,
-  },
-  topCommentIcon: {
-    fontSize: fontSize.sm,
-  },
-  topCommentAuthor: {
-    color: colors.primary,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  topCommentLikesBadge: {
-    backgroundColor: `${colors.primary}20`,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-    marginLeft: "auto",
-  },
-  topCommentLikesText: {
-    color: colors.primary,
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  topCommentText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    lineHeight: 16,
-  },
-  reactionPickerOverlay: {
-    position: "absolute",
-    top: "50%",
-    left: spacing.lg,
-    right: spacing.lg,
-    transform: [{ translateY: -50 }],
-  },
-  reactionPicker: {
-    backgroundColor: "rgba(30, 30, 42, 0.95)",
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  reactionOption: {
-    alignItems: "center",
-    padding: spacing.sm,
-  },
-  reactionOptionEmoji: {
-    fontSize: 24,
-  },
-  reactionOptionLabel: {
-    color: colors.textLight,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  // Menu modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xxl,
-  },
-  menuContainer: {
-    width: "100%",
-    backgroundColor: colors.cardElevated,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.md,
-  },
-  menuItemText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "500",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: glassFallback.border,
-  },
-});

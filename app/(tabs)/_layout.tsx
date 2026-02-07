@@ -1,10 +1,12 @@
 import { Tabs } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import { Home, Search, User, PlusCircle, Heart } from "lucide-react-native";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import GradientTabBar from "@/components/ui/GradientTabBar";
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       tabBar={(props) => <GradientTabBar {...props} />}

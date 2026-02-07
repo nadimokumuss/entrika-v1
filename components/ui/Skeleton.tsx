@@ -1,14 +1,112 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Animated } from "react-native";
-import { colors, gradients } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+function useSkeletonStyles() {
+  const { colors, glass } = useTheme();
+
+  return useMemo(() => ({
+    styles: StyleSheet.create({
+      shimmer: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
+      },
+
+      // Post Card Skeleton
+      card: {
+        backgroundColor: colors.card,
+        borderRadius: 12,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: glass.border,
+      },
+      header: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 12,
+      },
+      headerText: {
+        marginLeft: 12,
+        flex: 1,
+        gap: 4,
+      },
+      content: {
+        gap: 6,
+        marginBottom: 12,
+      },
+      categoryContainer: {
+        alignItems: "flex-start",
+      },
+      category: {
+        borderRadius: 6,
+      },
+
+      // Profile Card Skeleton
+      profileCard: {
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        padding: 20,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: glass.border,
+      },
+      avatarContainer: {
+        marginBottom: 12,
+      },
+      avatarRing: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        padding: 4,
+        backgroundColor: colors.background,
+      },
+      profileInfo: {
+        alignItems: "center",
+        marginBottom: 16,
+        gap: 4,
+      },
+      stats: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        width: "100%",
+        marginBottom: 16,
+      },
+      statBox: {
+        backgroundColor: glass.background,
+        borderRadius: 8,
+      },
+      bioContainer: {
+        width: "100%",
+        gap: 4,
+      },
+
+      // Match Card Skeleton
+      matchCard: {
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: glass.border,
+      },
+      matchImage: {
+        width: "100%",
+      },
+      matchInfo: {
+        position: "absolute",
+        bottom: 20,
+        left: 20,
+        gap: 4,
+      },
+    }),
+    colors,
+  }), [colors, glass]);
+}
 
 interface SkeletonProps {
   width?: number | string;
@@ -23,6 +121,7 @@ export function Skeleton({
   style,
   variant = "rect",
 }: SkeletonProps) {
+  const { styles, colors } = useSkeletonStyles();
   const shimmerAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -85,6 +184,8 @@ interface PostCardSkeletonProps {
 }
 
 export function PostCardSkeleton({ style }: PostCardSkeletonProps) {
+  const { styles } = useSkeletonStyles();
+
   return (
     <View style={[styles.card, style]}>
       {/* Header: Avatar + Username */}
@@ -116,6 +217,8 @@ interface ProfileCardSkeletonProps {
 }
 
 export function ProfileCardSkeleton({ style }: ProfileCardSkeletonProps) {
+  const { styles } = useSkeletonStyles();
+
   return (
     <View style={[styles.profileCard, style]}>
       {/* Avatar */}
@@ -152,6 +255,8 @@ interface MatchCardSkeletonProps {
 }
 
 export function MatchCardSkeleton({ style }: MatchCardSkeletonProps) {
+  const { styles } = useSkeletonStyles();
+
   return (
     <View style={[styles.matchCard, style]}>
       {/* Image */}
@@ -165,100 +270,3 @@ export function MatchCardSkeleton({ style }: MatchCardSkeletonProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  shimmer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-  },
-
-  // Post Card Skeleton
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  headerText: {
-    marginLeft: 12,
-    flex: 1,
-    gap: 4,
-  },
-  content: {
-    gap: 6,
-    marginBottom: 12,
-  },
-  categoryContainer: {
-    alignItems: "flex-start",
-  },
-  category: {
-    borderRadius: 6,
-  },
-
-  // Profile Card Skeleton
-  profileCard: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  avatarContainer: {
-    marginBottom: 12,
-  },
-  avatarRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    padding: 4,
-    backgroundColor: colors.background,
-  },
-  profileInfo: {
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 4,
-  },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginBottom: 16,
-  },
-  statBox: {
-    backgroundColor: glassFallback.background,
-    borderRadius: 8,
-  },
-  bioContainer: {
-    width: "100%",
-    gap: 4,
-  },
-
-  // Match Card Skeleton
-  matchCard: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  matchImage: {
-    width: "100%",
-  },
-  matchInfo: {
-    position: "absolute",
-    bottom: 20,
-    left: 20,
-    gap: 4,
-  },
-});

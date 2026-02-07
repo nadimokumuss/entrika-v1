@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -26,13 +26,8 @@ import {
   Unlink,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, Message } from "@/lib/supabase";
 import {
@@ -49,6 +44,7 @@ export default function ChatScreen() {
   const router = useRouter();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { user } = useAuth();
+  const { colors, glass } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -179,10 +175,10 @@ export default function ChatScreen() {
     setShowMenu(false);
     if (!user || !otherUserId || !otherUser) return;
     Alert.alert(
-      "Kullanıcıyı Engelle",
-      `@${otherUser.username} adlı kullanıcıyı engellemek istediğinize emin misiniz?`,
+      "Kullaniciyi Engelle",
+      `@${otherUser.username} adli kullaniciyi engellemek istediginize emin misiniz?`,
       [
-        { text: "İptal", style: "cancel" },
+        { text: "Iptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -192,7 +188,7 @@ export default function ChatScreen() {
               Alert.alert("Engellendi", `@${otherUser.username} engellendi.`);
               router.back();
             } else {
-              Alert.alert("Hata", "Kullanıcı engellenemedi.");
+              Alert.alert("Hata", "Kullanici engellenemedi.");
             }
           },
         },
@@ -204,12 +200,12 @@ export default function ChatScreen() {
     setShowMenu(false);
     if (!matchId) return;
     Alert.alert(
-      "Eşleşmeyi Boz",
-      "Bu eşleşmeyi bozmak istediğinize emin misiniz? Tüm mesajlar silinecek.",
+      "Eslesmeyi Boz",
+      "Bu eslesmeyi bozmak istediginize emin misiniz? Tum mesajlar silinecek.",
       [
-        { text: "İptal", style: "cancel" },
+        { text: "Iptal", style: "cancel" },
         {
-          text: "Eşleşmeyi Boz",
+          text: "Eslesmeyi Boz",
           style: "destructive",
           onPress: async () => {
             try {
@@ -219,7 +215,7 @@ export default function ChatScreen() {
               await supabase.from("matches").delete().eq("id", matchId);
               router.back();
             } catch (error) {
-              Alert.alert("Hata", "Eşleşme bozmada bir hata oluştu.");
+              Alert.alert("Hata", "Eslesme bozmada bir hata olustu.");
             }
           },
         },
@@ -230,6 +226,129 @@ export default function ChatScreen() {
   const renderMessage = ({ item }: { item: Message }) => (
     <MessageBubble message={item} isOwn={item.sender_id === user?.id} />
   );
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerAvatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      marginLeft: spacing.sm,
+      backgroundColor: colors.borderLight,
+    },
+    headerName: {
+      flex: 1,
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      marginLeft: spacing.sm,
+    },
+    headerRight: {
+      padding: spacing.sm,
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyChat: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: spacing.xxl,
+    },
+    emptyChatText: {
+      color: colors.textMuted,
+      fontSize: fontSize.base,
+      textAlign: "center",
+    },
+    messageList: {
+      paddingVertical: spacing.md,
+    },
+    inputBar: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: glass.background,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    textInput: {
+      flex: 1,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.xl,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      fontSize: fontSize.base,
+      color: colors.text,
+      maxHeight: 100,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: spacing.sm,
+      backgroundColor: colors.borderLight,
+    },
+    sendButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    // Menu modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: spacing.xxl,
+    },
+    menuContainer: {
+      width: "100%",
+      backgroundColor: colors.cardElevated,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      overflow: "hidden",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      gap: spacing.md,
+    },
+    menuItemText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "500",
+    },
+    menuDivider: {
+      height: 1,
+      backgroundColor: glass.border,
+    },
+  }), [colors, glass]);
 
   return (
     <GradientBackground variant="screen">
@@ -274,7 +393,7 @@ export default function ChatScreen() {
           ) : messages.length === 0 ? (
             <View style={styles.emptyChat}>
               <Text style={styles.emptyChatText}>
-                Henüz mesaj yok. İlk mesajı gönder!
+                Henuz mesaj yok. Ilk mesaji gonder!
               </Text>
             </View>
           ) : (
@@ -328,7 +447,7 @@ export default function ChatScreen() {
             <View style={styles.menuContainer}>
               <TouchableOpacity style={styles.menuItem} onPress={handleReview}>
                 <Star size={20} color={colors.warning} />
-                <Text style={styles.menuItemText}>Değerlendir</Text>
+                <Text style={styles.menuItemText}>Degerlendir</Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
               <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
@@ -346,7 +465,7 @@ export default function ChatScreen() {
               <TouchableOpacity style={styles.menuItem} onPress={handleUnmatch}>
                 <Unlink size={20} color={colors.danger} />
                 <Text style={[styles.menuItemText, { color: colors.danger }]}>
-                  Eşleşmeyi Boz
+                  Eslesmeyi Boz
                 </Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
@@ -355,7 +474,7 @@ export default function ChatScreen() {
                 onPress={() => setShowMenu(false)}
               >
                 <Text style={[styles.menuItemText, { color: colors.textMuted, textAlign: "center" }]}>
-                  İptal
+                  Iptal
                 </Text>
               </TouchableOpacity>
             </View>
@@ -365,126 +484,3 @@ export default function ChatScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginLeft: spacing.sm,
-    backgroundColor: colors.borderLight,
-  },
-  headerName: {
-    flex: 1,
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    marginLeft: spacing.sm,
-  },
-  headerRight: {
-    padding: spacing.sm,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyChat: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xxl,
-  },
-  emptyChatText: {
-    color: colors.textMuted,
-    fontSize: fontSize.base,
-    textAlign: "center",
-  },
-  messageList: {
-    paddingVertical: spacing.md,
-  },
-  inputBar: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: glassFallback.background,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    fontSize: fontSize.base,
-    color: colors.text,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: spacing.sm,
-    backgroundColor: colors.borderLight,
-  },
-  sendButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  // Menu modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xxl,
-  },
-  menuContainer: {
-    width: "100%",
-    backgroundColor: colors.cardElevated,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.md,
-  },
-  menuItemText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "500",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: glassFallback.border,
-  },
-});

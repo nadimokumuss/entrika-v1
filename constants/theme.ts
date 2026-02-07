@@ -1,44 +1,127 @@
-// Entrika Renk Paleti - Dark Premium
-export const colors = {
-  // Ana arka plan - Derin koyu
+// App version - should match package.json
+export const APP_VERSION = "1.0.0";
+
+// ─── Type Definitions ───
+
+export type ThemeColors = {
+  background: string;
+  card: string;
+  cardElevated: string;
+  primary: string;
+  primaryLight: string;
+  accent: string;
+  danger: string;
+  success: string;
+  warning: string;
+  text: string;
+  textLight: string;
+  textMuted: string;
+  border: string;
+  borderLight: string;
+  white: string;
+  text90: string;
+  text70: string;
+  text50: string;
+  text40: string;
+  text30: string;
+  text20: string;
+  text10: string;
+  text05: string;
+};
+
+export type ThemeGradients = Record<string, [string, string, ...string[]]>;
+
+export type ThemeGlass = {
+  background: string;
+  backgroundLight: string;
+  border: string;
+  borderHighlight: string;
+  blur: number;
+};
+
+export type Theme = {
+  colors: ThemeColors;
+  gradients: ThemeGradients;
+  glass: ThemeGlass;
+};
+
+// ─── Light Theme ───
+
+export const lightColors: ThemeColors = {
+  background: "#F5FBE6",
+  card: "#E2E8CE",
+  cardElevated: "#D8DFC4",
+  primary: "#FF7F11",
+  primaryLight: "#FFA04D",
+  accent: "#FF7F11",
+  danger: "#C93A2B",
+  success: "#4A7856",
+  warning: "#D9822B",
+  text: "#262626",
+  textLight: "#4A4A4A",
+  textMuted: "#7A7A7A",
+  border: "#ACBFA4",
+  borderLight: "#C8D4BE",
+  white: "#FFFFFF",
+  text90: "#262626",
+  text70: "#4A4A4A",
+  text50: "#7A7A7A",
+  text40: "#999999",
+  text30: "#ACBFA4",
+  text20: "#C8D4BE",
+  text10: "#E2E8CE",
+  text05: "#EDF2DD",
+};
+
+export const lightGradients: ThemeGradients = {
+  screenBg: ["#F5FBE6", "#EDF2DD", "#F5FBE6"],
+  authBg: ["#EDF2DD", "#E2E8CE", "#F5FBE6"],
+  primaryButton: ["#FF7F11", "#E06A00"],
+  accentButton: ["#FFA04D", "#FF7F11"],
+  premiumShimmer: ["#FF7F11", "#FFA04D", "#FF7F11"],
+  skeletonShimmer: ["#E2E8CE", "#D8DFC4", "#E2E8CE"],
+  tabBar: ["rgba(245,251,230,0)", "rgba(245,251,230,0.8)", "#F5FBE6"],
+  cardOverlay: ["transparent", "rgba(245,251,230,0.9)"],
+  glassOverlay: ["rgba(226,232,206,0.6)", "rgba(226,232,206,0.8)"],
+};
+
+export const lightGlass: ThemeGlass = {
+  background: "rgba(226, 232, 206, 0.6)",
+  backgroundLight: "rgba(226, 232, 206, 0.4)",
+  border: "rgba(172, 191, 164, 0.3)",
+  borderHighlight: "rgba(255, 127, 17, 0.2)",
+  blur: 20,
+};
+
+// ─── Dark Theme ───
+
+export const darkColors: ThemeColors = {
   background: "#0A0A0F",
-  // Kart arka plani - Koyu gri-mavi
   card: "#16161F",
-  // Elevated kart
   cardElevated: "#1E1E2A",
-  // Marka rengi - Mor
   primary: "#A855F7",
-  // Primary acik ton
   primaryLight: "#C084FC",
-  // Accent - Pembe
   accent: "#F472B6",
-  // Tehlike - Kirmizi
   danger: "#EF4444",
-  // Guven - Yesil
   success: "#22C55E",
-  // Uyari - Amber
   warning: "#F59E0B",
-  // Metin renkleri (Dark mode icin acik)
   text: "#F1F1F6",
   textLight: "#A1A1B5",
   textMuted: "#5A5A72",
-  // Border
   border: "#2A2A3C",
   borderLight: "#1E1E2A",
-  // Beyaz (sabit)
   white: "#FFFFFF",
-  // Karanlik tema icin white tonlari
-  white90: "#F1F1F6",
-  white70: "#C4C4D4",
-  white50: "#A1A1B5",
-  white40: "#7A7A92",
-  white30: "#5A5A72",
-  white20: "#2A2A3C",
-  white10: "#1E1E2A",
-  white05: "#16161F",
+  text90: "#F1F1F6",
+  text70: "#C4C4D4",
+  text50: "#A1A1B5",
+  text40: "#7A7A92",
+  text30: "#5A5A72",
+  text20: "#2A2A3C",
+  text10: "#1E1E2A",
+  text05: "#16161F",
 };
 
-export const gradients: Record<string, [string, string, ...string[]]> = {
+export const darkGradients: ThemeGradients = {
   screenBg: ["#0A0A0F", "#12101F", "#0A0A0F"],
   authBg: ["#0F0A1E", "#1A0B2E", "#0A0A0F"],
   primaryButton: ["#A855F7", "#9333EA"],
@@ -50,7 +133,7 @@ export const gradients: Record<string, [string, string, ...string[]]> = {
   glassOverlay: ["rgba(22,22,31,0.6)", "rgba(22,22,31,0.8)"],
 };
 
-export const glass = {
+export const darkGlass: ThemeGlass = {
   background: "rgba(22, 22, 31, 0.6)",
   backgroundLight: "rgba(22, 22, 31, 0.4)",
   border: "rgba(255, 255, 255, 0.08)",
@@ -58,41 +141,32 @@ export const glass = {
   blur: 20,
 };
 
-// Accessibility Standards (WCAG AA)
+// ─── Backward Compatibility (defaults to dark for static imports) ───
+// These are kept for files not yet migrated to useTheme()
+export const colors = darkColors;
+export const gradients = darkGradients;
+export const glass = darkGlass;
+
+// ─── Theme-independent constants ───
+
 export const accessibility = {
-  // Touch targets
-  minTouchTarget: 44, // px
-  minTouchTargetLarge: 48, // px
-
-  // Color contrast ratios (WCAG AA: 4.5:1 for normal text)
+  minTouchTarget: 44,
+  minTouchTargetLarge: 48,
   contrast: {
-    normalText: 4.5, // 14pt and larger
-    largeText: 3, // 18pt and larger
-    graphics: 3, // UI components
-
-    // Our colors (verified):
-    // - text (#F1F1F6) on background (#0A0A0F) = 15.1:1 ✓
-    // - textLight (#A1A1B5) on background (#0A0A0F) = 7.3:1 ✓
-    // - primary (#A855F7) on background = 4.8:1 ✓
-    // - success (#22C55E) on background = 4.5:1 ✓
-    // - danger (#EF4444) on background = 6.3:1 ✓
+    normalText: 4.5,
+    largeText: 3,
+    graphics: 3,
   },
-
-  // Focus states
   focusRing: {
     width: 3,
-    color: colors.primary,
+    color: "#A855F7",
     offset: 2,
     borderRadius: 4,
   },
-
-  // Font sizes
   fontSize: {
-    minReadable: 16, // px for body text
-    preferred: 18, // px for better readability
+    minReadable: 16,
+    preferred: 18,
   },
-
-  // Spacing
   spacing: {
     compact: 8,
     comfortable: 12,
@@ -161,7 +235,6 @@ export const fontSize = {
   xxxl: 32,
 };
 
-// Re-export glass as default for compatibility
 export { glass as defaultGlass };
 export default {
   colors,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,13 +17,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { X, Save, Plus, Trash2 } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 import { supabase, type DatingProfile } from "@/lib/supabase";
@@ -31,7 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { pickImage, uploadImage, deleteImage, extractPathFromUrl, showImageSourcePicker } from "@/lib/storage";
 
 const INTERESTS_LIST = [
-  "Müzik",
+  "Muzik",
   "Spor",
   "Seyahat",
   "Yemek",
@@ -42,26 +37,26 @@ const INTERESTS_LIST = [
   "Sanat",
   "Dans",
   "Yoga",
-  "Fotoğraf",
-  "Doğa",
+  "Fotograf",
+  "Doga",
   "Kahve",
   "Hayvanlar",
 ];
 
 const LOOKING_FOR_OPTIONS = [
-  { value: "female", label: "Kadın" },
+  { value: "female", label: "Kadin" },
   { value: "male", label: "Erkek" },
   { value: "both", label: "Her ikisi" },
 ];
 
 const RELATIONSHIP_STATUS_OPTIONS = [
   { value: "single", label: "Bekar" },
-  { value: "dating", label: "İlişkide" },
-  { value: "complicated", label: "Karmaşık" },
+  { value: "dating", label: "Iliskide" },
+  { value: "complicated", label: "Karmasik" },
   { value: "married", label: "Evli" },
-  { value: "divorced", label: "Boşanmış" },
+  { value: "divorced", label: "Bosanmis" },
   { value: "widowed", label: "Dul" },
-  { value: "rather_not_say", label: "Söylemek İstemiyorum" },
+  { value: "rather_not_say", label: "Soylemek Istemiyorum" },
 ];
 
 const MAX_PHOTOS = 6;
@@ -75,6 +70,7 @@ const PHOTO_HEIGHT = (PHOTO_WIDTH * 4) / 3;
 export default function EditDatingProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors, glass } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -149,7 +145,7 @@ export default function EditDatingProfileScreen() {
         const publicUrl = await uploadImage("dating-photos", user.id, uri);
         setPhotos((prev) => [...prev, publicUrl]);
       } catch (error: any) {
-        Alert.alert("Hata", error.message || "Fotoğraf yüklenemedi.");
+        Alert.alert("Hata", error.message || "Fotograf yuklenemedi.");
       } finally {
         setUploadingPhoto(false);
       }
@@ -158,8 +154,8 @@ export default function EditDatingProfileScreen() {
 
   const handleDeletePhoto = (index: number) => {
     const url = photos[index];
-    Alert.alert("Fotoğrafı Sil", "Bu fotoğrafı silmek istediğinize emin misiniz?", [
-      { text: "İptal", style: "cancel" },
+    Alert.alert("Fotografi Sil", "Bu fotografi silmek istediginize emin misiniz?", [
+      { text: "Iptal", style: "cancel" },
       {
         text: "Sil",
         style: "destructive",
@@ -167,11 +163,13 @@ export default function EditDatingProfileScreen() {
           try {
             const path = extractPathFromUrl(url, "dating-photos");
             if (path) {
-              await deleteImage("dating-photos", path).catch(() => {});
+              await deleteImage("dating-photos", path).catch((e) => {
+                console.warn("Failed to delete photo from storage:", e);
+              });
             }
             setPhotos((prev) => prev.filter((_, i) => i !== index));
           } catch (error: any) {
-            Alert.alert("Hata", error.message || "Fotoğraf silinemedi.");
+            Alert.alert("Hata", error.message || "Fotograf silinemedi.");
           }
         },
       },
@@ -185,7 +183,7 @@ export default function EditDatingProfileScreen() {
     if (age.trim() !== "") {
       const ageNum = parseInt(age, 10);
       if (isNaN(ageNum) || ageNum < 18 || ageNum > 99) {
-        Alert.alert("Hata", "Yaş 18 ile 99 arasında olmalıdır.");
+        Alert.alert("Hata", "Yas 18 ile 99 arasinda olmalidir.");
         return;
       }
     }
@@ -227,6 +225,211 @@ export default function EditDatingProfileScreen() {
       setSubmitting(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    closeButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontWeight: "600",
+      fontSize: fontSize.lg,
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.borderLight,
+    },
+    saveButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    saveButtonText: {
+      marginLeft: spacing.sm,
+      fontWeight: "500",
+      color: colors.white,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    fieldContainer: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    fieldLabel: {
+      color: colors.textLight,
+      fontWeight: "500",
+      marginBottom: spacing.sm,
+    },
+    photoGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: PHOTO_GAP,
+    },
+    photoItem: {
+      width: PHOTO_WIDTH,
+      height: PHOTO_HEIGHT,
+      borderRadius: borderRadius.lg,
+      overflow: "hidden",
+      position: "relative",
+    },
+    photoImage: {
+      width: "100%",
+      height: "100%",
+      backgroundColor: colors.borderLight,
+    },
+    photoDeleteButton: {
+      position: "absolute",
+      top: 6,
+      right: 6,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    photoAddButton: {
+      width: PHOTO_WIDTH,
+      height: PHOTO_HEIGHT,
+      borderRadius: borderRadius.lg,
+      borderWidth: 2,
+      borderColor: glass.border,
+      borderStyle: "dashed",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: glass.background,
+    },
+    textInput: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      color: colors.text,
+      fontSize: fontSize.base,
+    },
+    bioInput: {
+      minHeight: 100,
+    },
+    chipsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    chip: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    chipSelected: {
+      borderColor: colors.primary,
+      borderWidth: 2,
+      backgroundColor: `${colors.primary}15`,
+    },
+    chipText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    chipTextSelected: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    lookingForContainer: {
+      flexDirection: "row",
+      gap: spacing.sm,
+    },
+    lookingForButton: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: glass.border,
+      backgroundColor: glass.background,
+      alignItems: "center",
+    },
+    lookingForButtonSelected: {
+      borderColor: colors.accent,
+      borderWidth: 2,
+      backgroundColor: `${colors.accent}15`,
+    },
+    lookingForText: {
+      fontSize: fontSize.base,
+      color: colors.textLight,
+      fontWeight: "500",
+    },
+    lookingForTextSelected: {
+      color: colors.accent,
+      fontWeight: "600",
+    },
+    relationshipStatusContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    relationshipStatusButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    relationshipStatusButtonSelected: {
+      borderColor: colors.primary,
+      borderWidth: 2,
+      backgroundColor: `${colors.primary}15`,
+    },
+    relationshipStatusText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    relationshipStatusTextSelected: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    switchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    switchDescription: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    bottomSpacer: {
+      height: 80,
+    },
+  }), [colors, glass]);
 
   if (loading) {
     return (
@@ -276,9 +479,9 @@ export default function EditDatingProfileScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Fotoğraflar */}
+            {/* Fotograflar */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Fotoğraflar ({photos.length}/{MAX_PHOTOS})</Text>
+              <Text style={styles.fieldLabel}>Fotograflar ({photos.length}/{MAX_PHOTOS})</Text>
               <View style={styles.photoGrid}>
                 {photos.map((url, index) => (
                   <View key={url} style={styles.photoItem}>
@@ -307,12 +510,12 @@ export default function EditDatingProfileScreen() {
               </View>
             </View>
 
-            {/* Yaş */}
+            {/* Yas */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Yaş</Text>
+              <Text style={styles.fieldLabel}>Yas</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Örn: 25"
+                placeholder="Orn: 25"
                 placeholderTextColor={colors.textMuted}
                 value={age}
                 onChangeText={setAge}
@@ -321,12 +524,12 @@ export default function EditDatingProfileScreen() {
               />
             </View>
 
-            {/* Şehir */}
+            {/* Sehir */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Şehir</Text>
+              <Text style={styles.fieldLabel}>Sehir</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Örn: İstanbul"
+                placeholder="Orn: Istanbul"
                 placeholderTextColor={colors.textMuted}
                 value={city}
                 onChangeText={setCity}
@@ -338,19 +541,19 @@ export default function EditDatingProfileScreen() {
               <Text style={styles.fieldLabel}>Meslek</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Örn: Yazılım Mühendisi"
+                placeholder="Orn: Yazilim Muhendisi"
                 placeholderTextColor={colors.textMuted}
                 value={job}
                 onChangeText={setJob}
               />
             </View>
 
-            {/* Eğitim */}
+            {/* Egitim */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Eğitim</Text>
+              <Text style={styles.fieldLabel}>Egitim</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Örn: İstanbul Üniversitesi"
+                placeholder="Orn: Istanbul Universitesi"
                 placeholderTextColor={colors.textMuted}
                 value={education}
                 onChangeText={setEducation}
@@ -359,7 +562,7 @@ export default function EditDatingProfileScreen() {
 
             {/* Bio */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Hakkında</Text>
+              <Text style={styles.fieldLabel}>Hakkinda</Text>
               <TextInput
                 style={[styles.textInput, styles.bioInput]}
                 placeholder="Kendinden bahset..."
@@ -371,9 +574,9 @@ export default function EditDatingProfileScreen() {
               />
             </View>
 
-            {/* İlgi Alanları */}
+            {/* Ilgi Alanlari */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>İlgi Alanları</Text>
+              <Text style={styles.fieldLabel}>Ilgi Alanlari</Text>
               <View style={styles.chipsContainer}>
                 {INTERESTS_LIST.map((interest) => {
                   const isSelected = interests.includes(interest);
@@ -431,7 +634,7 @@ export default function EditDatingProfileScreen() {
 
             {/* Relationship Status */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>İlişki Durumu</Text>
+              <Text style={styles.fieldLabel}>Iliski Durumu</Text>
               <View style={styles.relationshipStatusContainer}>
                 {RELATIONSHIP_STATUS_OPTIONS.map((option) => {
                   const isSelected = relationshipStatus === option.value;
@@ -464,7 +667,7 @@ export default function EditDatingProfileScreen() {
                 <View>
                   <Text style={styles.fieldLabel}>Profil Aktif</Text>
                   <Text style={styles.switchDescription}>
-                    Kapatırsan eşleşme ekranında görünmezsin
+                    Kapatirsan eslesme ekraninda gorunmezsin
                   </Text>
                 </View>
                 <Switch
@@ -483,208 +686,3 @@ export default function EditDatingProfileScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  closeButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontWeight: "600",
-    fontSize: fontSize.lg,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.borderLight,
-  },
-  saveButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  saveButtonText: {
-    marginLeft: spacing.sm,
-    fontWeight: "500",
-    color: colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  fieldContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  fieldLabel: {
-    color: colors.textLight,
-    fontWeight: "500",
-    marginBottom: spacing.sm,
-  },
-  photoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: PHOTO_GAP,
-  },
-  photoItem: {
-    width: PHOTO_WIDTH,
-    height: PHOTO_HEIGHT,
-    borderRadius: borderRadius.lg,
-    overflow: "hidden",
-    position: "relative",
-  },
-  photoImage: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: colors.borderLight,
-  },
-  photoDeleteButton: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  photoAddButton: {
-    width: PHOTO_WIDTH,
-    height: PHOTO_HEIGHT,
-    borderRadius: borderRadius.lg,
-    borderWidth: 2,
-    borderColor: glassFallback.border,
-    borderStyle: "dashed",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: glassFallback.background,
-  },
-  textInput: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    color: colors.text,
-    fontSize: fontSize.base,
-  },
-  bioInput: {
-    minHeight: 100,
-  },
-  chipsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  chipSelected: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-    backgroundColor: `${colors.primary}15`,
-  },
-  chipText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  chipTextSelected: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  lookingForContainer: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  lookingForButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-    alignItems: "center",
-  },
-  lookingForButtonSelected: {
-    borderColor: colors.accent,
-    borderWidth: 2,
-    backgroundColor: `${colors.accent}15`,
-  },
-  lookingForText: {
-    fontSize: fontSize.base,
-    color: colors.textLight,
-    fontWeight: "500",
-  },
-  lookingForTextSelected: {
-    color: colors.accent,
-    fontWeight: "600",
-  },
-  relationshipStatusContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  relationshipStatusButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  relationshipStatusButtonSelected: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-    backgroundColor: `${colors.primary}15`,
-  },
-  relationshipStatusText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  relationshipStatusTextSelected: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  switchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  switchDescription: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  bottomSpacer: {
-    height: 80,
-  },
-});

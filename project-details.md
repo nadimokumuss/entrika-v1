@@ -1,7 +1,7 @@
 # Entrika - Project Details
 
 > Son güncelleme: 2026-02-07
-> Versiyon: 0.2.1 (Beta)
+> Versiyon: 0.3.0 (Beta) - Light/Dark Tema Sistemi
 
 ---
 

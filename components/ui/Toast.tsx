@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,12 +17,12 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import {
-  colors,
   borderRadius,
   spacing,
   fontSize,
   shadows,
 } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -40,41 +40,105 @@ interface ToastProps {
   position?: "top" | "bottom" | "center";
 }
 
-const TOAST_CONFIG = {
-  success: {
-    icon: CheckCircle,
-    color: colors.success,
-    bgColor: `${colors.success}15`,
-    borderColor: `${colors.success}30`,
-  },
-  error: {
-    icon: AlertCircle,
-    color: colors.danger,
-    bgColor: `${colors.danger}15`,
-    borderColor: `${colors.danger}30`,
-  },
-  info: {
-    icon: Info,
-    color: colors.primary,
-    bgColor: `${colors.primary}15`,
-    borderColor: `${colors.primary}30`,
-  },
-  warning: {
-    icon: AlertTriangle,
-    color: colors.warning,
-    bgColor: `${colors.warning}15`,
-    borderColor: `${colors.warning}30`,
-  },
-};
-
 export function Toast({ toast, onHide, position = "top" }: ToastProps) {
+  const { colors } = useTheme();
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
+  const TOAST_CONFIG = useMemo(() => ({
+    success: {
+      icon: CheckCircle,
+      color: colors.success,
+      bgColor: `${colors.success}15`,
+      borderColor: `${colors.success}30`,
+    },
+    error: {
+      icon: AlertCircle,
+      color: colors.danger,
+      bgColor: `${colors.danger}15`,
+      borderColor: `${colors.danger}30`,
+    },
+    info: {
+      icon: Info,
+      color: colors.primary,
+      bgColor: `${colors.primary}15`,
+      borderColor: `${colors.primary}30`,
+    },
+    warning: {
+      icon: AlertTriangle,
+      color: colors.warning,
+      bgColor: `${colors.warning}15`,
+      borderColor: `${colors.warning}30`,
+    },
+  }), [colors]);
+
   const config = TOAST_CONFIG[toast.type];
   const Icon = config.icon;
   const duration = toast.duration || 3000;
+
+  const styles = useMemo(() => StyleSheet.create({
+    toastContainer: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      zIndex: 9999,
+      paddingHorizontal: spacing.md,
+    },
+    toastTop: {
+      top: 0,
+    },
+    toastBottom: {
+      bottom: 0,
+    },
+    toastCenter: {
+      top: "50%",
+      marginTop: -50,
+    },
+    toastSafeArea: {
+      width: "100%",
+    },
+    toast: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      ...shadows.md,
+    },
+    toastIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: spacing.md,
+    },
+    toastContent: {
+      flex: 1,
+    },
+    toastTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    toastMessage: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: 2,
+    },
+    toastClose: {
+      padding: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    toastProgress: {
+      height: 3,
+      marginTop: spacing.xs,
+      borderRadius: 2,
+    },
+  }), [colors]);
 
   useEffect(() => {
     // Entrance animation
@@ -205,65 +269,3 @@ export function Toast({ toast, onHide, position = "top" }: ToastProps) {
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  toastContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    zIndex: 9999,
-    paddingHorizontal: spacing.md,
-  },
-  toastTop: {
-    top: 0,
-  },
-  toastBottom: {
-    bottom: 0,
-  },
-  toastCenter: {
-    top: "50%",
-    marginTop: -50,
-  },
-  toastSafeArea: {
-    width: "100%",
-  },
-  toast: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    ...shadows.md,
-  },
-  toastIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  toastContent: {
-    flex: 1,
-  },
-  toastTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  toastMessage: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  toastClose: {
-    padding: spacing.xs,
-    marginLeft: spacing.sm,
-  },
-  toastProgress: {
-    height: 3,
-    marginTop: spacing.xs,
-    borderRadius: 2,
-  },
-});

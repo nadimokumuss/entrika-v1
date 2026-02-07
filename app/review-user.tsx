@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,21 +13,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
 const REVIEW_TAGS = {
-  positive: ["Nazik", "Güvenilir", "Eğlenceli", "Samimi", "İlgili", "Saygılı", "Dürüst", "Tatlı Sözler", "İyi Dinleyici", "Anlayışlı"],
-  negative: ["Kaba", "Sahtekar", "Rahatsız Edici", "Yalancı", "Manipülatif", "Ağresif", "Geç Cevap", "İlgisiz", "Kıskanç"],
+  positive: ["Nazik", "Guvenilir", "Eglenceli", "Samimi", "Ilgili", "Saygili", "Durust", "Tatli Sozler", "Iyi Dinleyici", "Anlayisli"],
+  negative: ["Kaba", "Sahtekar", "Rahatsiz Edici", "Yalanci", "Manipulatif", "Agresif", "Gec Cevap", "Ilgisiz", "Kiskanc"],
 };
 
 const SCORE_EMOJIS: Record<number, string> = {
@@ -45,14 +40,14 @@ const SCORE_EMOJIS: Record<number, string> = {
 
 const SCORE_LABELS: Record<number, string> = {
   1: "Berbat",
-  2: "Çok Kötü",
-  3: "Kötü",
-  4: "İdare Eder",
+  2: "Cok Kotu",
+  3: "Kotu",
+  4: "Idare Eder",
   5: "Orta",
-  6: "Güzel",
-  7: "İyi",
-  8: "Çok İyi",
-  9: "Mükemmel",
+  6: "Guzel",
+  7: "Iyi",
+  8: "Cok Iyi",
+  9: "Mukemmel",
   10: "Harika",
 };
 
@@ -60,6 +55,7 @@ export default function ReviewUserScreen() {
   const router = useRouter();
   const { userId, username } = useLocalSearchParams<{ userId: string; username: string }>();
   const { user } = useAuth();
+  const { colors, glass } = useTheme();
 
   const [score, setScore] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -69,10 +65,10 @@ export default function ReviewUserScreen() {
   const [saving, setSaving] = useState(false);
   const [existingReview, setExistingReview] = useState<UserReview | null>(null);
 
-  // Kendini değerlendirmeye izin verme
+  // Kendini degerlendirmeye izin verme
   useEffect(() => {
     if (user && userId && user.id === userId) {
-      Alert.alert("Hata", "Kendinizi değerlendiremezsiniz.");
+      Alert.alert("Hata", "Kendinizi degerlendiremezsiniz.");
       router.back();
     }
   }, [user, userId]);
@@ -112,7 +108,7 @@ export default function ReviewUserScreen() {
     if (!user || !userId) return;
 
     if (score === null) {
-      Alert.alert("Hata", "Lütfen bir puan seçin.");
+      Alert.alert("Hata", "Lutfen bir puan secin.");
       return;
     }
 
@@ -134,13 +130,223 @@ export default function ReviewUserScreen() {
     setSaving(false);
 
     if (error) {
-      Alert.alert("Hata", "Değerlendirme kaydedilirken bir hata oluştu.");
+      Alert.alert("Hata", "Degerlendirme kaydedilirken bir hata olustu.");
       console.error("Review upsert error:", error);
       return;
     }
 
     router.back();
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    headerTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    submitButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+      minWidth: 70,
+      alignItems: "center",
+    },
+    submitButtonDisabled: {
+      opacity: 0.5,
+    },
+    submitButtonText: {
+      color: colors.white,
+      fontWeight: "600",
+      fontSize: fontSize.sm,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    targetUser: {
+      textAlign: "center",
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      color: colors.text,
+      marginTop: spacing.xl,
+      marginBottom: spacing.md,
+    },
+    section: {
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+    },
+    sectionTitle: {
+      fontSize: fontSize.base,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: spacing.md,
+    },
+    sectionSubtitle: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginBottom: spacing.sm,
+    },
+    scoreRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    scoreButton: {
+      width: 40,
+      height: 40,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: glass.border,
+      backgroundColor: glass.background,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    scoreButtonActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary,
+    },
+    scoreButtonGreen: {
+      borderColor: colors.success,
+      backgroundColor: colors.success,
+    },
+    scoreButtonYellow: {
+      borderColor: "#EAB308",
+      backgroundColor: "#EAB308",
+    },
+    scoreButtonRed: {
+      borderColor: colors.danger,
+      backgroundColor: colors.danger,
+    },
+    scoreButtonText: {
+      fontSize: fontSize.base,
+      fontWeight: "600",
+      color: colors.textLight,
+    },
+    scoreButtonTextActive: {
+      color: colors.white,
+    },
+    scoreFeedback: {
+      alignItems: "center",
+      marginBottom: spacing.lg,
+      paddingVertical: spacing.lg,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    scoreEmoji: {
+      fontSize: 48,
+    },
+    scoreLabel: {
+      fontSize: fontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+      marginTop: spacing.sm,
+    },
+    tagsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    tagChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    tagChipPositiveActive: {
+      borderColor: colors.success,
+      backgroundColor: `${colors.success}20`,
+    },
+    tagChipNegativeActive: {
+      borderColor: colors.danger,
+      backgroundColor: `${colors.danger}20`,
+    },
+    tagChipText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    tagChipTextPositiveActive: {
+      color: colors.success,
+      fontWeight: "600",
+    },
+    tagChipTextNegativeActive: {
+      color: colors.danger,
+      fontWeight: "600",
+    },
+    commentInput: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      fontSize: fontSize.base,
+      color: colors.text,
+      minHeight: 100,
+    },
+    charCount: {
+      textAlign: "right",
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      marginTop: spacing.xs,
+    },
+    anonymousRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: glass.border,
+      padding: spacing.lg,
+    },
+    anonymousTextContainer: {
+      flex: 1,
+      marginRight: spacing.md,
+    },
+    anonymousLabel: {
+      fontSize: fontSize.base,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    anonymousDesc: {
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      marginTop: spacing.xs,
+    },
+    updateNote: {
+      textAlign: "center",
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      marginTop: spacing.lg,
+      paddingHorizontal: spacing.lg,
+    },
+  }), [colors, glass]);
 
   if (loading) {
     return (
@@ -162,7 +368,7 @@ export default function ReviewUserScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
             <X size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Değerlendir</Text>
+          <Text style={styles.headerTitle}>Degerlendir</Text>
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={saving || score === null}
@@ -171,16 +377,16 @@ export default function ReviewUserScreen() {
             {saving ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>Gönder</Text>
+              <Text style={styles.submitButtonText}>Gonder</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Hedef kullanıcı */}
+          {/* Hedef kullanici */}
           <Text style={styles.targetUser}>@{username}</Text>
 
-          {/* Puan Seçimi */}
+          {/* Puan Secimi */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Puan</Text>
             {score !== null && (
@@ -272,7 +478,7 @@ export default function ReviewUserScreen() {
             <Text style={styles.sectionTitle}>Yorum (Opsiyonel)</Text>
             <TextInput
               style={styles.commentInput}
-              placeholder="Deneyiminizi paylaşın..."
+              placeholder="Deneyiminizi paylasin..."
               placeholderTextColor={colors.textMuted}
               value={content}
               onChangeText={setContent}
@@ -286,9 +492,9 @@ export default function ReviewUserScreen() {
           {/* Anonim Toggle */}
           <View style={styles.anonymousRow}>
             <View style={styles.anonymousTextContainer}>
-              <Text style={styles.anonymousLabel}>Anonim Değerlendir</Text>
+              <Text style={styles.anonymousLabel}>Anonim Degerlendir</Text>
               <Text style={styles.anonymousDesc}>
-                Kapatırsan kullanıcı adın görünür
+                Kapatirsan kullanici adin gorunur
               </Text>
             </View>
             <Switch
@@ -301,7 +507,7 @@ export default function ReviewUserScreen() {
 
           {existingReview && (
             <Text style={styles.updateNote}>
-              Daha önce değerlendirmiştiniz. Gönder'e basarsanız güncellenecek.
+              Daha once degerlendirmistiniz. Gonder'e basarsaniz guncellenecek.
             </Text>
           )}
 
@@ -311,213 +517,3 @@ export default function ReviewUserScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-  headerTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    minWidth: 70,
-    alignItems: "center",
-  },
-  submitButtonDisabled: {
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    color: colors.white,
-    fontWeight: "600",
-    fontSize: fontSize.sm,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  targetUser: {
-    textAlign: "center",
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    color: colors.text,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: fontSize.base,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  sectionSubtitle: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginBottom: spacing.sm,
-  },
-  scoreRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  scoreButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scoreButtonActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  scoreButtonGreen: {
-    borderColor: colors.success,
-    backgroundColor: colors.success,
-  },
-  scoreButtonYellow: {
-    borderColor: "#EAB308",
-    backgroundColor: "#EAB308",
-  },
-  scoreButtonRed: {
-    borderColor: colors.danger,
-    backgroundColor: colors.danger,
-  },
-  scoreButtonText: {
-    fontSize: fontSize.base,
-    fontWeight: "600",
-    color: colors.textLight,
-  },
-  scoreButtonTextActive: {
-    color: colors.white,
-  },
-  scoreFeedback: {
-    alignItems: "center",
-    marginBottom: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  scoreEmoji: {
-    fontSize: 48,
-  },
-  scoreLabel: {
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    color: colors.text,
-    marginTop: spacing.sm,
-  },
-  tagsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  tagChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  tagChipPositiveActive: {
-    borderColor: colors.success,
-    backgroundColor: `${colors.success}20`,
-  },
-  tagChipNegativeActive: {
-    borderColor: colors.danger,
-    backgroundColor: `${colors.danger}20`,
-  },
-  tagChipText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  tagChipTextPositiveActive: {
-    color: colors.success,
-    fontWeight: "600",
-  },
-  tagChipTextNegativeActive: {
-    color: colors.danger,
-    fontWeight: "600",
-  },
-  commentInput: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    fontSize: fontSize.base,
-    color: colors.text,
-    minHeight: 100,
-  },
-  charCount: {
-    textAlign: "right",
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  anonymousRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    padding: spacing.lg,
-  },
-  anonymousTextContainer: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  anonymousLabel: {
-    fontSize: fontSize.base,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  anonymousDesc: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  updateNote: {
-    textAlign: "center",
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-});

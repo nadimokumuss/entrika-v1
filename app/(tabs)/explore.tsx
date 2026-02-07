@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,18 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, UserPlus, Crown, Sparkles } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFollow } from "@/contexts/FollowContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  backgroundLight: "rgba(22, 22, 31, 0.4)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import GradientBackground from "@/components/ui/GradientBackground";
 import AnimatedHeader from "@/components/ui/AnimatedHeader";
 import GlassCard from "@/components/ui/GlassCard";
@@ -50,6 +45,7 @@ function UserProfileCard({
   isFollowing?: boolean; // Optional, deprecated - component now uses FollowContext directly
   onFollowToggle: () => void;
 }) {
+  const { colors, gradients, glass } = useTheme();
   const router = useRouter();
   const { isFollowing: checkIsFollowing } = useFollow();
 
@@ -64,6 +60,106 @@ function UserProfileCard({
   };
 
   const scoreColor = getScoreColor(profile.reputation_score);
+
+  const styles = useMemo(() => StyleSheet.create({
+    profileCard: {
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    profileContent: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    avatarContainer: {
+      position: "relative",
+      marginRight: spacing.md,
+    },
+    avatarRing: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: colors.borderLight,
+    },
+    scoreBadge: {
+      position: "absolute",
+      bottom: -2,
+      right: -2,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    scoreBadgeText: {
+      color: colors.white,
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    profileInfo: {
+      flex: 1,
+    },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    username: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "600",
+    },
+    verifiedIcon: {
+      marginLeft: spacing.xs,
+    },
+    statsRow: {
+      flexDirection: "row",
+      marginTop: spacing.xs,
+    },
+    statText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    statValue: {
+      fontWeight: "600",
+    },
+    joinDate: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    followButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: `${colors.primary}15`,
+    },
+    followButtonText: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    followingButton: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    followingButtonText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+  }), [colors, glass]);
 
   return (
     <GlassCard style={styles.profileCard}>
@@ -140,6 +236,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { followUser, unfollowUser, isFollowing: checkIsFollowing } = useFollow();
+  const { colors, glass } = useTheme();
 
   const [activeTab, setActiveTab] = useState<ExploreTab>("suggested");
   const [searchQuery, setSearchQuery] = useState("");
@@ -225,6 +322,89 @@ export default function ExploreScreen() {
       followUser(profileId);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+    headerTop: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      marginLeft: spacing.md,
+      fontSize: fontSize.md,
+    },
+    tabsContainer: {
+      flexDirection: "row",
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    tab: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
+      backgroundColor: glass.backgroundLight,
+      borderRadius: borderRadius.md,
+    },
+    tabActive: {
+      backgroundColor: `${colors.primary}20`,
+    },
+    tabText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    tabTextActive: {
+      color: colors.primary,
+    },
+    scrollView: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    scrollContent: {
+      paddingBottom: spacing.xl,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      paddingVertical: 48,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      paddingVertical: 48,
+    },
+    emptyText: {
+      color: colors.textMuted,
+      textAlign: "center",
+    },
+    bottomSpacer: {
+      height: 80,
+    },
+  }), [colors, glass]);
 
   return (
     <GradientBackground variant="screen">
@@ -318,183 +498,3 @@ export default function ExploreScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  headerTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.text,
-    marginLeft: spacing.md,
-    fontSize: fontSize.md,
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    backgroundColor: glassFallback.backgroundLight,
-    borderRadius: borderRadius.md,
-  },
-  tabActive: {
-    backgroundColor: `${colors.primary}20`,
-  },
-  tabText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  tabTextActive: {
-    color: colors.primary,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xl,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  emptyText: {
-    color: colors.textMuted,
-    textAlign: "center",
-  },
-  profileCard: {
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  profileContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatarContainer: {
-    position: "relative",
-    marginRight: spacing.md,
-  },
-  avatarRing: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.borderLight,
-  },
-  scoreBadge: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.background,
-  },
-  scoreBadgeText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  username: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-  },
-  verifiedIcon: {
-    marginLeft: spacing.xs,
-  },
-  statsRow: {
-    flexDirection: "row",
-    marginTop: spacing.xs,
-  },
-  statText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-  statValue: {
-    fontWeight: "600",
-  },
-  joinDate: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  followButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: `${colors.primary}15`,
-  },
-  followButtonText: {
-    color: colors.primary,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  followingButton: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  followingButtonText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  bottomSpacer: {
-    height: 80,
-  },
-});

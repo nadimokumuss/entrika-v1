@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,13 +19,8 @@ import {
   Sparkles,
   Star,
 } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
@@ -42,35 +37,36 @@ interface Notification {
   created_at: string;
 }
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string }> = {
-  message: { icon: MessageCircle, color: colors.accent },
-  match: { icon: Heart, color: colors.accent },
-  reaction: { icon: Sparkles, color: colors.primary },
-  comment: { icon: MessageCircle, color: colors.primary },
-  review: { icon: Star, color: colors.warning },
-};
-
 function formatTimeAgo(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az önce";
-  if (diffMins < 60) return `${diffMins} dk önce`;
+  if (diffMins < 1) return "Az once";
+  if (diffMins < 60) return `${diffMins} dk once`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat önce`;
+  if (diffHours < 24) return `${diffHours} saat once`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gün önce`;
+  if (diffDays < 7) return `${diffDays} gun once`;
   return date.toLocaleDateString("tr-TR");
 }
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors, glass } = useTheme();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
+
+  const TYPE_CONFIG: Record<string, { icon: any; color: string }> = useMemo(() => ({
+    message: { icon: MessageCircle, color: colors.accent },
+    match: { icon: Heart, color: colors.accent },
+    reaction: { icon: Sparkles, color: colors.primary },
+    comment: { icon: MessageCircle, color: colors.primary },
+    review: { icon: Star, color: colors.warning },
+  }), [colors]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -149,6 +145,114 @@ export default function NotificationsScreen() {
   };
 
   const hasUnread = notifications.some((n) => !n.is_read);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerTitle: {
+      flex: 1,
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      textAlign: "center",
+    },
+    headerRight: {
+      width: 80,
+    },
+    markAllButton: {
+      padding: spacing.sm,
+    },
+    markAllText: {
+      color: colors.primary,
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: spacing.xxl,
+    },
+    emptyTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
+    emptySubtitle: {
+      color: colors.textMuted,
+      fontSize: fontSize.md,
+      textAlign: "center",
+      marginTop: spacing.sm,
+    },
+    listContent: {
+      paddingBottom: spacing.xxl,
+    },
+    notificationCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    notificationCardUnread: {
+      backgroundColor: "rgba(168, 85, 247, 0.06)",
+    },
+    iconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    notificationContent: {
+      flex: 1,
+      marginLeft: spacing.md,
+      marginRight: spacing.sm,
+    },
+    notificationTitle: {
+      color: colors.text,
+      fontSize: fontSize.base,
+      fontWeight: "600",
+    },
+    notificationBody: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      marginTop: 2,
+      lineHeight: 18,
+    },
+    notificationTime: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    unreadDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primary,
+    },
+  }), [colors, glass]);
 
   const renderNotification = ({ item }: { item: Notification }) => {
     const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.message;
@@ -244,7 +348,7 @@ export default function NotificationsScreen() {
               onPress={markAllAsRead}
               style={styles.markAllButton}
             >
-              <Text style={styles.markAllText}>Tümü okundu</Text>
+              <Text style={styles.markAllText}>Tumu okundu</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.headerRight} />
@@ -254,9 +358,9 @@ export default function NotificationsScreen() {
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
             <Bell size={64} color={colors.border} />
-            <Text style={styles.emptyTitle}>Henüz bildirim yok</Text>
+            <Text style={styles.emptyTitle}>Henuz bildirim yok</Text>
             <Text style={styles.emptySubtitle}>
-              Yeni bildirimleriniz burada görünecek.
+              Yeni bildirimleriniz burada gorunecek.
             </Text>
           </View>
         ) : (
@@ -279,111 +383,3 @@ export default function NotificationsScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  headerRight: {
-    width: 80,
-  },
-  markAllButton: {
-    padding: spacing.sm,
-  },
-  markAllText: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xxl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    marginTop: spacing.lg,
-  },
-  emptySubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
-    textAlign: "center",
-    marginTop: spacing.sm,
-  },
-  listContent: {
-    paddingBottom: spacing.xxl,
-  },
-  notificationCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  notificationCardUnread: {
-    backgroundColor: "rgba(168, 85, 247, 0.06)",
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  notificationContent: {
-    flex: 1,
-    marginLeft: spacing.md,
-    marginRight: spacing.sm,
-  },
-  notificationTitle: {
-    color: colors.text,
-    fontSize: fontSize.base,
-    fontWeight: "600",
-  },
-  notificationBody: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  notificationTime: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-});

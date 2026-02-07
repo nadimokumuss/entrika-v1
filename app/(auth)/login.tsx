@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,12 +12,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock, Mail, ChevronLeft, Sparkles } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, gradients } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-};
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GradientButton from "@/components/ui/GradientButton";
@@ -26,6 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
+  const { colors, gradients, glass } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -56,6 +53,83 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.xxxl,
+    },
+    header: {
+      paddingTop: 64,
+      paddingBottom: spacing.lg,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: 48,
+    },
+    logoCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: spacing.lg,
+      overflow: "hidden",
+    },
+    logoImage: {
+      width: 48,
+      height: 48,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    subtitle: {
+      color: colors.textLight,
+      marginTop: spacing.sm,
+    },
+    formContainer: {
+      width: "100%",
+    },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      marginLeft: spacing.md,
+      fontSize: fontSize.md,
+    },
+    errorText: {
+      color: colors.danger,
+      textAlign: "center",
+      marginBottom: spacing.lg,
+    },
+    forgotPassword: {
+      alignItems: "center",
+      marginTop: spacing.xl,
+    },
+    forgotPasswordText: {
+      color: colors.primary,
+      fontWeight: "500",
+    },
+  }), [colors, glass]);
 
   return (
     <GradientBackground variant="auth">
@@ -145,80 +219,3 @@ export default function LoginScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.xxxl,
-  },
-  header: {
-    paddingTop: 64,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 48,
-  },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.lg,
-    overflow: "hidden",
-  },
-  logoImage: {
-    width: 48,
-    height: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  subtitle: {
-    color: colors.textLight,
-    marginTop: spacing.sm,
-  },
-  formContainer: {
-    width: "100%",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  input: {
-    flex: 1,
-    color: colors.text,
-    marginLeft: spacing.md,
-    fontSize: fontSize.md,
-  },
-  errorText: {
-    color: colors.danger,
-    textAlign: "center",
-    marginBottom: spacing.lg,
-  },
-  forgotPassword: {
-    alignItems: "center",
-    marginTop: spacing.xl,
-  },
-  forgotPasswordText: {
-    color: colors.primary,
-    fontWeight: "500",
-  },
-});

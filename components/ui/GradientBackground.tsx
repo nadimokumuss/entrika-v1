@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { gradients } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface GradientBackgroundProps {
   variant?: "screen" | "auth";
@@ -14,6 +14,7 @@ export default function GradientBackground({
   children,
   style,
 }: GradientBackgroundProps) {
+  const { gradients } = useTheme();
   const colorSet = variant === "auth" ? gradients.authBg : gradients.screenBg;
 
   return (

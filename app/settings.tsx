@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -31,14 +31,11 @@ import {
   LogOut,
   ShieldBan,
   Edit3,
+  Sun,
+  Moon,
 } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import GradientBackground from "@/components/ui/GradientBackground";
 import GlassCard from "@/components/ui/GlassCard";
 import { supabase } from "@/lib/supabase";
@@ -65,6 +62,7 @@ const DEFAULT_PREFS: NotificationPreferences = {
 export default function SettingsScreen() {
   const router = useRouter();
   const { profile, user, signOut, refreshProfile } = useAuth();
+  const { colors, glass, isDark, toggleTheme } = useTheme();
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(DEFAULT_PREFS);
   useEffect(() => {
     loadNotificationPreferences();
@@ -227,6 +225,112 @@ export default function SettingsScreen() {
     return `${visible}***@${domain}`;
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    backButton: {
+      padding: spacing.sm,
+    },
+    headerTitle: {
+      fontSize: fontSize.lg,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    section: {
+      marginTop: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+      color: colors.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: spacing.sm,
+      marginLeft: spacing.xs,
+    },
+    sectionCard: {
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      overflow: "hidden",
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+    },
+    rowDisabled: {
+      opacity: 0.5,
+    },
+    rowLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    rowRight: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    rowLabel: {
+      fontSize: fontSize.base,
+      color: colors.text,
+      marginLeft: spacing.md,
+    },
+    rowLabelDisabled: {
+      color: colors.textMuted,
+    },
+    rowValue: {
+      fontSize: fontSize.sm,
+      color: colors.textMuted,
+      marginRight: spacing.sm,
+    },
+    rowDivider: {
+      height: 1,
+      backgroundColor: glass.border,
+      marginLeft: spacing.lg + 20 + spacing.md,
+    },
+    signOutButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.danger,
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.xxl,
+      paddingVertical: spacing.lg,
+      borderRadius: borderRadius.xl,
+      gap: spacing.sm,
+    },
+    signOutButtonText: {
+      color: colors.white,
+      fontWeight: "bold",
+      fontSize: fontSize.md,
+    },
+    bottomSpacer: {
+      height: 60,
+    },
+  }), [colors, glass]);
+
   return (
     <GradientBackground variant="screen">
       <SafeAreaView style={styles.container} edges={["top"]}>
@@ -240,6 +344,29 @@ export default function SettingsScreen() {
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Gorunum */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Görünüm</Text>
+            <View style={styles.sectionCard}>
+              <View style={styles.row}>
+                <View style={styles.rowLeft}>
+                  {isDark ? (
+                    <Moon size={20} color={colors.primary} />
+                  ) : (
+                    <Sun size={20} color={colors.primary} />
+                  )}
+                  <Text style={styles.rowLabel}>Koyu Tema</Text>
+                </View>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: colors.border, true: `${colors.primary}80` }}
+                  thumbColor={isDark ? colors.primary : colors.textMuted}
+                />
+              </View>
+            </View>
+          </View>
+
           {/* Hesap */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Hesap</Text>
@@ -469,109 +596,3 @@ export default function SettingsScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  headerTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-    color: colors.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
-  },
-  sectionCard: {
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    overflow: "hidden",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-  },
-  rowDisabled: {
-    opacity: 0.5,
-  },
-  rowLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  rowRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rowLabel: {
-    fontSize: fontSize.base,
-    color: colors.text,
-    marginLeft: spacing.md,
-  },
-  rowLabelDisabled: {
-    color: colors.textMuted,
-  },
-  rowValue: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-    marginRight: spacing.sm,
-  },
-  rowDivider: {
-    height: 1,
-    backgroundColor: glassFallback.border,
-    marginLeft: spacing.lg + 20 + spacing.md,
-  },
-  signOutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.danger,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.xxl,
-    paddingVertical: spacing.lg,
-    borderRadius: borderRadius.xl,
-    gap: spacing.sm,
-  },
-  signOutButtonText: {
-    color: colors.white,
-    fontWeight: "bold",
-    fontSize: fontSize.md,
-  },
-  bottomSpacer: {
-    height: 60,
-  },
-});

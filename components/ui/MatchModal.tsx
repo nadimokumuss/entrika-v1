@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,16 @@ import {
   Dimensions,
   Animated,
   StatusBar,
+  Platform,
+  Image,
+  ImageSourcePropType,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Sparkles, MessageCircle, X } from "lucide-react-native";
-import { colors, borderRadius, spacing, fontSize, gradients, shadows } from "@/constants/theme";
+import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import * as Haptics from "expo-haptics";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -36,6 +35,7 @@ interface MatchModalProps {
 }
 
 export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
+  const { colors, gradients, glass } = useTheme();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
@@ -104,6 +104,149 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
     }
   }, [visible]);
 
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.9)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    container: {
+      width: SCREEN_WIDTH * 0.9,
+      maxWidth: 400,
+      backgroundColor: colors.card,
+      borderRadius: 24,
+      padding: spacing.xxl,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: `${colors.primary}30`,
+      ...shadows.lg,
+    },
+    pulseGlow: {
+      position: "absolute",
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      backgroundColor: colors.primary,
+    },
+    closeButton: {
+      position: "absolute",
+      top: spacing.lg,
+      right: spacing.lg,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: glass.background,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    content: {
+      alignItems: "center",
+      width: "100%",
+    },
+    iconContainer: {
+      marginBottom: spacing.lg,
+    },
+    iconGlow: {
+      position: "absolute",
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: `${colors.primary}30`,
+    },
+    icon: {
+      position: "relative",
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: spacing.sm,
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: fontSize.lg,
+      color: colors.textLight,
+      textAlign: "center",
+      marginBottom: spacing.xl,
+    },
+    matchInfo: {
+      marginBottom: spacing.xl,
+    },
+    avatarContainer: {
+      marginBottom: spacing.md,
+    },
+    avatarRing: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      padding: 3,
+    },
+    avatar: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 47,
+      backgroundColor: glass.background,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    avatarEmoji: {
+      fontSize: 36,
+      fontWeight: "bold",
+      color: colors.primary,
+    },
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+    },
+    heartsContainer: {
+      position: "relative",
+      height: 60,
+      width: 120,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    confetti: {
+      position: "absolute",
+    },
+    actions: {
+      width: "100%",
+      gap: spacing.md,
+    },
+    actionButton: {
+      width: "100%",
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+      alignItems: "center",
+    },
+    keepButton: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    keepButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+    },
+    messageButton: {
+      overflow: "hidden",
+    },
+    messageGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    messageIcon: {},
+    messageButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.white,
+    },
+  }), [colors, glass]);
+
   if (!matchData) return null;
 
   const handleMessage = () => {
@@ -161,11 +304,11 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>EŞLEŞME!</Text>
+          <Text style={styles.title}>ESLESME!</Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            {matchData.name} ile eşleştin
+            {matchData.name} ile eslestin
           </Text>
 
           {/* Match Info */}
@@ -176,16 +319,16 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
                 style={styles.avatarRing}
               >
                 <View style={styles.avatar}>
-                  <Text style={styles.avatarEmoji}>
-                    {matchData.avatar_url ? (
-                      <Image
-                        source={{ uri: matchData.avatar_url }}
-                        style={styles.avatarImage}
-                      />
-                    ) : (
-                      matchData.name.charAt(0)
-                    )}
-                  </Text>
+                  {matchData.avatar_url ? (
+                    <Image
+                      source={{ uri: matchData.avatar_url }}
+                      style={styles.avatarImage}
+                    />
+                  ) : (
+                    <Text style={styles.avatarEmoji}>
+                      {matchData.name.charAt(0)}
+                    </Text>
+                  )}
                 </View>
               </LinearGradient>
             </View>
@@ -196,15 +339,13 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
                   {
                     transform: [
                       {
-                        translateY: Animated.interpolate({
+                        translateY: confettiAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: [-100, 0],
                         }),
                       },
-                      {
-                        opacity: confettiAnim,
-                      },
                     ],
+                    opacity: confettiAnim,
                   },
                 ]}
               >
@@ -216,7 +357,7 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
                   {
                     transform: [
                       {
-                        translateY: Animated.interpolate({
+                        translateY: confettiAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: [-100, 0],
                         }),
@@ -224,16 +365,8 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
                       {
                         translateX: 30,
                       },
-                      {
-                        opacity: Animated.delay(
-                          confettiAnim,
-                          200
-                        ).interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 1],
-                        }),
-                      },
                     ],
+                    opacity: confettiAnim,
                   },
                 ]}
               >
@@ -245,7 +378,7 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
                   {
                     transform: [
                       {
-                        translateY: Animated.interpolate({
+                        translateY: confettiAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: [-100, 0],
                         }),
@@ -253,13 +386,8 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
                       {
                         translateX: -30,
                       },
-                      {
-                        opacity: Animated.delay(confettiAnim, 400).interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 1],
-                        }),
-                      },
                     ],
+                    opacity: confettiAnim,
                   },
                 ]}
               >
@@ -274,7 +402,7 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
               style={[styles.actionButton, styles.keepButton]}
               onPress={onClose}
             >
-              <Text style={styles.keepButtonText}>Keşfetmeye Devam Et</Text>
+              <Text style={styles.keepButtonText}>Kesfetmeye Devam Et</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -298,146 +426,3 @@ export function MatchModal({ visible, matchData, onClose }: MatchModalProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    width: SCREEN_WIDTH * 0.9,
-    maxWidth: 400,
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    padding: spacing.xxl,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: `${colors.primary}30`,
-    ...shadows.lg,
-  },
-  pulseGlow: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.primary,
-  },
-  closeButton: {
-    position: "absolute",
-    top: spacing.lg,
-    right: spacing.lg,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: glassFallback.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  content: {
-    alignItems: "center",
-    width: "100%",
-  },
-  iconContainer: {
-    marginBottom: spacing.lg,
-  },
-  iconGlow: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: `${colors.primary}30`,
-  },
-  icon: {
-    position: "relative",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: spacing.sm,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: fontSize.lg,
-    color: colors.textLight,
-    textAlign: "center",
-    marginBottom: spacing.xl,
-  },
-  matchInfo: {
-    marginBottom: spacing.xl,
-  },
-  avatarContainer: {
-    marginBottom: spacing.md,
-  },
-  avatarRing: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    padding: 3,
-  },
-  avatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 47,
-    backgroundColor: glassFallback.background,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  avatarEmoji: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: colors.primary,
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-  },
-  heartsContainer: {
-    position: "relative",
-    height: 60,
-    width: 120,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  confetti: {
-    position: "absolute",
-  },
-  actions: {
-    width: "100%",
-    gap: spacing.md,
-  },
-  actionButton: {
-    width: "100%",
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: "center",
-  },
-  keepButton: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  keepButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-  },
-  messageButton: {
-    overflow: "hidden",
-  },
-  messageGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  messageIcon: {},
-  messageButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.white,
-  },
-});

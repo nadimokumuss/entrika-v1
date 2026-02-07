@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,18 +14,13 @@ import {
 import { Search, X, Clock, Hash, User, FileText } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import {
-  colors,
   borderRadius,
   spacing,
   fontSize,
   shadows,
 } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "expo-router";
 
@@ -47,25 +42,26 @@ interface SearchModalProps {
 
 // Debounce utility
 function debounce(func: Function, wait: number) {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   return function executedFunction(...args: any[]) {
     const later = () => {
-      if (timeout) clearTimeout(timeout);
+      timeout = null;
       func(...args);
     };
-    clearTimeout(timeout);
+    if (timeout) clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
 }
 
 const SEARCH_CATEGORIES = [
-  { type: "all", label: "Tümü", icon: Search },
-  { type: "users", label: "Kullanıcılar", icon: User },
+  { type: "all", label: "Tumu", icon: Search },
+  { type: "users", label: "Kullanicilar", icon: User },
   { type: "posts", label: "Postlar", icon: FileText },
   { type: "hashtags", label: "Hashtagler", icon: Hash },
 ];
 
 export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
+  const { colors, glass } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"all" | "users" | "posts" | "hashtags">("all");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -97,17 +93,14 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
           // Search users
           const { data: users } = await supabase
             .from("profiles")
-            .select("user_id, username, avatar_url, bio")
-            .or(
-              `username.ilike.%${query}%`,
-              `bio.ilike.%${query}%`
-            )
+            .select("id, username, avatar_url, bio")
+            .or(`username.ilike.%${query}%,bio.ilike.%${query}%`)
             .limit(10);
 
           if (users) {
             searchResults.push(
               ...users.map((u: any) => ({
-                id: u.user_id,
+                id: u.id,
                 type: "user" as const,
                 title: u.username,
                 subtitle: u.bio ? u.bio.substring(0, 50) + "..." : undefined,
@@ -154,7 +147,7 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
             const hashtags = new Set<string>();
             posts.forEach((p: any) => {
               const matches = p.content.match(/#[\w]+/g);
-              matches?.forEach((tag) => hashtags.add(tag));
+              matches?.forEach((tag: string) => hashtags.add(tag));
             });
 
             searchResults.push(
@@ -237,6 +230,188 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      justifyContent: "flex-end",
+    },
+    container: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      borderWidth: 1,
+      borderColor: glass.border,
+      maxHeight: "80%",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      gap: spacing.md,
+    },
+    searchContainer: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.md,
+      height: 44,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: spacing.md,
+      fontSize: fontSize.md,
+      color: colors.text,
+    },
+    clearButton: {
+      padding: spacing.xs,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    categoriesScroll: {
+      maxHeight: 50,
+    },
+    categoriesContent: {
+      paddingHorizontal: spacing.xl,
+      gap: spacing.sm,
+    },
+    categoryChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    categoryChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryChipText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    categoryChipTextActive: {
+      color: colors.white,
+      fontWeight: "600",
+    },
+    content: {
+      flex: 1,
+    },
+    contentScroll: {
+      padding: spacing.xl,
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    clearButtonText: {
+      fontSize: fontSize.sm,
+      color: colors.primary,
+      fontWeight: "500",
+    },
+    recentsContainer: {
+      gap: spacing.sm,
+    },
+    recentItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.md,
+    },
+    recentText: {
+      fontSize: fontSize.md,
+      color: colors.textLight,
+    },
+    loadingContainer: {
+      padding: spacing.xxl,
+      alignItems: "center",
+    },
+    emptyContainer: {
+      alignItems: "center",
+      padding: spacing.xxl,
+    },
+    emptyTitle: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+      marginTop: spacing.lg,
+    },
+    emptySubtitle: {
+      fontSize: fontSize.md,
+      color: colors.textLight,
+      textAlign: "center",
+      marginTop: spacing.sm,
+    },
+    resultItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      gap: spacing.md,
+    },
+    resultIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    resultAvatar: {
+      width: "100%",
+      height: "100%",
+    },
+    resultContent: {
+      flex: 1,
+    },
+    resultTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    resultSubtitle: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: 2,
+    },
+    resultCategory: {
+      fontSize: fontSize.xs,
+      color: colors.primary,
+      marginTop: 4,
+      textTransform: "uppercase",
+      fontWeight: "bold",
+    },
+    resultUsername: {
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      marginTop: 4,
+    },
+  }), [colors, glass]);
+
   return (
     <Modal
       visible={visible}
@@ -253,7 +428,7 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
               <Search size={20} color={colors.textLight} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Kullanıcı, post, hashtag ara..."
+                placeholder="Kullanici, post, hashtag ara..."
                 placeholderTextColor={colors.textMuted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -334,10 +509,10 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
                   <Clock size={16} color={colors.textLight} />
                   <Text style={styles.sectionTitle}>Son Aramalar</Text>
                   <TouchableOpacity onPress={clearRecentSearches}>
-                    <Text style={styles.clearButton}>Temizle</Text>
+                    <Text style={styles.clearButtonText}>Temizle</Text>
                   </TouchableOpacity>
                 </View>
-                <View style={styles.recentesContainer}>
+                <View style={styles.recentsContainer}>
                   {recentSearches.map((search) => (
                     <TouchableOpacity
                       key={search}
@@ -363,9 +538,9 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
             {!loading && searchQuery.length >= 2 && results.length === 0 && (
               <View style={styles.emptyContainer}>
                 <Search size={48} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>Sonuç Bulunamadı</Text>
+                <Text style={styles.emptyTitle}>Sonuc Bulunamadi</Text>
                 <Text style={styles.emptySubtitle}>
-                  "{searchQuery}" için herhangi bir sonuç yok
+                  "{searchQuery}" icin herhangi bir sonuc yok
                 </Text>
               </View>
             )}
@@ -418,185 +593,3 @@ export function SearchModal({ visible, onClose, userId }: SearchModalProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "flex-end",
-  },
-  container: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    maxHeight: "80%",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    gap: spacing.md,
-  },
-  searchContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    height: 44,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: spacing.md,
-    fontSize: fontSize.md,
-    color: colors.text,
-  },
-  clearButton: {
-    padding: spacing.xs,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-  categoriesScroll: {
-    maxHeight: 50,
-  },
-  categoriesContent: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.sm,
-  },
-  categoryChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  categoryChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  categoryChipText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  categoryChipTextActive: {
-    color: colors.white,
-    fontWeight: "600",
-  },
-  content: {
-    flex: 1,
-  },
-  contentScroll: {
-    padding: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  clearButton: {
-    fontSize: fontSize.sm,
-    color: colors.primary,
-    fontWeight: "500",
-  },
-  recentsContainer: {
-    gap: spacing.sm,
-  },
-  recentItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.md,
-  },
-  recentText: {
-    fontSize: fontSize.md,
-    color: colors.textLight,
-  },
-  loadingContainer: {
-    padding: spacing.xxl,
-    alignItems: "center",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    padding: spacing.xxl,
-  },
-  emptyTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-    marginTop: spacing.lg,
-  },
-  emptySubtitle: {
-    fontSize: fontSize.md,
-    color: colors.textLight,
-    textAlign: "center",
-    marginTop: spacing.sm,
-  },
-  resultItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    gap: spacing.md,
-  },
-  resultIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  resultAvatar: {
-    width: "100%",
-    height: "100%",
-  },
-  resultContent: {
-    flex: 1,
-  },
-  resultTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  resultSubtitle: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  resultCategory: {
-    fontSize: fontSize.xs,
-    color: colors.primary,
-    marginTop: 4,
-    textTransform: "uppercase",
-    fontWeight: "bold",
-  },
-  resultUsername: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-});

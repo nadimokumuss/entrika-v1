@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,14 +23,15 @@ import { useRouter } from "expo-router";
 import Logo from "@/components/Logo";
 import * as Haptics from "expo-haptics";
 import {
-  colors,
   borderRadius,
   spacing,
   fontSize,
   shadows,
 } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function BookmarksScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const [bookmarks, setBookmarks] = useState<BookmarkWithPost[]>([]);
@@ -135,6 +136,126 @@ export default function BookmarksScreen() {
         return colors.textLight;
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      gap: spacing.md,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    headerCount: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.textMuted,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    content: {
+      flex: 1,
+    },
+    contentContainer: {
+      padding: spacing.md,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.xxl * 2,
+    },
+    emptyTitle: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+      marginTop: spacing.lg,
+    },
+    emptySubtitle: {
+      fontSize: fontSize.md,
+      color: colors.textLight,
+      textAlign: "center",
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.xl,
+    },
+    bookmarkItem: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      ...shadows.sm,
+    },
+    bookmarkHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.sm,
+    },
+    bookmarkMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    categoryBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    categoryText: {
+      fontSize: fontSize.xs,
+      fontWeight: "bold",
+      textTransform: "uppercase",
+    },
+    bookmarkDate: {
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+    },
+    removeButton: {
+      padding: spacing.xs,
+    },
+    postContent: {
+      fontSize: fontSize.md,
+      color: colors.text,
+      lineHeight: 22,
+      marginBottom: spacing.sm,
+    },
+    bookmarkFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    authorInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    authorText: {
+      fontSize: fontSize.sm,
+      color: colors.textMuted,
+    },
+    viewMore: {
+      fontSize: fontSize.sm,
+      color: colors.primary,
+      fontWeight: "600",
+    },
+  }), [colors]);
 
   if (loading) {
     return (
@@ -249,123 +370,3 @@ export default function BookmarksScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.md,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  headerCount: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.textMuted,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: spacing.md,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.xxl * 2,
-  },
-  emptyTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-    marginTop: spacing.lg,
-  },
-  emptySubtitle: {
-    fontSize: fontSize.md,
-    color: colors.textLight,
-    textAlign: "center",
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.xl,
-  },
-  bookmarkItem: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    ...shadows.sm,
-  },
-  bookmarkHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-  },
-  bookmarkMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  categoryBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  categoryText: {
-    fontSize: fontSize.xs,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-  },
-  bookmarkDate: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-  },
-  removeButton: {
-    padding: spacing.xs,
-  },
-  postContent: {
-    fontSize: fontSize.md,
-    color: colors.text,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  bookmarkFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  authorInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  authorText: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-  },
-  viewMore: {
-    fontSize: fontSize.sm,
-    color: colors.primary,
-    fontWeight: "600",
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,16 +15,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Trash2, Save, X, Check } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, borderRadius, spacing, fontSize, gradients } from "@/constants/theme";
+import { borderRadius, spacing, fontSize } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { CATEGORIES, type PostCategory } from "@/data/mockData";
+import { CATEGORIES, type PostCategory } from "@/constants/categories";
 
 const CONTENT_MIN_LENGTH = 10;
 const CONTENT_MAX_LENGTH = 500;
@@ -43,6 +39,7 @@ interface EditPostModalProps {
 }
 
 export function EditPostModal({ visible, onClose, post }: EditPostModalProps) {
+  const { colors, gradients, glass } = useTheme();
   const { user } = useAuth();
   const [content, setContent] = useState(post?.content || "");
   const [category, setCategory] = useState<PostCategory | null>(post?.category || null);
@@ -118,6 +115,174 @@ export function EditPostModal({ visible, onClose, post }: EditPostModalProps) {
       setSaving(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    keyboardView: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    deleteButton: {
+      padding: spacing.sm,
+    },
+    content: {
+      flex: 1,
+      padding: spacing.xl,
+    },
+    scrollContent: {
+      paddingBottom: spacing.xl,
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    label: {
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+      color: colors.textLight,
+      marginBottom: spacing.sm,
+    },
+    textInput: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      color: colors.text,
+      fontSize: fontSize.md,
+      minHeight: 120,
+      textAlignVertical: "top",
+    },
+    counter: {
+      fontSize: fontSize.xs,
+      color: colors.textMuted,
+      textAlign: "right",
+      marginTop: spacing.xs,
+    },
+    counterWarning: {
+      color: colors.danger,
+    },
+    categoriesScroll: {
+      marginHorizontal: -spacing.lg,
+    },
+    categoriesContent: {
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+    },
+    categoryChip: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    categoryChipActive: {
+      backgroundColor: `${colors.primary}20`,
+      borderColor: colors.primary,
+    },
+    categoryChipText: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+    },
+    categoryChipTextActive: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    optionRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    optionRowActive: {
+      backgroundColor: `${colors.primary}10`,
+      borderColor: colors.primary,
+    },
+    optionCheckbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: glass.border,
+      marginRight: spacing.md,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    optionCheckboxActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    optionText: {
+      fontSize: fontSize.md,
+      color: colors.textLight,
+    },
+    optionTextActive: {
+      color: colors.primary,
+      fontWeight: "500",
+    },
+    infoBox: {
+      backgroundColor: `${colors.primary}10`,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+    },
+    infoText: {
+      fontSize: fontSize.xs,
+      color: colors.textLight,
+      lineHeight: 18,
+    },
+    footer: {
+      padding: spacing.xl,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      borderRadius: borderRadius.lg,
+      gap: spacing.sm,
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
+    },
+    saveButtonText: {
+      color: colors.white,
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+    },
+  }), [colors, glass]);
 
   if (!post) return null;
 
@@ -273,171 +438,3 @@ export function EditPostModal({ visible, onClose, post }: EditPostModalProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  keyboardView: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  deleteButton: {
-    padding: spacing.sm,
-  },
-  content: {
-    flex: 1,
-    padding: spacing.xl,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  label: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-    color: colors.textLight,
-    marginBottom: spacing.sm,
-  },
-  textInput: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    color: colors.text,
-    fontSize: fontSize.md,
-    minHeight: 120,
-    textAlignVertical: "top",
-  },
-  counter: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    textAlign: "right",
-    marginTop: spacing.xs,
-  },
-  counterWarning: {
-    color: colors.danger,
-  },
-  categoriesScroll: {
-    marginHorizontal: -spacing.lg,
-  },
-  categoriesContent: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-  },
-  categoryChip: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  categoryChipActive: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  categoryChipText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  categoryChipTextActive: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  optionRowActive: {
-    backgroundColor: `${colors.primary}10`,
-    borderColor: colors.primary,
-  },
-  optionCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    marginRight: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  optionCheckboxActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  optionText: {
-    fontSize: fontSize.md,
-    color: colors.textLight,
-  },
-  optionTextActive: {
-    color: colors.primary,
-    fontWeight: "500",
-  },
-  infoBox: {
-    backgroundColor: `${colors.primary}10`,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-  },
-  infoText: {
-    fontSize: fontSize.xs,
-    color: colors.textLight,
-    lineHeight: 18,
-  },
-  footer: {
-    padding: spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-  },
-});

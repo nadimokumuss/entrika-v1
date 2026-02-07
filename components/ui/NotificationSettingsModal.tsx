@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -24,18 +24,13 @@ import {
   Moon,
 } from "lucide-react-native";
 import {
-  colors,
   borderRadius,
   spacing,
   fontSize,
   shadows,
 } from "@/constants/theme";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
 import {
   NotificationPreferences,
   DEFAULT_NOTIFICATION_PREFERENCES,
@@ -52,28 +47,6 @@ interface NotificationSettingsModalProps {
   onSave?: (preferences: NotificationPreferences) => void;
 }
 
-// Toggle Switch component
-function ToggleSwitch({
-  value,
-  onValueChange,
-  disabled = false,
-}: {
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Switch
-      value={value}
-      onValueChange={onValueChange}
-      disabled={disabled}
-      trackColor={{ false: glassFallback.border, true: colors.primary }}
-      thumbColor={value ? colors.white : colors.textMuted}
-      ios_backgroundColor={glassFallback.border}
-    />
-  );
-}
-
 export function NotificationSettingsModal({
   visible,
   onClose,
@@ -81,6 +54,7 @@ export function NotificationSettingsModal({
   currentPreferences,
   onSave,
 }: NotificationSettingsModalProps) {
+  const { colors, glass } = useTheme();
   const [preferences, setPreferences] = useState<NotificationPreferences>(
     currentPreferences || DEFAULT_NOTIFICATION_PREFERENCES
   );
@@ -111,12 +85,12 @@ export function NotificationSettingsModal({
           onSave(preferences);
         }
         onClose();
-        Alert.alert("Başarılı", "Bildirim tercihleri kaydedildi.");
+        Alert.alert("Basarili", "Bildirim tercihleri kaydedildi.");
       } else {
         Alert.alert("Hata", "Bildirim tercihleri kaydedilemedi.");
       }
     } catch (error) {
-      Alert.alert("Hata", "Bir hata oluştu.");
+      Alert.alert("Hata", "Bir hata olustu.");
     } finally {
       setSaving(false);
     }
@@ -124,12 +98,12 @@ export function NotificationSettingsModal({
 
   const handleReset = () => {
     Alert.alert(
-      "Sıfırla",
-      "Tüm bildirim tercihlerini varsayılan ayarlara döndürmek istediğinize emin misiniz?",
+      "Sifirla",
+      "Tum bildirim tercihlerini varsayilan ayarlara dondurmek istediginize emin misiniz?",
       [
-        { text: "İptal", style: "cancel" },
+        { text: "Iptal", style: "cancel" },
         {
-          text: "Sıfırla",
+          text: "Sifirla",
           style: "destructive",
           onPress: async () => {
             setSaving(true);
@@ -137,10 +111,10 @@ export function NotificationSettingsModal({
               const success = await resetNotificationPreferences(userId);
               if (success) {
                 setPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
-                Alert.alert("Başarılı", "Bildirim tercihleri sıfırlandı.");
+                Alert.alert("Basarili", "Bildirim tercihleri sifirlandi.");
               }
             } catch (error) {
-              Alert.alert("Hata", "Bir hata oluştu.");
+              Alert.alert("Hata", "Bir hata olustu.");
             } finally {
               setSaving(false);
             }
@@ -160,6 +134,183 @@ export function NotificationSettingsModal({
     weekly: BarChart3,
   };
 
+  // Toggle Switch component
+  function ToggleSwitch({
+    value,
+    onValueChange,
+    disabled = false,
+  }: {
+    value: boolean;
+    onValueChange: (value: boolean) => void;
+    disabled?: boolean;
+  }) {
+    return (
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        disabled={disabled}
+        trackColor={{ false: glass.border, true: colors.primary }}
+        thumbColor={value ? colors.white : colors.textMuted}
+        ios_backgroundColor={glass.border}
+      />
+    );
+  }
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      justifyContent: "flex-end",
+    },
+    container: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      borderWidth: 1,
+      borderColor: glass.border,
+      maxHeight: "85%",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    title: {
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    content: {
+      flex: 1,
+    },
+    contentScroll: {
+      padding: spacing.xl,
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: spacing.md,
+    },
+    settingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    settingRowBorder: {
+      borderBottomWidth: 0,
+    },
+    settingInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      flex: 1,
+    },
+    settingLabel: {
+      fontSize: fontSize.md,
+      color: colors.text,
+    },
+    settingDescription: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: 2,
+    },
+    categoryContainer: {
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    categoryHeader: {
+      marginBottom: spacing.sm,
+    },
+    categoryInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    categoryIcon: {
+      fontSize: fontSize.xl,
+    },
+    categoryLabel: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    quietHoursContainer: {
+      backgroundColor: `${colors.primary}10`,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginTop: spacing.sm,
+    },
+    quietHoursLabel: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.primary,
+    },
+    quietHoursDescription: {
+      fontSize: fontSize.sm,
+      color: colors.textLight,
+      marginTop: spacing.xs,
+    },
+    resetButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: `${colors.warning}50`,
+    },
+    resetButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.warning,
+    },
+    bottomSpacer: {
+      height: spacing.xl,
+    },
+    footer: {
+      padding: spacing.xl,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    saveButton: {
+      borderRadius: borderRadius.lg,
+      overflow: "hidden",
+    },
+    saveGradient: {
+      paddingVertical: spacing.md,
+      alignItems: "center",
+    },
+    saveButtonText: {
+      fontSize: fontSize.md,
+      fontWeight: "bold",
+      color: colors.white,
+    },
+  }), [colors, glass]);
+
   return (
     <Modal
       visible={visible}
@@ -174,7 +325,7 @@ export function NotificationSettingsModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Bell size={24} color={colors.primary} />
-              <Text style={styles.title}>Bildirim Ayarları</Text>
+              <Text style={styles.title}>Bildirim Ayarlari</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <X size={24} color={colors.textLight} />
@@ -236,7 +387,7 @@ export function NotificationSettingsModal({
                     {preferences.quiet_hours_end || "09:00"}
                   </Text>
                   <Text style={styles.quietHoursDescription}>
-                    Bu saatler arasında push bildirim almazsınız
+                    Bu saatler arasinda push bildirim almazsiniz
                   </Text>
                 </View>
               )}
@@ -244,7 +395,7 @@ export function NotificationSettingsModal({
 
             {/* Category Settings */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Bildirim Türleri</Text>
+              <Text style={styles.sectionTitle}>Bildirim Turleri</Text>
 
               {Object.entries(NOTIFICATION_CATEGORIES).map(
                 ([key, category]) => {
@@ -294,7 +445,7 @@ export function NotificationSettingsModal({
               disabled={saving}
             >
               <RotateCcw size={18} color={colors.warning} />
-              <Text style={styles.resetButtonText}>Varsayılanlara Dön</Text>
+              <Text style={styles.resetButtonText}>Varsayilanlara Don</Text>
             </TouchableOpacity>
 
             <View style={styles.bottomSpacer} />
@@ -324,158 +475,3 @@ export function NotificationSettingsModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "flex-end",
-  },
-  container: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    maxHeight: "85%",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-  content: {
-    flex: 1,
-  },
-  contentScroll: {
-    padding: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  settingRowBorder: {
-    borderBottomWidth: 0,
-  },
-  settingInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: fontSize.md,
-    color: colors.text,
-  },
-  settingDescription: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  categoryContainer: {
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  categoryHeader: {
-    marginBottom: spacing.sm,
-  },
-  categoryInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  categoryIcon: {
-    fontSize: fontSize.xl,
-  },
-  categoryLabel: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  quietHoursContainer: {
-    backgroundColor: `${colors.primary}10`,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginTop: spacing.sm,
-  },
-  quietHoursLabel: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  quietHoursDescription: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: spacing.xs,
-  },
-  resetButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: `${colors.warning}50`,
-  },
-  resetButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.warning,
-  },
-  bottomSpacer: {
-    height: spacing.xl,
-  },
-  footer: {
-    padding: spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  saveButton: {
-    borderRadius: borderRadius.lg,
-    overflow: "hidden",
-  },
-  saveGradient: {
-    paddingVertical: spacing.md,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-});

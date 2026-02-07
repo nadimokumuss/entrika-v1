@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,27 +23,20 @@ import {
   ShieldBan,
 } from "lucide-react-native";
 import {
-  colors,
   borderRadius,
   spacing,
   fontSize,
-  gradients,
 } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase, UserReview } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { blockUser } from "@/lib/blocking";
-import { CATEGORIES, type PostCategory } from "@/data/mockData";
+import { CATEGORIES, type PostCategory } from "@/constants/categories";
 import GradientBackground from "@/components/ui/GradientBackground";
 import { useFollow } from "@/contexts/FollowContext";
 import { UserPlus, UserMinus } from "lucide-react-native";
 
-type TabType = "paylaşımlar" | "degerlendirmeler";
+type TabType = "paylaSimlar" | "degerlendirmeler";
 
 interface ReviewWithReviewer extends UserReview {
   reviewer?: { username: string } | null;
@@ -66,12 +59,12 @@ interface PublicProfile {
 
 const POSITIVE_TAGS = [
   "Nazik",
-  "Güvenilir",
-  "Eğlenceli",
+  "Guvenilir",
+  "Eglenceli",
   "Samimi",
-  "İlgili",
-  "Saygılı",
-  "Dürüst",
+  "Ilgili",
+  "Saygili",
+  "Durust",
 ];
 
 function formatTimeAgo(dateStr: string): string {
@@ -79,12 +72,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az önce";
-  if (diffMins < 60) return `${diffMins} dk önce`;
+  if (diffMins < 1) return "Az once";
+  if (diffMins < 60) return `${diffMins} dk once`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat önce`;
+  if (diffHours < 24) return `${diffHours} saat once`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gün önce`;
+  if (diffDays < 7) return `${diffDays} gun once`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -92,10 +85,11 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { user } = useAuth();
+  const { colors, gradients, glass } = useTheme();
   const { followUser, unfollowUser, isFollowing: checkIsFollowing } = useFollow();
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("paylaşımlar");
+  const [activeTab, setActiveTab] = useState<TabType>("paylaSimlar");
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [reviews, setReviews] = useState<ReviewWithReviewer[]>([]);
@@ -197,10 +191,10 @@ export default function UserProfileScreen() {
     setShowMenu(false);
     if (!user || !profile) return;
     Alert.alert(
-      "Kullanıcıyı Engelle",
-      `@${profile.username} adlı kullanıcıyı engellemek istediğinize emin misiniz? Bu kullanıcının paylaşımlarını ve profilini göremezsiniz.`,
+      "Kullaniciyi Engelle",
+      `@${profile.username} adli kullaniciyi engellemek istediginize emin misiniz? Bu kullanicinin paylasimlarini ve profilini goremezsiniz.`,
       [
-        { text: "İptal", style: "cancel" },
+        { text: "Iptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -213,7 +207,7 @@ export default function UserProfileScreen() {
               );
               router.back();
             } else {
-              Alert.alert("Hata", "Kullanıcı engellenemedi.");
+              Alert.alert("Hata", "Kullanici engellenemedi.");
             }
           },
         },
@@ -265,6 +259,371 @@ export default function UserProfileScreen() {
     if (score >= 4) return colors.warning;
     return colors.danger;
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    // Header
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      marginLeft: spacing.sm,
+      flex: 1,
+    },
+    menuButton: {
+      padding: spacing.sm,
+    },
+
+    // Profile Section
+    profileSection: {
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.xxl,
+    },
+    avatarContainer: {
+      position: "relative",
+    },
+    avatarRing: {
+      width: 104,
+      height: 104,
+      borderRadius: 52,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarInner: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      overflow: "hidden",
+      backgroundColor: colors.background,
+    },
+    avatar: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: colors.borderLight,
+    },
+    scoreBadge: {
+      position: "absolute",
+      bottom: -4,
+      right: -4,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 3,
+      borderColor: colors.background,
+    },
+    scoreBadgeText: {
+      color: colors.white,
+      fontWeight: "bold",
+      fontSize: fontSize.sm,
+    },
+    username: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
+    reputationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.sm,
+    },
+    reputationDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginRight: spacing.sm,
+    },
+    reputationText: {
+      fontSize: fontSize.sm,
+      fontWeight: "500",
+    },
+
+    // Stats
+    statsContainer: {
+      flexDirection: "row",
+      marginTop: spacing.xxl,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.xl,
+      padding: spacing.lg,
+      width: "100%",
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    statItem: {
+      flex: 1,
+      alignItems: "center",
+    },
+    statValue: {
+      color: colors.text,
+      fontSize: fontSize.xxl,
+      fontWeight: "bold",
+    },
+    statLabel: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+    statDivider: {
+      width: 1,
+      backgroundColor: glass.border,
+    },
+
+    // Action Buttons Row
+    actionButtonsRow: {
+      flexDirection: "row",
+      gap: spacing.md,
+      marginTop: spacing.lg,
+      width: "100%",
+    },
+
+    // Follow Button
+    followButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.md,
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.lg,
+      gap: spacing.xs,
+    },
+    followButtonText: {
+      color: colors.white,
+      fontWeight: "600",
+      fontSize: fontSize.sm,
+    },
+    followingButton: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    followingButtonText: {
+      color: colors.text,
+      fontWeight: "600",
+      fontSize: fontSize.sm,
+    },
+
+    // Review Button
+    reviewButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: `${colors.primary}30`,
+      gap: spacing.xs,
+    },
+    reviewButtonText: {
+      color: colors.primary,
+      fontWeight: "600",
+      fontSize: fontSize.sm,
+    },
+
+    // Tabs
+    tabsContainer: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+      backgroundColor: glass.background,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: spacing.lg,
+      alignItems: "center",
+    },
+    tabActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: colors.primary,
+    },
+    tabText: {
+      fontWeight: "500",
+      color: colors.textMuted,
+    },
+    tabTextActive: {
+      color: colors.primary,
+    },
+
+    // Content
+    contentSection: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    postCard: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    postCategoryRow: {
+      marginBottom: spacing.sm,
+    },
+    postCategoryText: {
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    postContent: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      lineHeight: 20,
+    },
+    postTime: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.sm,
+    },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: 48,
+    },
+    emptyStateText: {
+      color: colors.textMuted,
+      marginTop: spacing.lg,
+      textAlign: "center",
+      lineHeight: 22,
+    },
+    emptyStateSubtext: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+
+    // Reviews
+    reviewCard: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    reviewHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    reviewScoreBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.sm,
+    },
+    reviewScoreText: {
+      color: colors.white,
+      fontWeight: "bold",
+      fontSize: fontSize.xs,
+    },
+    reviewAuthor: {
+      flex: 1,
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      marginLeft: spacing.sm,
+    },
+    reviewDate: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    reviewTagsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    reviewTag: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    reviewTagPositive: {
+      backgroundColor: `${colors.success}20`,
+    },
+    reviewTagNegative: {
+      backgroundColor: `${colors.danger}20`,
+    },
+    reviewTagText: {
+      fontSize: fontSize.xs,
+      fontWeight: "500",
+    },
+    reviewTagTextPositive: {
+      color: colors.success,
+    },
+    reviewTagTextNegative: {
+      color: colors.danger,
+    },
+    reviewContent: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      lineHeight: 20,
+      marginTop: spacing.sm,
+    },
+
+    // Menu Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: spacing.xxl,
+    },
+    menuContainer: {
+      width: "100%",
+      backgroundColor: colors.cardElevated,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      overflow: "hidden",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      gap: spacing.md,
+    },
+    menuItemText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "500",
+    },
+    menuDivider: {
+      height: 1,
+      backgroundColor: glass.border,
+    },
+    bottomSpacer: {
+      height: 80,
+    },
+  }), [colors, glass]);
 
   if (loading || !profile) {
     return (
@@ -361,12 +720,12 @@ export default function UserProfileScreen() {
               />
               <Text style={[styles.reputationText, { color: scoreColor }]}>
                 {profile.reputation_score >= 8
-                  ? "Güvenilir Üye"
+                  ? "Guvenilir Uye"
                   : profile.reputation_score >= 6
-                  ? "İyi İtibar"
+                  ? "Iyi Itibar"
                   : profile.reputation_score >= 4
-                  ? "Orta İtibar"
-                  : "Düşük İtibar"}
+                  ? "Orta Itibar"
+                  : "Dusuk Itibar"}
               </Text>
             </View>
 
@@ -374,12 +733,12 @@ export default function UserProfileScreen() {
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{postCount}</Text>
-                <Text style={styles.statLabel}>Paylaşım</Text>
+                <Text style={styles.statLabel}>Paylasim</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{followersCount}</Text>
-                <Text style={styles.statLabel}>Takipçi</Text>
+                <Text style={styles.statLabel}>Takipci</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -416,7 +775,7 @@ export default function UserProfileScreen() {
                   onPress={handleReview}
                 >
                   <Star size={18} color={colors.primary} />
-                  <Text style={styles.reviewButtonText}>Değerlendir</Text>
+                  <Text style={styles.reviewButtonText}>Degerlendir</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -427,17 +786,17 @@ export default function UserProfileScreen() {
             <TouchableOpacity
               style={[
                 styles.tab,
-                activeTab === "paylaşımlar" && styles.tabActive,
+                activeTab === "paylaSimlar" && styles.tabActive,
               ]}
-              onPress={() => setActiveTab("paylaşımlar")}
+              onPress={() => setActiveTab("paylaSimlar")}
             >
               <Text
                 style={[
                   styles.tabText,
-                  activeTab === "paylaşımlar" && styles.tabTextActive,
+                  activeTab === "paylaSimlar" && styles.tabTextActive,
                 ]}
               >
-                Paylaşımlar
+                Paylasimlar
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -453,14 +812,14 @@ export default function UserProfileScreen() {
                   activeTab === "degerlendirmeler" && styles.tabTextActive,
                 ]}
               >
-                Değerlendirmeler
+                Degerlendirmeler
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Content */}
           <View style={styles.contentSection}>
-            {activeTab === "paylaşımlar" ? (
+            {activeTab === "paylaSimlar" ? (
               userPosts.length > 0 ? (
                 userPosts.map((post) => (
                   <View key={post.id} style={styles.postCard}>
@@ -490,10 +849,10 @@ export default function UserProfileScreen() {
               ) : (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateText}>
-                    Henüz paylaşım yok.
+                    Henuz paylasim yok.
                   </Text>
                   <Text style={styles.emptyStateSubtext}>
-                    Anonim paylaşımlar burada görünmez.
+                    Anonim paylasimlar burada gorunmez.
                   </Text>
                 </View>
               )
@@ -520,7 +879,7 @@ export default function UserProfileScreen() {
                     </View>
                     <Text style={styles.reviewAuthor}>
                       {review.is_anonymous
-                        ? "Anonim Kullanıcı"
+                        ? "Anonim Kullanici"
                         : review.reviewer?.username
                         ? `@${review.reviewer.username}`
                         : "Bilinmeyen"}
@@ -566,7 +925,7 @@ export default function UserProfileScreen() {
               <View style={styles.emptyState}>
                 <Star size={48} color={colors.border} />
                 <Text style={styles.emptyStateText}>
-                  Henüz değerlendirme yok.
+                  Henuz degerlendirme yok.
                 </Text>
               </View>
             )}
@@ -598,7 +957,7 @@ export default function UserProfileScreen() {
                 <Text
                   style={[styles.menuItemText, { color: colors.danger }]}
                 >
-                  Kullanıcıyı Engelle
+                  Kullaniciyi Engelle
                 </Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
@@ -612,7 +971,7 @@ export default function UserProfileScreen() {
                     { color: colors.textMuted, textAlign: "center" },
                   ]}
                 >
-                  İptal
+                  Iptal
                 </Text>
               </TouchableOpacity>
             </View>
@@ -622,368 +981,3 @@ export default function UserProfileScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    marginLeft: spacing.sm,
-    flex: 1,
-  },
-  menuButton: {
-    padding: spacing.sm,
-  },
-
-  // Profile Section
-  profileSection: {
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxl,
-  },
-  avatarContainer: {
-    position: "relative",
-  },
-  avatarRing: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarInner: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    overflow: "hidden",
-    backgroundColor: colors.background,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: colors.borderLight,
-  },
-  scoreBadge: {
-    position: "absolute",
-    bottom: -4,
-    right: -4,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
-    borderColor: colors.background,
-  },
-  scoreBadgeText: {
-    color: colors.white,
-    fontWeight: "bold",
-    fontSize: fontSize.sm,
-  },
-  username: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: "bold",
-    marginTop: spacing.lg,
-  },
-  reputationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.sm,
-  },
-  reputationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: spacing.sm,
-  },
-  reputationText: {
-    fontSize: fontSize.sm,
-    fontWeight: "500",
-  },
-
-  // Stats
-  statsContainer: {
-    flexDirection: "row",
-    marginTop: spacing.xxl,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    width: "100%",
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statValue: {
-    color: colors.text,
-    fontSize: fontSize.xxl,
-    fontWeight: "bold",
-  },
-  statLabel: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: glassFallback.border,
-  },
-
-  // Action Buttons Row
-  actionButtonsRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-    marginTop: spacing.lg,
-    width: "100%",
-  },
-
-  // Follow Button
-  followButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    gap: spacing.xs,
-  },
-  followButtonText: {
-    color: colors.white,
-    fontWeight: "600",
-    fontSize: fontSize.sm,
-  },
-  followingButton: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  followingButtonText: {
-    color: colors.text,
-    fontWeight: "600",
-    fontSize: fontSize.sm,
-  },
-
-  // Review Button
-  reviewButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: `${colors.primary}30`,
-    gap: spacing.xs,
-  },
-  reviewButtonText: {
-    color: colors.primary,
-    fontWeight: "600",
-    fontSize: fontSize.sm,
-  },
-
-  // Tabs
-  tabsContainer: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-    backgroundColor: glassFallback.background,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: spacing.lg,
-    alignItems: "center",
-  },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    fontWeight: "500",
-    color: colors.textMuted,
-  },
-  tabTextActive: {
-    color: colors.primary,
-  },
-
-  // Content
-  contentSection: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  postCard: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  postCategoryRow: {
-    marginBottom: spacing.sm,
-  },
-  postCategoryText: {
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  postContent: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    lineHeight: 20,
-  },
-  postTime: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.sm,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  emptyStateText: {
-    color: colors.textMuted,
-    marginTop: spacing.lg,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  emptyStateSubtext: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-
-  // Reviews
-  reviewCard: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  reviewScoreBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-  },
-  reviewScoreText: {
-    color: colors.white,
-    fontWeight: "bold",
-    fontSize: fontSize.xs,
-  },
-  reviewAuthor: {
-    flex: 1,
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    marginLeft: spacing.sm,
-  },
-  reviewDate: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-  reviewTagsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  reviewTag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  reviewTagPositive: {
-    backgroundColor: `${colors.success}20`,
-  },
-  reviewTagNegative: {
-    backgroundColor: `${colors.danger}20`,
-  },
-  reviewTagText: {
-    fontSize: fontSize.xs,
-    fontWeight: "500",
-  },
-  reviewTagTextPositive: {
-    color: colors.success,
-  },
-  reviewTagTextNegative: {
-    color: colors.danger,
-  },
-  reviewContent: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    lineHeight: 20,
-    marginTop: spacing.sm,
-  },
-
-  // Menu Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xxl,
-  },
-  menuContainer: {
-    width: "100%",
-    backgroundColor: colors.cardElevated,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.md,
-  },
-  menuItemText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "500",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: glassFallback.border,
-  },
-  bottomSpacer: {
-    height: 80,
-  },
-});

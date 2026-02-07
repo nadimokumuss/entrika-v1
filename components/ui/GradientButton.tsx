@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import {
   TouchableOpacity,
   Text,
@@ -10,19 +10,12 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import {
-  colors,
-  gradients,
   borderRadius,
   spacing,
   fontSize,
   shadows,
 } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface GradientButtonProps {
   onPress: () => void;
@@ -43,6 +36,42 @@ export default function GradientButton({
   disabled = false,
   style,
 }: GradientButtonProps) {
+  const { colors, gradients, glass } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    gradient: {
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xxl,
+      borderRadius: borderRadius.xl,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+    },
+    text: {
+      color: colors.white,
+      fontWeight: "600",
+      fontSize: fontSize.md,
+    },
+    outline: {
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xxl,
+      borderRadius: borderRadius.xl,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: glass.borderHighlight,
+      backgroundColor: glass.background,
+    },
+    outlineText: {
+      color: colors.primary,
+      fontWeight: "600",
+      fontSize: fontSize.md,
+    },
+    disabled: {
+      opacity: 0.6,
+    },
+  }), [colors, glass]);
+
   const handlePress = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
@@ -102,37 +131,3 @@ export default function GradientButton({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  gradient: {
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxl,
-    borderRadius: borderRadius.xl,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-  },
-  text: {
-    color: colors.white,
-    fontWeight: "600",
-    fontSize: fontSize.md,
-  },
-  outline: {
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxl,
-    borderRadius: borderRadius.xl,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: glassFallback.borderHighlight,
-    backgroundColor: glassFallback.background,
-  },
-  outlineText: {
-    color: colors.primary,
-    fontWeight: "600",
-    fontSize: fontSize.md,
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-});

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -30,24 +30,17 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import {
-  colors,
   borderRadius,
   spacing,
   fontSize,
-  shadows,
 } from "@/constants/theme";
-
-const glassFallback = {
-  background: "rgba(22, 22, 31, 0.6)",
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHighlight: "rgba(168, 85, 247, 0.2)",
-};
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   CATEGORIES,
   REACTIONS,
   type PostCategory,
   type ReactionType,
-} from "@/data/mockData";
+} from "@/constants/categories";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { blockUser } from "@/lib/blocking";
@@ -84,12 +77,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az önce";
-  if (diffMins < 60) return `${diffMins} dk önce`;
+  if (diffMins < 1) return "Az once";
+  if (diffMins < 60) return `${diffMins} dk once`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat önce`;
+  if (diffHours < 24) return `${diffHours} saat once`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gün önce`;
+  if (diffDays < 7) return `${diffDays} gun once`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -97,6 +90,7 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const { user, profile } = useAuth();
+  const { colors, glass } = useTheme();
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [reactions, setReactions] = useState<
@@ -324,10 +318,9 @@ export default function PostDetailScreen() {
         // Remove temp comment on error
         setComments(prev => prev.filter(c => c.id !== tempComment.id));
         setInputText(text);
-        Alert.alert("Hata", "Yorum gönderilemedi.");
+        Alert.alert("Hata", "Yorum gonderilemedi.");
       }
       // If successful, realtime will sync the real comment
-      // We could replace the temp comment with the real one if needed
     } catch (e) {
       console.error("Comment error:", e);
       // Remove temp comment on error
@@ -377,34 +370,34 @@ export default function PostDetailScreen() {
         setComments(prev => prev.map(c => {
           if (c.id === commentId) {
             const oldReaction = c.userReaction;
-            const reactions = [...(c.reactions || [])];
+            const reactionsArr = [...(c.reactions || [])];
 
             // Remove count from old reaction if exists
             if (oldReaction) {
-              const oldIdx = reactions.findIndex(r => r.type === oldReaction);
+              const oldIdx = reactionsArr.findIndex(r => r.type === oldReaction);
               if (oldIdx >= 0) {
-                if (reactions[oldIdx].count <= 1) {
-                  reactions.splice(oldIdx, 1);
+                if (reactionsArr[oldIdx].count <= 1) {
+                  reactionsArr.splice(oldIdx, 1);
                 } else {
-                  reactions[oldIdx].count--;
+                  reactionsArr[oldIdx].count--;
                 }
               }
             }
 
             // Add or update new reaction count
-            const newIdx = reactions.findIndex(r => r.type === type);
+            const newIdx = reactionsArr.findIndex(r => r.type === type);
             if (newIdx >= 0) {
-              reactions[newIdx].count++;
+              reactionsArr[newIdx].count++;
             } else {
-              reactions.push({ type, count: 1 });
+              reactionsArr.push({ type, count: 1 });
             }
 
             // Sort by count
-            reactions.sort((a, b) => b.count - a.count);
+            reactionsArr.sort((a, b) => b.count - a.count);
 
             return {
               ...c,
-              reactions,
+              reactions: reactionsArr,
               userReaction: type,
             };
           }
@@ -421,9 +414,9 @@ export default function PostDetailScreen() {
 
     Alert.alert(
       "Yorumu Sil",
-      "Bu yorumu silmek istediğine emin misin?",
+      "Bu yorumu silmek istedigine emin misin?",
       [
-        { text: "İptal", style: "cancel" },
+        { text: "Iptal", style: "cancel" },
         {
           text: "Sil",
           style: "destructive",
@@ -487,7 +480,7 @@ export default function PostDetailScreen() {
         type: "post",
         targetId: post.id,
         targetName: post.is_anonymous
-          ? "Anonim paylaşım"
+          ? "Anonim paylasim"
           : `@${post.profiles?.username}`,
       },
     });
@@ -497,10 +490,10 @@ export default function PostDetailScreen() {
     setShowMenu(false);
     if (!user || !post || post.is_anonymous) return;
     Alert.alert(
-      "Kullanıcıyı Engelle",
-      `@${post.profiles?.username} adlı kullanıcıyı engellemek istediğinize emin misiniz?`,
+      "Kullaniciyi Engelle",
+      `@${post.profiles?.username} adli kullaniciyi engellemek istediginize emin misiniz?`,
       [
-        { text: "İptal", style: "cancel" },
+        { text: "Iptal", style: "cancel" },
         {
           text: "Engelle",
           style: "destructive",
@@ -522,6 +515,426 @@ export default function PostDetailScreen() {
       params: { userId: authorId },
     });
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: glass.background,
+      borderBottomWidth: 1,
+      borderBottomColor: glass.border,
+    },
+    backButton: {
+      padding: spacing.sm,
+      marginLeft: -spacing.sm,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      marginLeft: spacing.sm,
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    listContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+
+    // Post Card
+    postCard: {
+      marginBottom: spacing.lg,
+    },
+    postCardInner: {
+      padding: spacing.lg,
+    },
+    postHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: spacing.md,
+    },
+    categoryBadge: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    categoryText: {
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    timeText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginLeft: "auto",
+    },
+    menuButton: {
+      padding: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    postContent: {
+      flexDirection: "row",
+    },
+    postTextContainer: {
+      flex: 1,
+    },
+    postText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      lineHeight: 24,
+    },
+    spoilerBox: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+    },
+    spoilerText: {
+      color: colors.textLight,
+      textAlign: "center",
+      fontSize: fontSize.sm,
+    },
+    spoilerSubtext: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    thumbnailContainer: {
+      marginLeft: spacing.md,
+    },
+    thumbnail: {
+      width: 64,
+      height: 64,
+      borderRadius: borderRadius.lg,
+      backgroundColor: colors.borderLight,
+    },
+    authorRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    authorAvatar: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.borderLight,
+    },
+    authorName: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      marginLeft: spacing.sm,
+    },
+    reactionsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    reactionsList: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      flexWrap: "wrap",
+      gap: spacing.sm,
+    },
+    reactionChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    reactionEmoji: {
+      fontSize: fontSize.sm,
+    },
+    reactionCount: {
+      color: colors.textLight,
+      fontSize: fontSize.xs,
+      marginLeft: spacing.xs,
+    },
+    reactionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    commentsInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    commentsInfoText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginLeft: spacing.xs,
+    },
+    reactionPickerOverlay: {
+      position: "absolute",
+      top: "50%",
+      left: spacing.lg,
+      right: spacing.lg,
+      transform: [{ translateY: -50 }],
+    },
+    reactionPicker: {
+      backgroundColor: "rgba(30, 30, 42, 0.95)",
+      borderWidth: 1,
+      borderColor: glass.border,
+      borderRadius: borderRadius.xl,
+      padding: spacing.md,
+      flexDirection: "row",
+      justifyContent: "space-around",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    reactionOption: {
+      alignItems: "center",
+      padding: spacing.sm,
+    },
+    reactionOptionEmoji: {
+      fontSize: 24,
+    },
+    reactionOptionLabel: {
+      color: colors.textLight,
+      fontSize: fontSize.xs,
+      marginTop: spacing.xs,
+    },
+
+    // Comments
+    commentItem: {
+      flexDirection: "row",
+      marginBottom: spacing.lg,
+    },
+    commentAvatar: {
+      marginRight: spacing.md,
+    },
+    commentAvatarImage: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.borderLight,
+    },
+    commentAvatarPlaceholder: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    commentBody: {
+      flex: 1,
+    },
+    commentHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.xs,
+    },
+    commentHeaderLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    deleteCommentButton: {
+      padding: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    commentAuthor: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      fontWeight: "600",
+    },
+    commentTime: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginLeft: spacing.sm,
+    },
+    commentContent: {
+      color: colors.text,
+      fontSize: fontSize.base,
+      lineHeight: 20,
+    },
+    commentReactionsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.sm,
+      flexWrap: "wrap",
+      gap: spacing.xs,
+    },
+    commentReactionChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    commentReactionChipActive: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}15`,
+    },
+    commentReactionEmoji: {
+      fontSize: fontSize.xs,
+    },
+    commentReactionCount: {
+      color: colors.textMuted,
+      fontSize: 10,
+      marginLeft: spacing.xs,
+    },
+    commentReactionCountActive: {
+      color: colors.primary,
+      fontWeight: "600",
+    },
+    commentAddReactionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      marginLeft: spacing.xs,
+    },
+    emptyComments: {
+      alignItems: "center",
+      paddingVertical: spacing.xxxl,
+    },
+    emptyCommentsTitle: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      marginTop: spacing.md,
+    },
+    emptyCommentsText: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
+      marginTop: spacing.xs,
+    },
+
+    // Input Bar
+    inputBar: {
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+      backgroundColor: glass.background,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+    },
+    inputRow: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+    },
+    textInput: {
+      flex: 1,
+      backgroundColor: glass.background,
+      borderRadius: borderRadius.xl,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      fontSize: fontSize.base,
+      color: colors.text,
+      maxHeight: 100,
+      borderWidth: 1,
+      borderColor: glass.border,
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: spacing.sm,
+      backgroundColor: colors.borderLight,
+    },
+    sendButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    inputFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: spacing.xs,
+      paddingHorizontal: spacing.xs,
+    },
+    anonToggle: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    switch: {
+      transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+    },
+    anonLabel: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      marginLeft: spacing.xs,
+    },
+    charCount: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+
+    // Menu Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: spacing.xxl,
+    },
+    menuContainer: {
+      width: "100%",
+      backgroundColor: colors.cardElevated,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: glass.border,
+      overflow: "hidden",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      gap: spacing.md,
+    },
+    menuItemText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: "500",
+    },
+    menuDivider: {
+      height: 1,
+      backgroundColor: glass.border,
+    },
+  }), [colors, glass]);
 
   const renderComment = ({ item }: { item: CommentItem }) => {
     const authorTappable = !item.is_anonymous && item.profiles;
@@ -602,7 +1015,7 @@ export default function PostDetailScreen() {
                   hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                 >
                   <Text style={styles.commentReactionEmoji}>
-                    {REACTIONS[reaction.type].emoji}
+                    {REACTIONS[reaction.type]?.emoji ?? "?"}
                   </Text>
                   <Text style={[
                     styles.commentReactionCount,
@@ -617,9 +1030,7 @@ export default function PostDetailScreen() {
             <TouchableOpacity
               style={styles.commentAddReactionButton}
               onPress={() => {
-                // For now, just add the first reaction type (heart/like)
-                // In a full implementation, this would open a reaction picker
-                handleCommentReaction(item.id, "fire");
+                handleCommentReaction(item.id, "alev");
               }}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
@@ -674,9 +1085,9 @@ export default function PostDetailScreen() {
                   >
                     <View style={styles.spoilerBox}>
                       <Text style={styles.spoilerText}>
-                        {"Hassas içerik\n"}
+                        {"Hassas icerik\n"}
                         <Text style={styles.spoilerSubtext}>
-                          Görmek için dokun
+                          Gormek icin dokun
                         </Text>
                       </Text>
                     </View>
@@ -721,7 +1132,7 @@ export default function PostDetailScreen() {
                 {reactions.slice(0, 3).map((reaction, index) => (
                   <View key={index} style={styles.reactionChip}>
                     <Text style={styles.reactionEmoji}>
-                      {REACTIONS[reaction.type].emoji}
+                      {REACTIONS[reaction.type]?.emoji ?? "?"}
                     </Text>
                     <Text style={styles.reactionCount}>{reaction.count}</Text>
                   </View>
@@ -758,7 +1169,7 @@ export default function PostDetailScreen() {
                       style={styles.reactionOption}
                     >
                       <Text style={styles.reactionOptionEmoji}>
-                        {REACTIONS[type].emoji}
+                        {REACTIONS[type]?.emoji ?? "?"}
                       </Text>
                       <Text style={styles.reactionOptionLabel}>
                         {REACTIONS[type].label}
@@ -777,8 +1188,8 @@ export default function PostDetailScreen() {
   const renderEmpty = () => (
     <View style={styles.emptyComments}>
       <MessageCircle size={32} color={colors.textMuted} />
-      <Text style={styles.emptyCommentsTitle}>Henüz yorum yok</Text>
-      <Text style={styles.emptyCommentsText}>İlk yorumu sen yap!</Text>
+      <Text style={styles.emptyCommentsTitle}>Henuz yorum yok</Text>
+      <Text style={styles.emptyCommentsText}>Ilk yorumu sen yap!</Text>
     </View>
   );
 
@@ -794,7 +1205,7 @@ export default function PostDetailScreen() {
               <ArrowLeft size={24} color={colors.text} />
             </TouchableOpacity>
             <Logo size={24} />
-            <Text style={styles.headerTitle}>Paylaşım</Text>
+            <Text style={styles.headerTitle}>Paylasim</Text>
           </View>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -816,7 +1227,7 @@ export default function PostDetailScreen() {
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Logo size={24} />
-          <Text style={styles.headerTitle}>Paylaşım</Text>
+          <Text style={styles.headerTitle}>Paylasim</Text>
         </View>
 
         <KeyboardAvoidingView
@@ -928,7 +1339,7 @@ export default function PostDetailScreen() {
                           { color: colors.danger },
                         ]}
                       >
-                        Kullanıcıyı Engelle
+                        Kullaniciyi Engelle
                       </Text>
                     </TouchableOpacity>
                   </>
@@ -944,7 +1355,7 @@ export default function PostDetailScreen() {
                     { color: colors.textMuted, textAlign: "center" },
                   ]}
                 >
-                  İptal
+                  Iptal
                 </Text>
               </TouchableOpacity>
             </View>
@@ -954,423 +1365,3 @@ export default function PostDetailScreen() {
     </GradientBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: glassFallback.background,
-    borderBottomWidth: 1,
-    borderBottomColor: glassFallback.border,
-  },
-  backButton: {
-    padding: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    marginLeft: spacing.sm,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-
-  // Post Card
-  postCard: {
-    marginBottom: spacing.lg,
-  },
-  postCardInner: {
-    padding: spacing.lg,
-  },
-  postHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  categoryBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  categoryText: {
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-  },
-  timeText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginLeft: "auto",
-  },
-  menuButton: {
-    padding: spacing.xs,
-    marginLeft: spacing.sm,
-  },
-  postContent: {
-    flexDirection: "row",
-  },
-  postTextContainer: {
-    flex: 1,
-  },
-  postText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    lineHeight: 24,
-  },
-  spoilerBox: {
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-  },
-  spoilerText: {
-    color: colors.textLight,
-    textAlign: "center",
-    fontSize: fontSize.sm,
-  },
-  spoilerSubtext: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-  thumbnailContainer: {
-    marginLeft: spacing.md,
-  },
-  thumbnail: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.borderLight,
-  },
-  authorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  authorAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.borderLight,
-  },
-  authorName: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    marginLeft: spacing.sm,
-  },
-  reactionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  reactionsList: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  reactionChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  reactionEmoji: {
-    fontSize: fontSize.sm,
-  },
-  reactionCount: {
-    color: colors.textLight,
-    fontSize: fontSize.xs,
-    marginLeft: spacing.xs,
-  },
-  reactionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  commentsInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  commentsInfoText: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginLeft: spacing.xs,
-  },
-  reactionPickerOverlay: {
-    position: "absolute",
-    top: "50%",
-    left: spacing.lg,
-    right: spacing.lg,
-    transform: [{ translateY: -50 }],
-  },
-  reactionPicker: {
-    backgroundColor: "rgba(30, 30, 42, 0.95)",
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  reactionOption: {
-    alignItems: "center",
-    padding: spacing.sm,
-  },
-  reactionOptionEmoji: {
-    fontSize: 24,
-  },
-  reactionOptionLabel: {
-    color: colors.textLight,
-    fontSize: fontSize.xs,
-    marginTop: spacing.xs,
-  },
-
-  // Comments
-  commentItem: {
-    flexDirection: "row",
-    marginBottom: spacing.lg,
-  },
-  commentAvatar: {
-    marginRight: spacing.md,
-  },
-  commentAvatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.borderLight,
-  },
-  commentAvatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  commentBody: {
-    flex: 1,
-  },
-  commentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  commentHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  deleteCommentButton: {
-    padding: spacing.xs,
-    marginLeft: spacing.sm,
-  },
-  commentAuthor: {
-    color: colors.textLight,
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-  },
-  commentTime: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginLeft: spacing.sm,
-  },
-  commentContent: {
-    color: colors.text,
-    fontSize: fontSize.base,
-    lineHeight: 20,
-  },
-  commentReactionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.sm,
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  commentReactionChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  commentReactionChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: `${colors.primary}15`,
-  },
-  commentReactionEmoji: {
-    fontSize: fontSize.xs,
-  },
-  commentReactionCount: {
-    color: colors.textMuted,
-    fontSize: 10,
-    marginLeft: spacing.xs,
-  },
-  commentReactionCountActive: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  commentAddReactionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: glassFallback.background,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    marginLeft: spacing.xs,
-  },
-  emptyComments: {
-    alignItems: "center",
-    paddingVertical: spacing.xxxl,
-  },
-  emptyCommentsTitle: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    marginTop: spacing.md,
-  },
-  emptyCommentsText: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-    marginTop: spacing.xs,
-  },
-
-  // Input Bar
-  inputBar: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-    backgroundColor: glassFallback.background,
-    borderTopWidth: 1,
-    borderTopColor: glassFallback.border,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: glassFallback.background,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    fontSize: fontSize.base,
-    color: colors.text,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: spacing.sm,
-    backgroundColor: colors.borderLight,
-  },
-  sendButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  inputFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.xs,
-  },
-  anonToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  switch: {
-    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
-  },
-  anonLabel: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    marginLeft: spacing.xs,
-  },
-  charCount: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-  },
-
-  // Menu Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xxl,
-  },
-  menuContainer: {
-    width: "100%",
-    backgroundColor: colors.cardElevated,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: glassFallback.border,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.md,
-  },
-  menuItemText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: "500",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: glassFallback.border,
-  },
-});
