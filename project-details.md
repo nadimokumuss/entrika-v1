@@ -1,7 +1,7 @@
 # Entrika - Project Details
 
-> Son güncelleme: 2026-02-07
-> Versiyon: 0.3.0 (Beta) - Light/Dark Tema Sistemi
+> Son güncelleme: 2026-02-08
+> Versiyon: 0.4.0 (Beta) - Monorepo + Web Platform
 
 ---
 
@@ -16,17 +16,21 @@ npx expo start --tunnel
 - Expo Go ile aç
 - Test listesini kontrol et
 
-### 2. Web Deploy (Vercel)
+### 2. Web Dev (Next.js)
 ```bash
-npx vercel --prod
+cd "C:\Users\reiss\Desktop\Entrika v1\entrika\apps\web"
+npm run dev
 ```
-- https://entrika.vercel.app
-- Sadece final check
+- http://localhost:3000
+- X/Twitter tarzi 3 kolonlu layout
 
-### 3. Web Geliştirme (Gelecek)
-- Yeni proje: `entrika-web/`
-- Next.js ile sıfırdan
-- Ayrı UI/UX
+### 3. Web Deploy (Vercel)
+```bash
+cd "C:\Users\reiss\Desktop\Entrika v1\entrika"
+npx vercel --prod --yes
+```
+- https://entrika-web.vercel.app (Web)
+- https://entrika.vercel.app (Mobile/eski)
 
 ---
 
@@ -36,30 +40,23 @@ npx vercel --prod
 
 Türkiye'nin ilk topluluk tabanlı dating ve sosyal istihbarat uygulaması. Kullanıcılar, tanışmadan önce karşı taraf hakkında topluluk değerlendirmelerini görebilir, deneyimlerini anonim olarak paylaşabilir ve güvenli bir şekilde eşleşebilir.
 
-### Platform Stratejisi (X Modeli)
-Ayrı codebase'ler, aynı backend.
+### Platform Stratejisi (Monorepo + Shared Backend)
+Turborepo monorepo, ortak paket, ayni Supabase backend.
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                    BACKEND (Supabase)                  │
-│  - Database, Auth, Storage, Realtime                  │
-└──────────────┬─────────────────────────────────────────┘
-               │
-       ┌───────┴────────┐
-       ▼                ▼
-┌──────────────┐  ┌──────────────────┐
-│  MOBILE APP  │  │   WEB SITE       │
-│  (Expo/RN)   │  │   (Next.js)      │
-│              │  │                  │
-│  - Native UI │  │  - Web UI        │
-│  - Tab bar   │  │  - Sidebar nav   │
-│  - Swipe     │  │  - Hover states  │
-│  - Gestures  │  │  - Keyboard nav  │
-└──────────────┘  └──────────────────┘
+entrika/                          (Turborepo monorepo root)
+├── apps/
+│   ├── mobile/                   (Expo SDK 54 - React Native)
+│   └── web/                      (Next.js 16 - Web/Desktop)
+├── packages/
+│   └── shared/                   (@entrika/shared - ortak is mantigi)
+├── turbo.json
+└── package.json
 ```
 
-- **Mobile**: `entrika/` - React Native (Expo SDK 54) - Mevcut proje
-- **Web**: `entrika-web/` - Next.js (yeni proje, başlanmadı)
+- **Mobile**: `apps/mobile/` - React Native (Expo SDK 54)
+- **Web**: `apps/web/` - Next.js 16 + Tailwind v4 - **CANLI: https://entrika-web.vercel.app**
+- **Shared**: `packages/shared/` - Tipler, lib factory'leri, sabitler, tema
 
 ### Problem
 - Dating uygulamalarında karşılaşılan kişiler hakkında önceden bilgi edinme imkanı yok
@@ -242,17 +239,31 @@ Ayrı codebase'ler, aynı backend.
 - **Reaction picker arka planı düzeltildi** (transparent -> solid)
 - **Yorum optimistic update düzeltildi** (temp comment matching)
 - **Feed filter tabs eklendi**: Tümü / Tanıdıklar / Tanımadıklar
-  - `app/(tabs)/index.tsx`'e tab UI eklendi
-  - `useFollow()` hook ile followingIds kullanılıyor
-  - Post fetch'de filtreleme uygulanıyor
-- **İlişki durumu UI eklendi**:
-  - `dating_profiles` tablosuna `relationship_status` kolonu
-  - `app/edit-dating-profile.tsx`'e seçici eklendi
-  - `app/(tabs)/match.tsx`'te gösterim eklendi
-- **Yorum reaksiyonları UI eklendi**:
-  - `comment_reactions` tablosu oluşturuldu
-  - `app/post-detail.tsx`'e tepki butonları eklendi
-  - Tepki sayısı ve kullanıcı tepki rengi gösteriliyor
+- **İlişki durumu UI eklendi**
+- **Yorum reaksiyonları UI eklendi**
+
+### 2026-02-08 - Monorepo + Web Platform (Major)
+- **Turborepo monorepo kurulumu**: Root workspace, turbo.json pipeline
+- **Mobil app tasindi**: `entrika/` -> `apps/mobile/`
+- **@entrika/shared paketi olusturuldu**:
+  - types/index.ts: Tum DB tipleri (Profile, Post, Match, Message, vb.)
+  - supabase.ts: createSupabaseClient() factory
+  - lib/following.ts, blocking.ts, messaging.ts, bookmarks.ts, premium.ts: Factory pattern
+  - constants/categories.ts, theme.ts: Paylasilabilir sabitler + tema
+  - hooks/useError.ts: Hata yonetimi
+- **Mobile bridge re-exports**: categories.ts, theme.ts, useError.ts @entrika/shared'dan re-export
+- **Next.js 16 web uygulamasi olusturuldu** (apps/web/):
+  - Tailwind v4 + CSS Variables tema sistemi (light/dark)
+  - 3-kolonlu X/Twitter tarzi layout (Sidebar | Content | RightPanel)
+  - Responsive: tablet=icon sidebar, mobile=bottom nav
+  - 15 sayfa: Feed, Explore, Match, Messages, Chat, Notifications, Bookmarks, Profile, Settings, New Post, Post Detail, User Profile, Login, Register, Forgot Password
+  - SSR SEO: u/[username] sayfasi Open Graph meta tags
+  - Klavye kisayollari: J/K navigasyon, N yeni post, / arama, Esc
+  - Web Notifications API entegrasyonu
+  - Framer Motion drag-to-swipe match kartlari
+  - Kullanici arama (Explore sayfasi)
+  - FollowProvider: Realtime takip state yonetimi
+- **Vercel deploy**: https://entrika-web.vercel.app
 
 ---
 

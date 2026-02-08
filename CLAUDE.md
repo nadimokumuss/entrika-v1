@@ -118,13 +118,17 @@ Kullanıcı her değişiklik sonrası bu listeyi kontrol etmelidir:
 ## Teknik Bilgiler
 
 ### Tech Stack
-- **Framework:** React Native (Expo SDK 54)
-- **Router:** Expo Router ~6.0.22 (file-based routing)
+- **Monorepo:** Turborepo + npm workspaces
+- **Mobile:** React Native (Expo SDK 54) + Expo Router ~6.0.22
+- **Web:** Next.js 16 + Tailwind v4 + Framer Motion
+- **Shared:** @entrika/shared (tipler, lib factory'leri, sabitler)
 - **Language:** TypeScript
-- **Styling:** React Native StyleSheet (NativeWind kaldırıldı - Node.js 24 uyumsuzluğu)
+- **Styling:** Mobile: RN StyleSheet | Web: CSS Variables + Tailwind v4
 - **Backend:** Supabase (production aktif, MOCK_MODE = false)
-- **Icons:** Lucide React Native
-- **Web Hosting:** Vercel (https://entrika.vercel.app)
+- **Icons:** Lucide React Native (mobile) / Lucide React (web)
+- **Web Hosting:** Vercel
+  - Mobile (eski): https://entrika.vercel.app
+  - Web (yeni): https://entrika-web.vercel.app
 
 ### Tema Sistemi (Light/Dark)
 **Default: Light tema.** Ayarlardan koyu temaya gecilebilir.
@@ -154,49 +158,40 @@ darkColors = {
 
 **Logo:** Light'ta turuncu tonlari, dark'ta mor/pembe tonlari
 
-### Klasör Yapısı
+### Klasör Yapısı (Monorepo)
 ```
-entrika/
-├── app/
-│   ├── (auth)/          # Auth ekranları
-│   │   ├── _layout.tsx
-│   │   ├── index.tsx    # Karşılama ekranı (Hesap Oluştur / Giriş Yap)
-│   │   ├── login.tsx    # Giriş
-│   │   ├── forgot-password.tsx # Sifremi unuttum
-│   │   └── register.tsx # Kayıt (cinsiyet + avatar)
-│   ├── (tabs)/          # Ana tab ekranları
-│   │   ├── _layout.tsx
-│   │   ├── index.tsx    # Feed (Supabase) + Feed Filter Tabs
-│   │   ├── match.tsx    # Eşleşme (Supabase)
-│   │   ├── explore.tsx  # Keşfet (Supabase)
-│   │   └── profile.tsx  # Profil (Supabase)
-│   ├── chat/
-│   │   └── [matchId].tsx # Chat ekrani (Supabase realtime)
-│   ├── _layout.tsx      # Root layout
-│   ├── new-post.tsx     # Yeni paylaşım (Supabase insert)
-│   ├── edit-dating-profile.tsx # Dating profil duzenleme + Relationship Status
-│   ├── conversations.tsx # Sohbet listesi
-│   ├── notifications.tsx # Bildirim ekrani (in-app)
-│   ├── post-detail.tsx  # Post detay + yorumlar + yorum reaksiyonları
-│   └── review-user.tsx  # Kullanici degerlendirme formu (modal)
-├── components/
-│   ├── Logo.tsx         # Basit logo component (3 bar)
-│   ├── ui/              # UI bileşenleri
-│   └── ...
-├── constants/
-│   ├── theme.ts         # Renk ve spacing sabitleri
-│   └── categories.ts   # Kategori ve reaksiyon sabitleri
-├── contexts/
-│   ├── AuthContext.tsx  # Auth state yönetimi (production)
-│   └── FollowContext.tsx # Follow state yönetimi
-├── lib/
-│   ├── supabase.ts      # Supabase client + type definitions
-│   ├── following.ts     # Follow fonksiyonları
-│   └── ...
-└── supabase/
-    ├── schema.sql              # Orijinal şema
-    ├── schema-v2.sql           # Güncel tam şema
-    └── update-relationship-status.sql # Relationship status + comment reactions
+entrika/                              # Turborepo monorepo root
+├── apps/
+│   ├── mobile/                       # Expo SDK 54 React Native
+│   │   ├── app/(auth)/               # Auth ekranları
+│   │   ├── app/(tabs)/               # Ana tab ekranları (Feed, Match, Explore, Profile)
+│   │   ├── app/chat/[matchId].tsx    # Realtime chat
+│   │   ├── components/               # UI bileşenleri
+│   │   ├── constants/                # Re-exports from @entrika/shared
+│   │   ├── contexts/                 # AuthContext, FollowContext, ThemeContext
+│   │   ├── hooks/                    # Re-exports from @entrika/shared
+│   │   └── lib/                      # supabase, following, blocking, messaging, bookmarks
+│   └── web/                          # Next.js 16 Web App
+│       └── src/
+│           ├── app/(auth)/           # Login, Register, Forgot Password
+│           ├── app/(main)/           # Feed, Explore, Match, Messages, Profile, Settings, vb.
+│           ├── app/u/[username]/     # SSR user profile (SEO)
+│           ├── app/post/[postId]/    # Post detail
+│           ├── components/layout/    # Sidebar, RightPanel, MobileNav
+│           ├── contexts/             # AuthContext, ThemeContext, FollowContext
+│           ├── hooks/                # useKeyboardShortcuts
+│           └── lib/                  # supabase, shared (factory instances), notifications
+├── packages/
+│   └── shared/                       # @entrika/shared
+│       └── src/
+│           ├── types/index.ts        # Tum DB tipleri
+│           ├── supabase.ts           # createSupabaseClient() factory
+│           ├── lib/                   # Factory pattern: createXxxLib(supabase)
+│           ├── constants/            # categories.ts, theme.ts
+│           └── hooks/                # useError.ts
+├── turbo.json
+├── vercel.json                       # Monorepo deploy config
+└── package.json                      # npm workspaces
 ```
 
 ---
@@ -244,13 +239,17 @@ entrika/
 5. [ ] Feed'de algorithm optimization
 
 ### Tamamlanan Ek Ozellikler
-- [x] Web deploy (Vercel) - https://entrika.vercel.app
+- [x] Web deploy (Vercel) - https://entrika.vercel.app (mobile)
 - [x] Platform kontrolleri (Haptics, Notifications, SecureStore, ImagePicker)
 - [x] SSR hydration fix (isClient pattern)
-- [x] Template dosyalari temizlendi (two.tsx kaldirildi)
 - [x] Logo component yeniden yazıldı (basit ve güvenilir)
 - [x] Reaction picker arka planı düzeltildi (transparent -> solid)
 - [x] Light/Dark tema sistemi (ThemeContext + useTheme hook, 48 dosya migrate edildi)
+- [x] **Monorepo donusumu** (Turborepo + npm workspaces)
+- [x] **@entrika/shared paketi** (factory pattern, tipler, sabitler)
+- [x] **Next.js 16 web uygulamasi** - 15 sayfa, tam ozellik paritesi
+- [x] **Web deploy** - https://entrika-web.vercel.app
+- [x] **Web ozellikleri**: Klavye kisayollari, Web Notifications, SSR SEO, drag-to-swipe
 
 ---
 
@@ -267,6 +266,11 @@ entrika/
 8. **Davetiye sistemi kaldirildi** - Uygulama herkese acik, gatekeeper yerine karsilama ekrani
 9. **Turkce karakter duzeltmeleri** - Tum UI metinlerinde ö, ü, ş, ç, ğ, ı, İ, Ş, Ç karakterleri duzeltildi
 10. **Takip sistemi eklendi** - FollowContext, follows tablosu, kullanıcı takip edebilir
+11. **Monorepo yapısı (2026-02-08)** - Turborepo + npm workspaces, @entrika/shared factory pattern
+12. **Web app Next.js 16** - Tailwind v4 + CSS Variables tema, 3-kolonlu layout, Framer Motion
+13. **Shared lib factory pattern** - `createXxxLib(supabase)` → platform-agnostic
+14. **Mobile bridge re-exports** - constants/ ve hooks/ @entrika/shared'dan re-export, lib/ dosyalari ayni kaldi
+15. **Web deploy Vercel monorepo** - Root'tan deploy, `buildCommand: cd apps/web && npm run build`
 
 ### Dikkat Edilecekler
 - Expo Go ile test edilebilir (development build gerekmez)
@@ -275,15 +279,19 @@ entrika/
 - Yeni tablo eklenirse `supabase/setup-missing-tables.sql` guncellenmeli
 - `supabase/update-relationship-status.sql` Supabase SQL Editor'de calistirilmali (EN ÖNCE!)
 
-### Web Deploy Notlari
-- **Vercel URL:** https://entrika.vercel.app
-- **Vercel env vars:** `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` production scope'da tanimli
-- **Build command:** `.env` dosyasi Vercel env vars'tan olusturulup `expo export --platform web --clear` calistirilir
-- **vercel.json:** `rewrites` kullanilir (`routes` degil - routes statik dosyalari da yonlendirir!)
+### Web Deploy Notlari (Next.js)
+- **Vercel URL (web):** https://entrika-web.vercel.app
+- **Vercel URL (mobile/eski):** https://entrika.vercel.app
+- **Vercel proje adi:** entrika-web
+- **Vercel env vars:** `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` production scope'da tanimli
+- **Deploy:** Monorepo root'tan `npx vercel --prod --yes` (vercel.json buildCommand ile apps/web build eder)
+- **vercel.json (root):** `buildCommand: cd apps/web && npm run build`, `outputDirectory: apps/web/.next`
+- **Tema:** CSS Variables + `.dark` class toggle, Tailwind v4 @theme inline
+- **Auth storage:** Web'de localStorage adapter
+
+### Eski Mobile Web Deploy Notlari
 - **Platform kontrolleri:** Haptics, SplashScreen, SecureStore, ImagePicker, Notifications - hepsi `Platform.OS !== 'web'` ile sarili
-- **Hydration fix:** `_layout.tsx`'te `isClient` state pattern - SSR'da bos View render edilir, client mount sonrasi gercek icerik
-- **SecureStore:** Web'de `require('expo-secure-store')` yerine `localStorage` kullanilir
-- **Auth storage:** Web'de localStorage, native'de SecureStore
+- **Auth storage:** Mobile native'de SecureStore, mobile web'de localStorage
 
 ### Tema Kullanimi
 - `useTheme()` hook'u kullan: `const { colors, gradients, glass, isDark } = useTheme()`
@@ -293,36 +301,42 @@ entrika/
 - `app/_layout.tsx` pre-ThemeProvider loading icin `lightColors` import eder
 
 ### Proje Yapisi
-- **Repo Root:** `C:\Users\reiss\Desktop\Entrika v1\entrika\`
-- **Duplika klasor:** YOK (entrika/entrika/ silindi - 2026-02-06)
-- **Tum dosyalar tek ve dogru lokasyonda
+- **Repo Root:** `C:\Users\reiss\Desktop\Entrika v1\entrika\` (Turborepo monorepo)
+- **Mobile App:** `apps/mobile/`
+- **Web App:** `apps/web/`
+- **Shared Package:** `packages/shared/`
 
 ---
 
 ## Geliştirme Komutları
 
 ```bash
-# Projeyi başlat
+# Monorepo root
 cd "C:\Users\reiss\Desktop\Entrika v1\entrika"
-npx expo start
 
-# Farklı port ile başlat
-npx expo start --port 8082
+# Mobile gelistirme
+cd apps/mobile && npx expo start --tunnel
 
-# Tunnel modunda başlat (telefon testi için)
-npx expo start --tunnel
+# Web gelistirme
+cd apps/web && npm run dev          # http://localhost:3000
 
-# Web dev mode
-npx expo start --web
+# Web build (lokal test)
+cd apps/web && npm run build
 
-# Web build (static export)
-npx expo export --platform web
+# Web deploy (Vercel production)
+cd "C:\Users\reiss\Desktop\Entrika v1\entrika" && npx vercel --prod --yes
 
-# Vercel deploy (production)
-npx vercel --prod --yes
+# Turborepo build (tum paketler)
+npm run build
 
-# Paket ekle
-npm install <paket-adı>
+# Paket ekle (mobile)
+cd apps/mobile && npm install <paket>
+
+# Paket ekle (web)
+cd apps/web && npm install <paket>
+
+# Paket ekle (shared)
+cd packages/shared && npm install <paket>
 ```
 
 ---

@@ -1,5 +1,3 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
 # dependencies
 node_modules/
 
@@ -8,6 +6,13 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+
+# Next.js
+.next/
+out/
+
+# Turborepo
+.turbo/
 
 # Native
 .kotlin/
@@ -42,3 +47,6 @@ yarn-error.*
 /android
 
 .vercel
+
+# shared build output
+packages/shared/dist/
