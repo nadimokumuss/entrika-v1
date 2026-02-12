@@ -33,13 +33,13 @@ export const CATEGORIES: Record<
   { label: string; emoji: string; color: string; bgColor: string }
 > = {
   itiraf: {
-    label: "Itiraf",
+    label: "İtiraf",
     emoji: "🔥",
     color: "#7C3AED",
     bgColor: "bg-primary/20",
   },
   ifsa: {
-    label: "Ifsa",
+    label: "İfşa",
     emoji: "⚠️",
     color: "#EC4899",
     bgColor: "bg-danger/20",
@@ -51,13 +51,13 @@ export const CATEGORIES: Record<
     bgColor: "bg-red-500/20",
   },
   yilanlik: {
-    label: "Yilanlar",
+    label: "Yılanlar",
     emoji: "🐍",
     color: "#10B981",
     bgColor: "bg-success/20",
   },
   dolandiricilik: {
-    label: "Dolandiricilar",
+    label: "Dolandırıcılar",
     emoji: "💸",
     color: "#F59E0B",
     bgColor: "bg-amber-500/20",
@@ -76,13 +76,13 @@ export const REACTIONS: Record<
   { emoji: string; label: string }
 > = {
   alev: { emoji: "🔥", label: "Olay" },
-  yanindayim: { emoji: "🫂", label: "Yanindayim" },
-  yilan: { emoji: "🐍", label: "Yilan" },
-  sok: { emoji: "😱", label: "Sok" },
+  yanindayim: { emoji: "🤝", label: "Yanındayım" },
+  yilan: { emoji: "🐍", label: "Yılan" },
+  sok: { emoji: "😱", label: "Şok" },
   helal: { emoji: "👏", label: "Helal" },
-  begeni: { emoji: "❤️", label: "Begeni" },
-  ofke: { emoji: "😡", label: "Ofke" },
+  begeni: { emoji: "❤️", label: "Beğeni" },
+  ofke: { emoji: "😡", label: "Öfke" },
   korku: { emoji: "😨", label: "Korku" },
-  huzun: { emoji: "😢", label: "Huzun" },
-  saskinlik: { emoji: "😲", label: "Saskinlik" },
+  huzun: { emoji: "😢", label: "Hüzün" },
+  saskinlik: { emoji: "😲", label: "Şaşkınlık" },
 };

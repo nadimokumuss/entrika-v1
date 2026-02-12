@@ -23,12 +23,12 @@ interface DatingCard {
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
   single: "Bekar",
-  in_relationship: "Iliskide",
-  complicated: "Karmasik",
+  in_relationship: "İlişkide",
+  complicated: "Karmaşık",
   married: "Evli",
-  divorced: "Bosanmis",
+  divorced: "Boşanmış",
   widowed: "Dul",
-  open_relationship: "Acik Iliski",
+  open_relationship: "Açık İlişki",
 };
 
 export default function MatchPage() {
@@ -112,10 +112,10 @@ export default function MatchPage() {
   return (
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[var(--text)]">Eslesmeler</h1>
+        <h1 className="text-xl font-bold text-[var(--text)]">Eşleşme</h1>
         <div className="flex items-center gap-2">
           <Link href="/edit-dating-profile" className="text-sm text-[var(--primary)] hover:underline">
-            Profilimi Duzenle
+            Profilimi Düzenle
           </Link>
           <button onClick={fetchCards} className="p-2 rounded-lg hover:bg-[var(--card)]">
             <RefreshCw size={18} className="text-[var(--text-muted)]" />
@@ -129,7 +129,7 @@ export default function MatchPage() {
         ) : !currentCard ? (
           <div className="text-center text-[var(--text-muted)] py-12">
             <Heart size={48} className="mx-auto mb-3 opacity-30" />
-            <p>Simdilik gosterecek profil kalmadi.</p>
+            <p>Gösterilecek profil kalmadı.</p>
             <button onClick={fetchCards} className="mt-4 px-4 py-2 rounded-xl text-sm text-white" style={{ background: "var(--primary)" }}>
               Yenile
             </button>

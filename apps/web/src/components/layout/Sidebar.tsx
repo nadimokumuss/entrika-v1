@@ -21,11 +21,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_ITEMS = [
   { href: "/", label: "Ana Sayfa", icon: Home },
-  { href: "/explore", label: "Kesfet", icon: Compass },
-  { href: "/match", label: "Eslesme", icon: Heart },
+  { href: "/explore", label: "Keşfet", icon: Compass },
+  { href: "/match", label: "Eşleşme", icon: Heart },
   { href: "/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/notifications", label: "Bildirimler", icon: Bell },
-  { href: "/bookmarks", label: "Yer Imleri", icon: Bookmark },
+  { href: "/bookmarks", label: "Yer İmleri", icon: Bookmark },
   { href: "/profile", label: "Profil", icon: User },
   { href: "/settings", label: "Ayarlar", icon: Settings },
 ];
@@ -95,7 +95,7 @@ export default function Sidebar() {
         >
           {isDark ? <Sun size={24} /> : <Moon size={24} />}
           <span className="hidden xl:block text-sm">
-            {isDark ? "Acik Tema" : "Koyu Tema"}
+            {isDark ? "Açık Tema" : "Koyu Tema"}
           </span>
         </button>
 

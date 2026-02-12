@@ -109,7 +109,7 @@ export default function UserProfileClient({ username }: { username: string }) {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -134,9 +134,9 @@ export default function UserProfileClient({ username }: { username: string }) {
   if (!profile) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--text-muted)]">Kullanici bulunamadi.</p>
+        <p className="text-[var(--text-muted)]">Kullanıcı bulunamadı.</p>
         <Link href="/" className="mt-4 text-[var(--primary)] hover:underline text-sm">
-          Ana sayfaya don
+          Ana sayfaya dön
         </Link>
       </div>
     );
@@ -146,7 +146,7 @@ export default function UserProfileClient({ username }: { username: string }) {
   const following = isFollowing(profile.id);
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div>
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center gap-3">
         <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]">
@@ -154,7 +154,7 @@ export default function UserProfileClient({ username }: { username: string }) {
         </Link>
         <div className="flex-1">
           <h1 className="text-lg font-bold text-[var(--text)]">{profile.username}</h1>
-          <p className="text-xs text-[var(--text-muted)]">{posts.length} paylasim</p>
+          <p className="text-xs text-[var(--text-muted)]">{posts.length} paylaşım</p>
         </div>
         {!isOwnProfile && user && (
           <div className="relative">
@@ -173,9 +173,9 @@ export default function UserProfileClient({ username }: { username: string }) {
                 <button
                   onClick={async () => {
                     setShowMenu(false);
-                    if (window.confirm(`${profile.username} kullanicisini engellemek istediginize emin misiniz?`)) {
+                    if (window.confirm(`${profile.username} kullanıcısını engellemek istediğinize emin misiniz?`)) {
                       await supabase.from("blocked_users").insert({ blocker_id: user.id, blocked_id: profile.id });
-                      alert("Kullanici engellendi");
+                      alert("Kullanıcı engellendi");
                     }
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--danger)] hover:bg-[var(--danger)]/5"
@@ -204,7 +204,7 @@ export default function UserProfileClient({ username }: { username: string }) {
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-[var(--card)] text-[var(--text)] border border-[var(--border)]"
               >
                 <Star size={16} />
-                Degerlendir
+                Değerlendir
               </button>
               <button
                 onClick={() => toggleFollow(profile.id)}
@@ -244,9 +244,9 @@ export default function UserProfileClient({ username }: { username: string }) {
       {/* Tabs */}
       <div className="flex border-b border-[var(--border-light)]">
         {([
-          ["posts", "Paylasimlar"],
-          ["reviews_received", "Aldigi Degerlendirmeler"],
-          ["reviews_given", "Verdigi Degerlendirmeler"],
+          ["posts", "Paylaşımlar"],
+          ["reviews_received", "Aldığı Değerlendirmeler"],
+          ["reviews_given", "Verdiği Değerlendirmeler"],
         ] as const).map(([key, label]) => (
           <button
             key={key}
@@ -267,7 +267,7 @@ export default function UserProfileClient({ username }: { username: string }) {
       <div>
         {activeTab === "posts" && (
           posts.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Henuz paylasim yok.</div>
+            <div className="text-center py-12 text-[var(--text-muted)]">Henüz paylaşım yok.</div>
           ) : (
             posts.map((post) => {
               const cat = CATEGORIES[post.category as keyof typeof CATEGORIES];
@@ -297,14 +297,14 @@ export default function UserProfileClient({ username }: { username: string }) {
 
         {activeTab === "reviews_received" && (
           reviewsReceived.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Henuz degerlendirme yok.</div>
+            <div className="text-center py-12 text-[var(--text-muted)]">Henüz değerlendirme yok.</div>
           ) : (
             reviewsReceived.map((review) => (
               <div key={review.id} className="px-4 py-4 border-b border-[var(--border-light)]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg font-bold" style={{ color: getScoreColor(review.score) }}>{review.score}/10</span>
                   <span className="text-sm text-[var(--text-muted)]">
-                    {review.is_anonymous ? "Anonim" : review.reviewer?.username || "Kullanici"}
+                    {review.is_anonymous ? "Anonim" : review.reviewer?.username || "Kullanıcı"}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{timeAgo(review.created_at)}</span>
                 </div>
@@ -323,14 +323,14 @@ export default function UserProfileClient({ username }: { username: string }) {
 
         {activeTab === "reviews_given" && (
           reviewsGiven.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Henuz degerlendirme yok.</div>
+            <div className="text-center py-12 text-[var(--text-muted)]">Henüz değerlendirme yok.</div>
           ) : (
             reviewsGiven.map((review) => (
               <div key={review.id} className="px-4 py-4 border-b border-[var(--border-light)]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg font-bold" style={{ color: getScoreColor(review.score) }}>{review.score}/10</span>
                   <span className="text-sm text-[var(--text-muted)]">
-                    {review.reviewer?.username || "Kullanici"}
+                    {review.reviewer?.username || "Kullanıcı"}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{timeAgo(review.created_at)}</span>
                 </div>

@@ -33,7 +33,7 @@ export default function BookmarksPage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -43,7 +43,7 @@ export default function BookmarksPage() {
   return (
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3">
-        <h1 className="text-xl font-bold text-[var(--text)]">Yer Imleri</h1>
+        <h1 className="text-xl font-bold text-[var(--text)]">Yer İmleri</h1>
       </div>
 
       {loading ? (
@@ -53,7 +53,7 @@ export default function BookmarksPage() {
       ) : bookmarks.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
           <Bookmark size={48} className="mb-3 opacity-30" />
-          <p>Henuz yer imlerine eklenen paylasim yok</p>
+          <p>Henüz yer imlerine eklenen paylaşım yok</p>
         </div>
       ) : (
         bookmarks.map((bm) => {
@@ -66,7 +66,7 @@ export default function BookmarksPage() {
                     {bm.posts.profiles.username}
                   </Link>
                 ) : (
-                  <span className="font-semibold text-sm text-[var(--text)]">Kullanici</span>
+                  <span className="font-semibold text-sm text-[var(--text)]">Kullanıcı</span>
                 )}
                 <span className="text-xs text-[var(--text-muted)]">{timeAgo(bm.posts.created_at)}</span>
                 {cat && (
@@ -80,7 +80,7 @@ export default function BookmarksPage() {
                 <button
                   onClick={() => removeBookmark(bm.posts.id)}
                   className="ml-auto p-1 rounded-lg hover:bg-[var(--danger)]/10 text-[var(--text-muted)] hover:text-[var(--danger)]"
-                  title="Yer iminden kaldir"
+                  title="Yer iminden kaldır"
                 >
                   <BookmarkX size={16} />
                 </button>

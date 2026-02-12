@@ -47,7 +47,7 @@ export default function NotificationsPage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -109,7 +109,7 @@ export default function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
           <Bell size={48} className="mb-3 opacity-30" />
-          <p>Henuz bildirim yok</p>
+          <p>Henüz bildirim yok</p>
         </div>
       ) : (
         notifications.map((n) => (

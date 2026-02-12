@@ -49,7 +49,7 @@ export function RepostModal({ open, onClose, originalPost, onReposted }: RepostM
       onClose();
       setContent("");
     } catch {
-      setError("Paylasim yapilamadi");
+      setError("Paylaşım yapılamadı");
     }
     setLoading(false);
   };
@@ -63,7 +63,7 @@ export function RepostModal({ open, onClose, originalPost, onReposted }: RepostM
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
-          <h2 className="text-lg font-bold text-[var(--text)]">Alintila</h2>
+          <h2 className="text-lg font-bold text-[var(--text)]">Alıntıla</h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]">
             <X size={20} className="text-[var(--text-muted)]" />
           </button>
@@ -78,7 +78,7 @@ export function RepostModal({ open, onClose, originalPost, onReposted }: RepostM
           <div className="p-3 rounded-xl border border-[var(--border-light)] bg-[var(--card)]/50">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-medium text-[var(--text-muted)]">
-                {originalPost.is_anonymous ? "Anonim" : originalPost.profiles?.username || "Kullanici"}
+                {originalPost.is_anonymous ? "Anonim" : originalPost.profiles?.username || "Kullanıcı"}
               </span>
               {cat && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: cat.color + "20", color: cat.color }}>
@@ -129,7 +129,7 @@ export function RepostModal({ open, onClose, originalPost, onReposted }: RepostM
                 className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isAnonymous ? "left-5" : "left-1"}`}
               />
             </div>
-            <span className="text-sm text-[var(--text)]">Anonim paylasim</span>
+            <span className="text-sm text-[var(--text)]">Anonim paylaşım</span>
           </label>
 
           <button
@@ -138,7 +138,7 @@ export function RepostModal({ open, onClose, originalPost, onReposted }: RepostM
             className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-50"
             style={{ background: "var(--primary)" }}
           >
-            {loading ? "Paylasiliyor..." : "Alintila ve Paylas"}
+            {loading ? "Paylaşılıyor..." : "Alıntıla ve Paylaş"}
           </button>
         </div>
       </div>

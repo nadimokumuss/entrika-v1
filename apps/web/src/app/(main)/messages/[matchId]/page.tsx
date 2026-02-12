@@ -107,7 +107,7 @@ export default function ChatPage() {
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-12 text-[var(--text-muted)]">
-            Henuz mesaj yok. Ilk mesaji gonder!
+            Henüz mesaj yok. İlk mesajı gönder!
           </div>
         ) : (
           messages.map((msg) => {

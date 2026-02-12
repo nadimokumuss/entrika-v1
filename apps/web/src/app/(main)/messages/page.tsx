@@ -25,7 +25,7 @@ export default function MessagesPage() {
     if (!dateStr) return "";
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -44,7 +44,7 @@ export default function MessagesPage() {
         </div>
       ) : conversations.length === 0 ? (
         <div className="text-center py-12 text-[var(--text-muted)]">
-          Henuz mesajin yok. Eslestikten sonra sohbet baslayabilirsin.
+          Henüz mesajın yok. Eşleştikten sonra sohbet başlayabilirsin.
         </div>
       ) : (
         conversations.map((conv) => (
@@ -64,7 +64,7 @@ export default function MessagesPage() {
                 <span className="text-xs text-[var(--text-muted)]">{timeAgo(conv.lastMessageAt)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-sm text-[var(--text-muted)] truncate">{conv.lastMessage || "Henuz mesaj yok"}</p>
+                <p className="text-sm text-[var(--text-muted)] truncate">{conv.lastMessage || "Henüz mesaj yok"}</p>
                 {conv.unreadCount > 0 && (
                   <span className="ml-2 w-5 h-5 flex items-center justify-center rounded-full text-xs text-white" style={{ background: "var(--primary)" }}>
                     {conv.unreadCount}

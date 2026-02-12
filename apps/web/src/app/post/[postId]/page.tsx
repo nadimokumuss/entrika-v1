@@ -143,7 +143,7 @@ export default function PostDetailPage() {
   };
 
   const handleDeletePost = async () => {
-    if (!window.confirm("Bu postu silmek istediginize emin misiniz? Bu islem geri alinamaz.")) return;
+    if (!window.confirm("Bu postu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) return;
     try {
       const { error } = await supabase.from("posts").delete().eq("id", postId);
       if (error) throw error;
@@ -155,17 +155,26 @@ export default function PostDetailPage() {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!window.confirm("Bu yorumu silmek istediginize emin misiniz?")) return;
-    await supabase.from("comments").delete().eq("id", commentId);
-    fetchComments();
+    if (!user) return;
+    if (!window.confirm("Bu yorumu silmek istediğinize emin misiniz?")) return;
+    const { error } = await supabase.from("comments").delete().eq("id", commentId).eq("author_id", user.id);
+    if (error) {
+      alert("Yorum silinemedi: " + error.message);
+      return;
+    }
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
   };
 
   const handleEditComment = async (commentId: string) => {
-    if (!editingCommentContent.trim()) return;
-    await supabase.from("comments").update({ content: editingCommentContent.trim() }).eq("id", commentId);
+    if (!user || !editingCommentContent.trim()) return;
+    const { error } = await supabase.from("comments").update({ content: editingCommentContent.trim() }).eq("id", commentId).eq("author_id", user.id);
+    if (error) {
+      alert("Yorum güncellenemedi: " + error.message);
+      return;
+    }
+    setComments((prev) => prev.map((c) => c.id === commentId ? { ...c, content: editingCommentContent.trim() } : c));
     setEditingCommentId(null);
     setEditingCommentContent("");
-    fetchComments();
   };
 
   const handleBookmark = async () => {
@@ -182,7 +191,7 @@ export default function PostDetailPage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -200,7 +209,7 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <div className="text-center py-12 text-[var(--text-muted)]">
-        Paylasim bulunamadi.
+        Paylaşım bulunamadı.
       </div>
     );
   }
@@ -222,12 +231,12 @@ export default function PostDetailPage() {
         <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
-        <h1 className="text-lg font-bold text-[var(--text)] flex-1">Paylasim</h1>
+        <h1 className="text-lg font-bold text-[var(--text)] flex-1">Paylaşım</h1>
         <div className="flex items-center gap-1">
-          <button onClick={handleBookmark} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title={isBookmarked ? "Yer iminden kaldir" : "Yer imlerine ekle"}>
+          <button onClick={handleBookmark} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title={isBookmarked ? "Yer iminden kaldır" : "Yer imlerine ekle"}>
             {isBookmarked ? <BookmarkCheck size={18} className="text-[var(--primary)]" /> : <Bookmark size={18} className="text-[var(--text-muted)]" />}
           </button>
-          <button onClick={() => setRepostModalOpen(true)} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title="Alintila">
+          <button onClick={() => setRepostModalOpen(true)} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title="Alıntıla">
             <Repeat2 size={18} className="text-[var(--text-muted)]" />
           </button>
           {isOwner && (
@@ -242,7 +251,7 @@ export default function PostDetailPage() {
                     className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--card)] transition-colors"
                   >
                     <Pencil size={14} />
-                    Duzenle
+                    Düzenle
                   </button>
                   <button
                     onClick={() => { setMenuOpen(false); handleDeletePost(); }}
@@ -283,7 +292,7 @@ export default function PostDetailPage() {
                   <span className="font-semibold text-[var(--text)]">Anonim</span>
                 ) : (
                   <Link href={`/u/${post.profiles?.username}`} className="font-semibold text-[var(--text)] hover:underline">
-                    {post.profiles?.username || "Kullanici"}
+                    {post.profiles?.username || "Kullanıcı"}
                   </Link>
                 )}
                 <span className="text-sm text-[var(--text-muted)]">{timeAgo(post.created_at)}</span>
@@ -333,7 +342,7 @@ export default function PostDetailPage() {
           </h2>
           {comments.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)] py-4 text-center">
-              Henuz yorum yok. Ilk yorumu sen yap!
+              Henüz yorum yok. İlk yorumu sen yap!
             </p>
           ) : (
             comments.map((comment) => {
@@ -363,7 +372,7 @@ export default function PostDetailPage() {
                         <span className="font-semibold text-sm text-[var(--text)]">Anonim</span>
                       ) : (
                         <Link href={`/u/${comment.profiles?.username}`} className="font-semibold text-sm text-[var(--text)] hover:underline">
-                          {comment.profiles?.username || "Kullanici"}
+                          {comment.profiles?.username || "Kullanıcı"}
                         </Link>
                       )}
                       <span className="text-xs text-[var(--text-muted)]">{timeAgo(comment.created_at)}</span>
@@ -386,7 +395,7 @@ export default function PostDetailPage() {
                                 }}
                                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[var(--text)] hover:bg-[var(--card)]"
                               >
-                                <Pencil size={12} /> Duzenle
+                                <Pencil size={12} /> Düzenle
                               </button>
                               <button
                                 onClick={() => { setCommentMenuId(null); handleDeleteComment(comment.id); }}
@@ -419,7 +428,7 @@ export default function PostDetailPage() {
                           onClick={() => { setEditingCommentId(null); setEditingCommentContent(""); }}
                           className="px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)]"
                         >
-                          Iptal
+                          İptal
                         </button>
                       </div>
                     ) : (

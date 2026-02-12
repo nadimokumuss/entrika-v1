@@ -147,7 +147,7 @@ export default function RightPanel() {
       {trends.length > 0 && (
         <div className="rounded-xl bg-[var(--card)] p-4 mb-4">
           <h2 className="text-lg font-bold text-[var(--text)] mb-3">
-            Gundemdekiler
+            Gündemdekiler
           </h2>
           <div className="flex flex-col gap-2">
             {trends.map((trend) => {
@@ -165,7 +165,7 @@ export default function RightPanel() {
                     <span>{cat.emoji}</span>
                     <span className="text-sm font-medium text-[var(--text)]">{cat.label}</span>
                   </div>
-                  <span className="text-xs text-[var(--text-muted)]">{trend.count} paylasim</span>
+                  <span className="text-xs text-[var(--text-muted)]">{trend.count} paylaşım</span>
                 </button>
               );
             })}
@@ -177,7 +177,7 @@ export default function RightPanel() {
       {popularUsers.length > 0 && (
         <div className="rounded-xl bg-[var(--card)] p-4 mb-4">
           <h2 className="text-lg font-bold text-[var(--text)] mb-3">
-            Gunun Populerleri
+            Günün Popülerleri
           </h2>
           <div className="flex flex-col gap-3">
             {popularUsers.map((s) => {
@@ -193,7 +193,7 @@ export default function RightPanel() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-[var(--text)] truncate">{s.username}</p>
                       <p className="text-xs text-[var(--text-muted)]">
-                        {s.interaction_count > 0 ? `${s.interaction_count} etkilesim` : `${s.reputation_score.toFixed(1)} puan`}
+                        {s.interaction_count > 0 ? `${s.interaction_count} etkileşim` : `${s.reputation_score.toFixed(1)} puan`}
                       </p>
                     </div>
                   </Link>
@@ -243,7 +243,7 @@ export default function RightPanel() {
       {/* Footer */}
       <div className="text-xs text-[var(--text-muted)] px-2 space-y-1">
         <p>Entrika &copy; 2026</p>
-        <p>Tanismadan Once Tani</p>
+        <p>Tanışmadan Önce Tanı</p>
         <Link href="/settings" className="text-[var(--primary)] hover:underline">Ayarlar</Link>
       </div>
     </aside>

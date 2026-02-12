@@ -85,21 +85,21 @@ export default function ExplorePage() {
   );
 
   const tabs: { key: ExploreTab; label: string; icon: React.ReactNode }[] = [
-    { key: "popular", label: "Populer", icon: <TrendingUp size={16} /> },
-    { key: "new", label: "Yeni Uyeler", icon: <Clock size={16} /> },
-    { key: "trusted", label: "En Guvenilir", icon: <Shield size={16} /> },
-    { key: "nearby", label: "Yakinimdakiler", icon: <MapPin size={16} /> },
+    { key: "popular", label: "Popüler", icon: <TrendingUp size={16} /> },
+    { key: "new", label: "Yeni Üyeler", icon: <Clock size={16} /> },
+    { key: "trusted", label: "En Güvenilir", icon: <Shield size={16} /> },
+    { key: "nearby", label: "Yakınımdakiler", icon: <MapPin size={16} /> },
   ];
 
   return (
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 space-y-3">
-        <h1 className="text-xl font-bold text-[var(--text)]">Kesfet</h1>
+        <h1 className="text-xl font-bold text-[var(--text)]">Keşfet</h1>
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input
             type="text"
-            placeholder="Kullanici ara..."
+            placeholder="Kullanıcı ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--card)] text-[var(--text)] text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]/30 placeholder:text-[var(--text-muted)]"
@@ -132,8 +132,8 @@ export default function ExplorePage() {
       ) : filteredUsers.length === 0 ? (
         <div className="text-center py-12 text-[var(--text-muted)]">
           {activeTab === "nearby" && !myProfile?.city
-            ? "Sehir bilgin profilinde belirtilmemis."
-            : "Kullanici bulunamadi."}
+            ? "Şehir bilgin profilinde belirtilmemiş."
+            : "Henüz kullanıcı yok"}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">

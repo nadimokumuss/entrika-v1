@@ -60,7 +60,7 @@ function PostMenu({ post, onEdit, onDelete }: { post: FeedPost; onEdit: () => vo
             className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--card)] transition-colors"
           >
             <Pencil size={14} />
-            Duzenle
+            Düzenle
           </button>
           <button
             onClick={() => { setOpen(false); onDelete(); }}
@@ -91,7 +91,7 @@ export default function FeedPage() {
     setLoading(true);
     const { data } = await supabase
       .from("posts")
-      .select(`*, profiles (username, avatar_url), reactions:post_reactions (reaction_type, user_id), comments (id)`)
+      .select(`*, profiles (username, avatar_url), reactions:post_reactions (reaction_type, user_id), comments (id), repost_of:repost_of_id(id, content, category, is_anonymous, author_id, profiles(username, avatar_url))`)
       .order("created_at", { ascending: false })
       .limit(50);
     setPosts((data as unknown as FeedPost[]) || []);
@@ -174,7 +174,7 @@ export default function FeedPage() {
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (!window.confirm("Bu postu silmek istediginize emin misiniz? Bu islem geri alinamaz.")) return;
+    if (!window.confirm("Bu postu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) return;
     try {
       const { error } = await supabase.from("posts").delete().eq("id", postId);
       if (error) throw error;
@@ -204,7 +204,7 @@ export default function FeedPage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -224,7 +224,7 @@ export default function FeedPage() {
           <div className="flex items-center gap-2">
             {categoryFilter && (
               <Link href="/" className="text-sm text-[var(--primary)] hover:underline">
-                Tumu
+                Tümü
               </Link>
             )}
             <button onClick={fetchPosts} className="p-2 rounded-lg hover:bg-[var(--card)]">
@@ -234,9 +234,9 @@ export default function FeedPage() {
         </div>
         <div className="flex border-b border-[var(--border-light)]">
           {([
-            ["all", "Tumu"],
-            ["known", "Tanidiklar"],
-            ["unknown", "Tanimadiklar"],
+            ["all", "Tümü"],
+            ["known", "Tanıdıklar"],
+            ["unknown", "Tanımadıklar"],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -271,10 +271,10 @@ export default function FeedPage() {
       ) : filteredPosts.length === 0 ? (
         <div className="text-center py-12 text-[var(--text-muted)]">
           {categoryFilter
-            ? "Bu kategoride henuz paylasim yok."
+            ? "Bu kategoride henüz paylaşım yok."
             : activeTab === "known"
-              ? "Takip ettigin kisi yok veya henuz paylasim yapilmamis."
-              : "Henuz paylasim yok."}
+              ? "Takip ettiğin kişi yok veya henüz paylaşım yapılmamış."
+              : "Henüz paylaşım yok."}
         </div>
       ) : (
         filteredPosts.map((post) => {
@@ -312,7 +312,7 @@ export default function FeedPage() {
                       <span className="font-semibold text-[var(--text)]">Anonim</span>
                     ) : (
                       <Link href={`/u/${post.profiles?.username}`} className="font-semibold text-[var(--text)] hover:underline">
-                        {post.profiles?.username || "Kullanici"}
+                        {post.profiles?.username || "Kullanıcı"}
                       </Link>
                     )}
                     <span className="text-sm text-[var(--text-muted)]">{timeAgo(post.created_at)}</span>
@@ -328,7 +328,7 @@ export default function FeedPage() {
                       <button
                         onClick={() => handleBookmark(post.id)}
                         className="p-1 rounded-lg hover:bg-[var(--card)] transition-colors"
-                        title={isBookmarked ? "Yer iminden kaldir" : "Yer imlerine ekle"}
+                        title={isBookmarked ? "Yer iminden kaldır" : "Yer imlerine ekle"}
                       >
                         {isBookmarked ? (
                           <BookmarkCheck size={16} className="text-[var(--primary)]" />

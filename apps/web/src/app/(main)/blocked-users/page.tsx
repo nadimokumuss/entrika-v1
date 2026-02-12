@@ -43,7 +43,7 @@ export default function BlockedUsersPage() {
         <Link href="/settings" className="p-1 rounded-lg hover:bg-[var(--card)]">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
-        <h1 className="text-lg font-bold text-[var(--text)]">Engellenen Kullanicilar</h1>
+        <h1 className="text-lg font-bold text-[var(--text)]">Engellenen Kullanıcılar</h1>
       </div>
 
       {loading ? (
@@ -53,7 +53,7 @@ export default function BlockedUsersPage() {
       ) : blockedUsers.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
           <Shield size={48} className="mb-3 opacity-30" />
-          <p>Engellenen kullanici yok</p>
+          <p>Engellenen kullanıcı yok</p>
         </div>
       ) : (
         blockedUsers.map((blocked) => (
@@ -65,14 +65,14 @@ export default function BlockedUsersPage() {
                 className="w-10 h-10 rounded-full object-cover"
               />
               <span className="font-medium text-[var(--text)]">
-                {blocked.blocked_profile?.username || "Kullanici"}
+                {blocked.blocked_profile?.username || "Kullanıcı"}
               </span>
             </div>
             <button
               onClick={() => handleUnblock(blocked.blocked_id)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger)]/10"
             >
-              Engeli Kaldir
+              Engeli Kaldır
             </button>
           </div>
         ))

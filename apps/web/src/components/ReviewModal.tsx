@@ -6,26 +6,26 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 const SCORE_LABELS: Record<number, { label: string; emoji: string; color: string }> = {
-  1: { label: "Cok Kotu", emoji: "💀", color: "#EF4444" },
-  2: { label: "Kotu", emoji: "😡", color: "#F97316" },
-  3: { label: "Zayif", emoji: "😤", color: "#F59E0B" },
-  4: { label: "Ortalama Alti", emoji: "😕", color: "#EAB308" },
+  1: { label: "Çok Kötü", emoji: "💀", color: "#EF4444" },
+  2: { label: "Kötü", emoji: "😡", color: "#F97316" },
+  3: { label: "Zayıf", emoji: "😤", color: "#F59E0B" },
+  4: { label: "Ortalama Altı", emoji: "😕", color: "#EAB308" },
   5: { label: "Ortalama", emoji: "😐", color: "#84CC16" },
-  6: { label: "Ortalama Ustu", emoji: "🙂", color: "#22C55E" },
-  7: { label: "Iyi", emoji: "😊", color: "#10B981" },
-  8: { label: "Cok Iyi", emoji: "😄", color: "#14B8A6" },
+  6: { label: "Ortalama Üstü", emoji: "🙂", color: "#22C55E" },
+  7: { label: "İyi", emoji: "😊", color: "#10B981" },
+  8: { label: "Çok İyi", emoji: "😄", color: "#14B8A6" },
   9: { label: "Harika", emoji: "🤩", color: "#06B6D4" },
-  10: { label: "Mukemmel", emoji: "👑", color: "#8B5CF6" },
+  10: { label: "Mükemmel", emoji: "👑", color: "#8B5CF6" },
 };
 
 const POSITIVE_TAGS = [
-  "Guvenilir", "Durust", "Eglenceli", "Saygilı", "Ilgili",
-  "Olgun", "Zeki", "Karizmatik", "Sempatik", "Sadik",
+  "Güvenilir", "Dürüst", "Eğlenceli", "Saygılı", "İlgili",
+  "Olgun", "Zeki", "Karizmatik", "Sempatik", "Sadık",
 ];
 
 const NEGATIVE_TAGS = [
-  "Yalanci", "Manipulatif", "Ilgisiz", "Saygisiz", "Bencil",
-  "Toksik", "Guvenilmez", "Ikiyuzlu", "Aldatici",
+  "Yalancı", "Manipülatif", "İlgisiz", "Saygısız", "Bencil",
+  "Toksik", "Güvenilmez", "İkiyüzlü", "Aldatıcı",
 ];
 
 interface ReviewModalProps {
@@ -59,13 +59,17 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
     setError("");
 
     try {
+      const positiveTags = selectedTags.filter((t) => POSITIVE_TAGS.includes(t));
+      const negativeTags = selectedTags.filter((t) => NEGATIVE_TAGS.includes(t));
+
       const { error: upsertError } = await supabase
         .from("user_reviews")
         .upsert({
           target_user_id: targetUserId,
           reviewer_id: user.id,
           score,
-          tags: selectedTags,
+          positive_tags: positiveTags,
+          negative_tags: negativeTags,
           content: content.trim() || null,
           is_anonymous: isAnonymous,
         }, { onConflict: "target_user_id,reviewer_id" });
@@ -75,7 +79,7 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
       onReviewSubmitted?.();
       onClose();
     } catch {
-      setError("Degerlendirme gonderilemedi");
+      setError("Değerlendirme gönderilemedi");
     }
     setLoading(false);
   };
@@ -91,7 +95,7 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
           <h2 className="text-lg font-bold text-[var(--text)]">
-            {targetUsername} Degerlendir
+            {targetUsername} Değerlendir
           </h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]">
             <X size={20} className="text-[var(--text-muted)]" />
@@ -172,7 +176,7 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value.slice(0, 500))}
-              placeholder="Deneyimini paylasabilirsin..."
+              placeholder="Deneyimini paylaşabilirsin..."
               rows={3}
               className="w-full px-4 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] placeholder:text-[var(--text-muted)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none resize-none"
             />
@@ -189,7 +193,7 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
                 className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isAnonymous ? "left-5" : "left-1"}`}
               />
             </div>
-            <span className="text-sm text-[var(--text)]">Anonim degerlendir</span>
+            <span className="text-sm text-[var(--text)]">Anonim değerlendir</span>
           </label>
 
           {/* Submit */}
@@ -199,7 +203,7 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
             className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-50"
             style={{ background: "var(--primary)" }}
           >
-            {loading ? "Gonderiliyor..." : "Degerlendirmeyi Gonder"}
+            {loading ? "Gönderiliyor..." : "Değerlendirmeyi Gönder"}
           </button>
         </div>
       </div>

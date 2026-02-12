@@ -95,7 +95,7 @@ export default function ProfilePage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
+    if (mins < 1) return "az önce";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -110,11 +110,11 @@ export default function ProfilePage() {
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 9) return "Mukemmel";
-    if (score >= 7) return "Cok Iyi";
-    if (score >= 5) return "Iyi";
+    if (score >= 9) return "Mükemmel";
+    if (score >= 7) return "Çok İyi";
+    if (score >= 5) return "İyi";
     if (score >= 3) return "Orta";
-    return "Dusuk";
+    return "Düşük";
   };
 
   if (!profile) return null;
@@ -163,11 +163,11 @@ export default function ProfilePage() {
         <div className="flex gap-4 mt-4">
           <div className="text-center flex-1">
             <p className="font-bold text-[var(--text)]">{postCount}</p>
-            <p className="text-xs text-[var(--text-muted)]">Paylasim</p>
+            <p className="text-xs text-[var(--text-muted)]">Paylaşım</p>
           </div>
           <div className="text-center flex-1">
             <p className="font-bold text-[var(--text)]">{followersCount}</p>
-            <p className="text-xs text-[var(--text-muted)]">Takipci</p>
+            <p className="text-xs text-[var(--text-muted)]">Takipçi</p>
           </div>
           <div className="text-center flex-1">
             <p className="font-bold text-[var(--text)]">{followingCount}</p>
@@ -175,14 +175,14 @@ export default function ProfilePage() {
           </div>
           <div className="text-center flex-1">
             <p className="font-bold text-[var(--text)]">{reviewCount}</p>
-            <p className="text-xs text-[var(--text-muted)]">Degerlendirme</p>
+            <p className="text-xs text-[var(--text-muted)]">Değerlendirme</p>
           </div>
         </div>
 
         {/* Reputation */}
         <div className="mt-4 p-4 rounded-xl bg-[var(--card)] flex items-center justify-between">
           <div>
-            <p className="text-sm text-[var(--text-muted)]">Topluluk Puani</p>
+            <p className="text-sm text-[var(--text-muted)]">Topluluk Puanı</p>
             <p className="text-2xl font-bold" style={{ color: getScoreColor(repScore) }}>
               {repScore.toFixed(1)}
             </p>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
             className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-medium flex items-center justify-center gap-2 hover:bg-[var(--card)]"
           >
             <Edit3 size={16} />
-            Profili Duzenle
+            Profili Düzenle
           </Link>
           <Link
             href="/edit-dating-profile"
@@ -224,7 +224,7 @@ export default function ProfilePage() {
               : "text-[var(--text-muted)]"
           }`}
         >
-          Paylasimlar
+          Paylaşımlar
         </button>
         <button
           onClick={() => setTab("reviews")}
@@ -234,7 +234,7 @@ export default function ProfilePage() {
               : "text-[var(--text-muted)]"
           }`}
         >
-          Degerlendirmeler
+          Değerlendirmeler
         </button>
       </div>
 
@@ -243,7 +243,7 @@ export default function ProfilePage() {
         posts.length === 0 ? (
           <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
             <MessageCircle size={48} className="mb-3 opacity-30" />
-            <p>Henuz paylasim yok</p>
+            <p>Henüz paylaşım yok</p>
           </div>
         ) : (
           posts.map((post) => {
@@ -272,7 +272,7 @@ export default function ProfilePage() {
       ) : reviews.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
           <Star size={48} className="mb-3 opacity-30" />
-          <p>Henuz degerlendirme yok</p>
+          <p>Henüz değerlendirme yok</p>
         </div>
       ) : (
         reviews.map((review) => (
@@ -286,7 +286,7 @@ export default function ProfilePage() {
                     {review.reviewer.username}
                   </Link>
                 ) : (
-                  <span className="text-sm text-[var(--text-muted)]">Kullanici</span>
+                  <span className="text-sm text-[var(--text-muted)]">Kullanıcı</span>
                 )}
                 <span className="text-xs text-[var(--text-muted)]">{timeAgo(review.created_at)}</span>
               </div>

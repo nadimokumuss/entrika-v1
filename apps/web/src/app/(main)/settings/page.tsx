@@ -57,9 +57,9 @@ export default function SettingsPage() {
     setMessage("");
     const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
     if (error) {
-      setMessage("E-posta guncellenemedi: " + error.message);
+      setMessage("E-posta güncellenemedi: " + error.message);
     } else {
-      setMessage("Dogrulama e-postasi gonderildi. Lutfen kontrol edin.");
+      setMessage("Doğrulama e-postası gönderildi. Lütfen kontrol edin.");
       setNewEmail("");
       setShowEmailChange(false);
     }
@@ -68,20 +68,20 @@ export default function SettingsPage() {
 
   const handlePasswordChange = async () => {
     if (!newPassword || newPassword !== confirmPassword) {
-      setMessage("Sifreler eslesmiyor");
+      setMessage("Şifreler eşleşmiyor");
       return;
     }
     if (newPassword.length < 6) {
-      setMessage("Sifre en az 6 karakter olmali");
+      setMessage("Şifre en az 6 karakter olmalı");
       return;
     }
     setSaving(true);
     setMessage("");
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      setMessage("Sifre guncellenemedi: " + error.message);
+      setMessage("Şifre güncellenemedi: " + error.message);
     } else {
-      setMessage("Sifre basariyla guncellendi");
+      setMessage("Şifre başarıyla güncellendi");
       setNewPassword("");
       setConfirmPassword("");
       setShowPasswordChange(false);
@@ -111,8 +111,8 @@ export default function SettingsPage() {
       )}
 
       <div className="p-4 space-y-1">
-        {/* SECTION: Gorunum */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-2 pb-1">Gorunum</p>
+        {/* SECTION: Görünüm */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-2 pb-1">Görünüm</p>
 
         <button
           onClick={toggleTheme}
@@ -122,7 +122,7 @@ export default function SettingsPage() {
             {isDark ? <Moon size={20} className="text-[var(--text-muted)]" /> : <Sun size={20} className="text-[var(--text-muted)]" />}
             <span className="text-[var(--text)]">Tema</span>
           </div>
-          <span className="text-sm text-[var(--text-muted)]">{isDark ? "Koyu" : "Acik"}</span>
+          <span className="text-sm text-[var(--text-muted)]">{isDark ? "Koyu" : "Açık"}</span>
         </button>
 
         {/* SECTION: Hesap */}
@@ -134,7 +134,7 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <User size={20} className="text-[var(--text-muted)]" />
-            <span className="text-[var(--text)]">Profili Duzenle</span>
+            <span className="text-[var(--text)]">Profili Düzenle</span>
           </div>
           <ChevronRight size={16} className="text-[var(--text-muted)]" />
         </Link>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <Mail size={20} className="text-[var(--text-muted)]" />
-            <span className="text-[var(--text)]">E-posta Degistir</span>
+            <span className="text-[var(--text)]">E-posta Değiştir</span>
           </div>
           <ChevronRight size={16} className="text-[var(--text-muted)]" />
         </button>
@@ -166,7 +166,7 @@ export default function SettingsPage() {
               className="w-full py-2 rounded-xl text-white text-sm font-medium disabled:opacity-50"
               style={{ background: "var(--primary)" }}
             >
-              {saving ? "Guncelleniyor..." : "Guncelle"}
+              {saving ? "Güncelleniyor..." : "Güncelle"}
             </button>
           </div>
         )}
@@ -177,7 +177,7 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <KeyRound size={20} className="text-[var(--text-muted)]" />
-            <span className="text-[var(--text)]">Sifre Degistir</span>
+            <span className="text-[var(--text)]">Şifre Değiştir</span>
           </div>
           <ChevronRight size={16} className="text-[var(--text-muted)]" />
         </button>
@@ -188,14 +188,14 @@ export default function SettingsPage() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Yeni sifre"
+              placeholder="Yeni şifre"
               className="w-full px-4 py-2.5 rounded-xl bg-[var(--background)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none text-sm"
             />
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Sifre tekrar"
+              placeholder="Şifre tekrar"
               className="w-full px-4 py-2.5 rounded-xl bg-[var(--background)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none text-sm"
             />
             <button
@@ -204,7 +204,7 @@ export default function SettingsPage() {
               className="w-full py-2 rounded-xl text-white text-sm font-medium disabled:opacity-50"
               style={{ background: "var(--primary)" }}
             >
-              {saving ? "Guncelleniyor..." : "Sifreyi Guncelle"}
+              {saving ? "Güncelleniyor..." : "Şifreyi Güncelle"}
             </button>
           </div>
         )}
@@ -218,10 +218,10 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <Bell size={20} className="text-[var(--text-muted)]" />
-            <span className="text-[var(--text)]">Masaustu Bildirimleri</span>
+            <span className="text-[var(--text)]">Masaüstü Bildirimleri</span>
           </div>
           <span className="text-sm text-[var(--text-muted)]">
-            {notifPermission === "granted" ? "Acik" : notifPermission === "denied" ? "Engellendi" : "Kapali"}
+            {notifPermission === "granted" ? "Açık" : notifPermission === "denied" ? "Engellendi" : "Kapalı"}
           </span>
         </button>
 
@@ -234,13 +234,13 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <Shield size={20} className="text-[var(--text-muted)]" />
-            <span className="text-[var(--text)]">Engellenen Kullanicilar</span>
+            <span className="text-[var(--text)]">Engellenen Kullanıcılar</span>
           </div>
           <ChevronRight size={16} className="text-[var(--text-muted)]" />
         </Link>
 
-        {/* SECTION: Klavye */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Diger</p>
+        {/* SECTION: Diğer */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Diğer</p>
 
         <button
           onClick={() => setShowShortcuts(!showShortcuts)}
@@ -248,18 +248,18 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <Keyboard size={20} className="text-[var(--text-muted)]" />
-            <span className="text-[var(--text)]">Klavye Kisayollari</span>
+            <span className="text-[var(--text)]">Klavye Kısayolları</span>
           </div>
           <ChevronRight size={16} className="text-[var(--text-muted)]" />
         </button>
 
         {showShortcuts && (
           <div className="px-4 py-3 rounded-xl bg-[var(--card)] text-sm space-y-2">
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Asagi git</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">J</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yukari git</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">K</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yeni paylasim</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">N</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Aşağı git</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">J</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yukarı git</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">K</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yeni paylaşım</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">N</kbd></div>
             <div className="flex justify-between"><span className="text-[var(--text-muted)]">Ara</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">/</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Iptal</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">Esc</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">İptal</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">Esc</kbd></div>
           </div>
         )}
 
@@ -267,7 +267,7 @@ export default function SettingsPage() {
         <div className="px-4 py-3 rounded-xl hover:bg-[var(--card)] flex items-center gap-3">
           <Info size={20} className="text-[var(--text-muted)]" />
           <div>
-            <p className="text-[var(--text)]">Hakkinda</p>
+            <p className="text-[var(--text)]">Hakkında</p>
             <p className="text-xs text-[var(--text-muted)]">Entrika v1.0.0</p>
           </div>
         </div>
@@ -278,18 +278,18 @@ export default function SettingsPage() {
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--danger)]/10 text-[var(--danger)] mt-2"
         >
           <Trash2 size={20} />
-          <span>Hesabi Sil</span>
+          <span>Hesabı Sil</span>
         </button>
 
         {showDeleteConfirm && (
           <div className="px-4 py-3 rounded-xl bg-[var(--danger)]/10 space-y-3">
-            <p className="text-sm text-[var(--danger)] font-medium">Hesabinizi silmek istediginizden emin misiniz? Bu islem geri alinamaz.</p>
+            <p className="text-sm text-[var(--danger)] font-medium">Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2 rounded-xl border border-[var(--border)] text-[var(--text)] text-sm font-medium"
               >
-                Vazgec
+                Vazgeç
               </button>
               <button
                 onClick={handleDeleteAccount}
@@ -308,7 +308,7 @@ export default function SettingsPage() {
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--danger)]/10 text-[var(--danger)] mt-2"
         >
           <LogOut size={20} />
-          <span>Cikis Yap</span>
+          <span>Çıkış Yap</span>
         </button>
       </div>
     </div>

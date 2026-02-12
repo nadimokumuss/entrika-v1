@@ -82,7 +82,7 @@ export default function EditProfilePage() {
       await refreshProfile();
       router.push("/profile");
     } catch {
-      setError("Profil guncellenemedi");
+      setError("Profil güncellenemedi");
     }
     setSaving(false);
   };
@@ -93,7 +93,7 @@ export default function EditProfilePage() {
         <Link href="/profile" className="p-1 rounded-lg hover:bg-[var(--card)]">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
-        <h1 className="text-lg font-bold text-[var(--text)]">Profili Duzenle</h1>
+        <h1 className="text-lg font-bold text-[var(--text)]">Profili Düzenle</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-md mx-auto">
@@ -125,7 +125,7 @@ export default function EditProfilePage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-[var(--text)]">Kullanici Adi</label>
+          <label className="text-sm font-medium text-[var(--text)]">Kullanıcı Adı</label>
           <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
             className="w-full mt-1 px-4 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none" />
         </div>
@@ -138,7 +138,7 @@ export default function EditProfilePage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm font-medium text-[var(--text)]">Yas</label>
+            <label className="text-sm font-medium text-[var(--text)]">Yaş</label>
             <input type="number" value={age} onChange={(e) => setAge(e.target.value)} min={18} max={99}
               className="w-full mt-1 px-4 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none" />
           </div>
@@ -151,7 +151,7 @@ export default function EditProfilePage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm font-medium text-[var(--text)]">Sehir</label>
+            <label className="text-sm font-medium text-[var(--text)]">Şehir</label>
             <input type="text" value={city} onChange={(e) => setCity(e.target.value)}
               className="w-full mt-1 px-4 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none" />
           </div>
