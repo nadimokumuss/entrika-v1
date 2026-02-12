@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Heart, X, RefreshCw } from "lucide-react";
+import { Heart, X, RefreshCw, ChevronLeft, ChevronRight, MapPin, Briefcase, GraduationCap } from "lucide-react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 interface DatingCard {
   id: string;
@@ -14,28 +15,39 @@ interface DatingCard {
   interests: string[];
   city: string;
   age: number | null;
+  job: string | null;
+  education: string | null;
   relationship_status: string | null;
   profile: { username: string; avatar_url: string; reputation_score: number };
 }
+
+const RELATIONSHIP_LABELS: Record<string, string> = {
+  single: "Bekar",
+  in_relationship: "Iliskide",
+  complicated: "Karmasik",
+  married: "Evli",
+  divorced: "Bosanmis",
+  widowed: "Dul",
+  open_relationship: "Acik Iliski",
+};
 
 export default function MatchPage() {
   const { user } = useAuth();
   const [cards, setCards] = useState<DatingCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [photoIndex, setPhotoIndex] = useState(0);
 
   const fetchCards = async () => {
     if (!user) return;
     setLoading(true);
 
-    // Get swiped user IDs
     const { data: swipes } = await supabase
       .from("swipes")
       .select("target_id")
       .eq("swiper_id", user.id);
     const swipedIds = (swipes || []).map((s) => s.target_id);
 
-    // Get blocked user IDs
     const { data: blocks } = await supabase
       .from("blocked_users")
       .select("blocked_id")
@@ -56,6 +68,7 @@ export default function MatchPage() {
     const { data } = await query.limit(20);
     setCards((data as unknown as DatingCard[]) || []);
     setCurrentIndex(0);
+    setPhotoIndex(0);
     setLoading(false);
   };
 
@@ -74,6 +87,7 @@ export default function MatchPage() {
     });
 
     setCurrentIndex((prev) => prev + 1);
+    setPhotoIndex(0);
   };
 
   const currentCard = cards[currentIndex];
@@ -91,13 +105,22 @@ export default function MatchPage() {
     }
   };
 
+  const photos = currentCard?.photos?.length > 0
+    ? currentCard.photos
+    : [currentCard?.profile?.avatar_url || `https://api.dicebear.com/7.x/lorelei/png?seed=${currentCard?.user_id}`];
+
   return (
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold text-[var(--text)]">Eslesmeler</h1>
-        <button onClick={fetchCards} className="p-2 rounded-lg hover:bg-[var(--card)]">
-          <RefreshCw size={18} className="text-[var(--text-muted)]" />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link href="/edit-dating-profile" className="text-sm text-[var(--primary)] hover:underline">
+            Profilimi Duzenle
+          </Link>
+          <button onClick={fetchCards} className="p-2 rounded-lg hover:bg-[var(--card)]">
+            <RefreshCw size={18} className="text-[var(--text-muted)]" />
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col items-center px-4 py-8">
@@ -113,7 +136,6 @@ export default function MatchPage() {
           </div>
         ) : (
           <>
-            {/* Draggable Card */}
             <div className="relative w-full max-w-sm">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -129,7 +151,7 @@ export default function MatchPage() {
                   transition={{ duration: 0.2 }}
                   className="w-full rounded-2xl overflow-hidden bg-[var(--card)] border border-[var(--border-light)] cursor-grab active:cursor-grabbing select-none"
                 >
-                  {/* Like/Nope overlay labels */}
+                  {/* Like/Nope overlay */}
                   <motion.div
                     style={{ opacity: likeOpacity }}
                     className="absolute top-6 left-6 z-10 px-4 py-2 rounded-lg border-3 border-[var(--success)] text-[var(--success)] font-black text-2xl -rotate-12"
@@ -143,16 +165,45 @@ export default function MatchPage() {
                     NOPE
                   </motion.div>
 
-                  <img
-                    src={
-                      currentCard.photos?.[0] ||
-                      currentCard.profile?.avatar_url ||
-                      `https://api.dicebear.com/7.x/lorelei/png?seed=${currentCard.user_id}`
-                    }
-                    alt=""
-                    className="w-full h-80 object-cover pointer-events-none"
-                    draggable={false}
-                  />
+                  {/* Photo gallery */}
+                  <div className="relative">
+                    <img
+                      src={photos[photoIndex] || `https://api.dicebear.com/7.x/lorelei/png?seed=${currentCard.user_id}`}
+                      alt=""
+                      className="w-full h-80 object-cover pointer-events-none"
+                      draggable={false}
+                    />
+                    {/* Photo indicators */}
+                    {photos.length > 1 && (
+                      <div className="absolute top-2 left-0 right-0 flex justify-center gap-1">
+                        {photos.map((_, i) => (
+                          <div key={i} className={`h-1 rounded-full ${i === photoIndex ? "bg-white w-6" : "bg-white/40 w-4"}`} />
+                        ))}
+                      </div>
+                    )}
+                    {/* Photo nav buttons */}
+                    {photos.length > 1 && (
+                      <>
+                        {photoIndex > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => p - 1); }}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white"
+                          >
+                            <ChevronLeft size={18} />
+                          </button>
+                        )}
+                        {photoIndex < photos.length - 1 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => p + 1); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white"
+                          >
+                            <ChevronRight size={18} />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-[var(--text)]">
@@ -163,9 +214,31 @@ export default function MatchPage() {
                         {currentCard.profile?.reputation_score?.toFixed(1)}
                       </span>
                     </div>
-                    {currentCard.city && (
-                      <p className="text-sm text-[var(--text-muted)]">{currentCard.city}</p>
-                    )}
+
+                    {/* Info row */}
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      {currentCard.city && (
+                        <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                          <MapPin size={12} /> {currentCard.city}
+                        </span>
+                      )}
+                      {currentCard.job && (
+                        <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                          <Briefcase size={12} /> {currentCard.job}
+                        </span>
+                      )}
+                      {currentCard.education && (
+                        <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                          <GraduationCap size={12} /> {currentCard.education}
+                        </span>
+                      )}
+                      {currentCard.relationship_status && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
+                          {RELATIONSHIP_LABELS[currentCard.relationship_status] || currentCard.relationship_status}
+                        </span>
+                      )}
+                    </div>
+
                     {currentCard.bio && (
                       <p className="mt-2 text-sm text-[var(--text)]">{currentCard.bio}</p>
                     )}

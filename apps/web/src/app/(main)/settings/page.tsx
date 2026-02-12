@@ -3,8 +3,13 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { LogOut, Moon, Sun, Shield, Bell, Lock, Keyboard } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import {
+  LogOut, Moon, Sun, Shield, Bell, Lock, Keyboard,
+  User, Mail, KeyRound, Trash2, ChevronRight, Info, ExternalLink,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   requestNotificationPermission,
   isNotificationSupported,
@@ -13,11 +18,19 @@ import {
 } from "@/lib/notifications";
 
 export default function SettingsPage() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const router = useRouter();
   const [notifPermission, setNotifPermission] = useState<string>("default");
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showEmailChange, setShowEmailChange] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (isNotificationSupported()) {
@@ -38,14 +51,69 @@ export default function SettingsPage() {
     }
   };
 
+  const handleEmailChange = async () => {
+    if (!newEmail.trim()) return;
+    setSaving(true);
+    setMessage("");
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    if (error) {
+      setMessage("E-posta guncellenemedi: " + error.message);
+    } else {
+      setMessage("Dogrulama e-postasi gonderildi. Lutfen kontrol edin.");
+      setNewEmail("");
+      setShowEmailChange(false);
+    }
+    setSaving(false);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!newPassword || newPassword !== confirmPassword) {
+      setMessage("Sifreler eslesmiyor");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setMessage("Sifre en az 6 karakter olmali");
+      return;
+    }
+    setSaving(true);
+    setMessage("");
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setMessage("Sifre guncellenemedi: " + error.message);
+    } else {
+      setMessage("Sifre basariyla guncellendi");
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowPasswordChange(false);
+    }
+    setSaving(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    // Account deletion - mark profile as deleted
+    if (!user) return;
+    setSaving(true);
+    await supabase.from("profiles").update({ username: "deleted_" + user.id.slice(0, 8), bio: null, avatar_url: null }).eq("id", user.id);
+    await signOut();
+    router.replace("/login");
+  };
+
   return (
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3">
         <h1 className="text-xl font-bold text-[var(--text)]">Ayarlar</h1>
       </div>
 
-      <div className="p-4 space-y-2">
-        {/* Theme */}
+      {message && (
+        <div className="mx-4 mt-3 px-4 py-2 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] text-sm">
+          {message}
+        </div>
+      )}
+
+      <div className="p-4 space-y-1">
+        {/* SECTION: Gorunum */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-2 pb-1">Gorunum</p>
+
         <button
           onClick={toggleTheme}
           className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
@@ -57,7 +125,93 @@ export default function SettingsPage() {
           <span className="text-sm text-[var(--text-muted)]">{isDark ? "Koyu" : "Acik"}</span>
         </button>
 
-        {/* Notifications */}
+        {/* SECTION: Hesap */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Hesap</p>
+
+        <Link
+          href="/edit-profile"
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
+        >
+          <div className="flex items-center gap-3">
+            <User size={20} className="text-[var(--text-muted)]" />
+            <span className="text-[var(--text)]">Profili Duzenle</span>
+          </div>
+          <ChevronRight size={16} className="text-[var(--text-muted)]" />
+        </Link>
+
+        <button
+          onClick={() => { setShowEmailChange(!showEmailChange); setShowPasswordChange(false); }}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
+        >
+          <div className="flex items-center gap-3">
+            <Mail size={20} className="text-[var(--text-muted)]" />
+            <span className="text-[var(--text)]">E-posta Degistir</span>
+          </div>
+          <ChevronRight size={16} className="text-[var(--text-muted)]" />
+        </button>
+
+        {showEmailChange && (
+          <div className="px-4 py-3 rounded-xl bg-[var(--card)] space-y-3">
+            <p className="text-xs text-[var(--text-muted)]">Mevcut: {user?.email}</p>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="Yeni e-posta adresi"
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--background)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none text-sm"
+            />
+            <button
+              onClick={handleEmailChange}
+              disabled={saving}
+              className="w-full py-2 rounded-xl text-white text-sm font-medium disabled:opacity-50"
+              style={{ background: "var(--primary)" }}
+            >
+              {saving ? "Guncelleniyor..." : "Guncelle"}
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={() => { setShowPasswordChange(!showPasswordChange); setShowEmailChange(false); }}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
+        >
+          <div className="flex items-center gap-3">
+            <KeyRound size={20} className="text-[var(--text-muted)]" />
+            <span className="text-[var(--text)]">Sifre Degistir</span>
+          </div>
+          <ChevronRight size={16} className="text-[var(--text-muted)]" />
+        </button>
+
+        {showPasswordChange && (
+          <div className="px-4 py-3 rounded-xl bg-[var(--card)] space-y-3">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Yeni sifre"
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--background)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none text-sm"
+            />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Sifre tekrar"
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--background)] text-[var(--text)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none text-sm"
+            />
+            <button
+              onClick={handlePasswordChange}
+              disabled={saving}
+              className="w-full py-2 rounded-xl text-white text-sm font-medium disabled:opacity-50"
+              style={{ background: "var(--primary)" }}
+            >
+              {saving ? "Guncelleniyor..." : "Sifreyi Guncelle"}
+            </button>
+          </div>
+        )}
+
+        {/* SECTION: Bildirimler */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Bildirimler</p>
+
         <button
           onClick={handleNotifications}
           className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
@@ -71,7 +225,23 @@ export default function SettingsPage() {
           </span>
         </button>
 
-        {/* Keyboard Shortcuts */}
+        {/* SECTION: Gizlilik */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Gizlilik</p>
+
+        <Link
+          href="/blocked-users"
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
+        >
+          <div className="flex items-center gap-3">
+            <Shield size={20} className="text-[var(--text-muted)]" />
+            <span className="text-[var(--text)]">Engellenen Kullanicilar</span>
+          </div>
+          <ChevronRight size={16} className="text-[var(--text-muted)]" />
+        </Link>
+
+        {/* SECTION: Klavye */}
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Diger</p>
+
         <button
           onClick={() => setShowShortcuts(!showShortcuts)}
           className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--card)]"
@@ -80,43 +250,66 @@ export default function SettingsPage() {
             <Keyboard size={20} className="text-[var(--text-muted)]" />
             <span className="text-[var(--text)]">Klavye Kisayollari</span>
           </div>
+          <ChevronRight size={16} className="text-[var(--text-muted)]" />
         </button>
 
         {showShortcuts && (
           <div className="px-4 py-3 rounded-xl bg-[var(--card)] text-sm space-y-2">
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Asagi git</span><kbd className="px-2 py-0.5 rounded bg-[var(--card-elevated)] text-[var(--text)] text-xs font-mono">J</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yukari git</span><kbd className="px-2 py-0.5 rounded bg-[var(--card-elevated)] text-[var(--text)] text-xs font-mono">K</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yeni paylasim</span><kbd className="px-2 py-0.5 rounded bg-[var(--card-elevated)] text-[var(--text)] text-xs font-mono">N</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Ara</span><kbd className="px-2 py-0.5 rounded bg-[var(--card-elevated)] text-[var(--text)] text-xs font-mono">/</kbd></div>
-            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Iptal</span><kbd className="px-2 py-0.5 rounded bg-[var(--card-elevated)] text-[var(--text)] text-xs font-mono">Esc</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Asagi git</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">J</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yukari git</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">K</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Yeni paylasim</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">N</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Ara</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">/</kbd></div>
+            <div className="flex justify-between"><span className="text-[var(--text-muted)]">Iptal</span><kbd className="px-2 py-0.5 rounded bg-[var(--background)] text-[var(--text)] text-xs font-mono">Esc</kbd></div>
           </div>
         )}
 
-        {/* Privacy */}
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--card)]">
-          <Lock size={20} className="text-[var(--text-muted)]" />
-          <span className="text-[var(--text)]">Gizlilik</span>
+        {/* Hakkinda */}
+        <div className="px-4 py-3 rounded-xl hover:bg-[var(--card)] flex items-center gap-3">
+          <Info size={20} className="text-[var(--text-muted)]" />
+          <div>
+            <p className="text-[var(--text)]">Hakkinda</p>
+            <p className="text-xs text-[var(--text-muted)]">Entrika v1.0.0</p>
+          </div>
+        </div>
+
+        {/* Hesap Sil */}
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--danger)]/10 text-[var(--danger)] mt-2"
+        >
+          <Trash2 size={20} />
+          <span>Hesabi Sil</span>
         </button>
 
-        {/* Blocked Users */}
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--card)]">
-          <Shield size={20} className="text-[var(--text-muted)]" />
-          <span className="text-[var(--text)]">Engellenenler</span>
-        </button>
+        {showDeleteConfirm && (
+          <div className="px-4 py-3 rounded-xl bg-[var(--danger)]/10 space-y-3">
+            <p className="text-sm text-[var(--danger)] font-medium">Hesabinizi silmek istediginizden emin misiniz? Bu islem geri alinamaz.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2 rounded-xl border border-[var(--border)] text-[var(--text)] text-sm font-medium"
+              >
+                Vazgec
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={saving}
+                className="flex-1 py-2 rounded-xl bg-[var(--danger)] text-white text-sm font-medium disabled:opacity-50"
+              >
+                {saving ? "Siliniyor..." : "Evet, Sil"}
+              </button>
+            </div>
+          </div>
+        )}
 
-        {/* Sign Out */}
+        {/* Cikis */}
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--danger)]/10 text-[var(--danger)] mt-4"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--danger)]/10 text-[var(--danger)] mt-2"
         >
           <LogOut size={20} />
           <span>Cikis Yap</span>
         </button>
-      </div>
-
-      {/* Version */}
-      <div className="px-4 py-6 text-center">
-        <p className="text-xs text-[var(--text-muted)]">Entrika v1.0.0</p>
       </div>
     </div>
   );

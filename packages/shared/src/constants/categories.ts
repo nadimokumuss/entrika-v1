@@ -51,13 +51,13 @@ export const CATEGORIES: Record<
     bgColor: "bg-red-500/20",
   },
   yilanlik: {
-    label: "Yilanlik",
+    label: "Yilanlar",
     emoji: "🐍",
     color: "#10B981",
     bgColor: "bg-success/20",
   },
   dolandiricilik: {
-    label: "Dolandiricilik",
+    label: "Dolandiricilar",
     emoji: "💸",
     color: "#F59E0B",
     bgColor: "bg-amber-500/20",

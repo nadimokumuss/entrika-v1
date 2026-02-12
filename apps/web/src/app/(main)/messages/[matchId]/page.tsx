@@ -6,8 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { messagingLib } from "@/lib/shared";
 import { supabase } from "@/lib/supabase";
 import type { Message } from "@entrika/shared";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, Smile } from "lucide-react";
 import Link from "next/link";
+
+const EMOJI_LIST = ["😀", "😂", "😍", "🥰", "😎", "🤗", "😢", "😡", "🔥", "❤️", "👏", "💯", "🎉", "👀", "🤔", "😱", "🙏", "💪", "✨", "🫂"];
 
 export default function ChatPage() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -15,7 +17,9 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showEmoji, setShowEmoji] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -29,8 +33,12 @@ export default function ChatPage() {
     }
     load();
 
-    const channel = messagingLib.subscribeToMessages(matchId, (newMsg) => {
-      setMessages((prev) => [...prev, newMsg]);
+    const channel = messagingLib.subscribeToMessages(matchId, (newMsg: Message) => {
+      setMessages((prev) => {
+        // Duplicate check
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
       if (user && newMsg.sender_id !== user.id) {
         messagingLib.markMessagesAsRead(matchId, user.id);
       }
@@ -45,11 +53,40 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Close emoji picker on outside click
+  useEffect(() => {
+    if (!showEmoji) return;
+    const handler = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) setShowEmoji(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showEmoji]);
+
   const handleSend = async () => {
     if (!input.trim() || !user) return;
     const text = input;
     setInput("");
+
+    // Optimistic update
+    const optimisticMsg: Message = {
+      id: `temp-${Date.now()}`,
+      match_id: matchId,
+      sender_id: user.id,
+      content: text,
+      message_type: "text",
+      metadata: null,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
     await messagingLib.sendMessage(matchId, user.id, text);
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setInput((prev) => prev + emoji);
+    setShowEmoji(false);
   };
 
   return (
@@ -85,7 +122,7 @@ export default function ChatPage() {
                   }`}
                   style={isMine ? { background: "var(--primary)" } : undefined}
                 >
-                  <p className="text-sm">{msg.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                   <p className={`text-[10px] mt-1 ${isMine ? "text-white/70" : "text-[var(--text-muted)]"}`}>
                     {new Date(msg.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -99,7 +136,30 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="border-t border-[var(--border-light)] px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative">
+          {/* Emoji picker */}
+          <div ref={emojiRef} className="relative">
+            <button
+              onClick={() => setShowEmoji(!showEmoji)}
+              className="p-2 rounded-xl hover:bg-[var(--card)]"
+            >
+              <Smile size={20} className="text-[var(--text-muted)]" />
+            </button>
+            {showEmoji && (
+              <div className="absolute bottom-12 left-0 w-64 p-2 rounded-xl border border-[var(--border-light)] bg-[var(--background)] shadow-lg grid grid-cols-5 gap-1 z-20">
+                {EMOJI_LIST.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => insertEmoji(emoji)}
+                    className="w-10 h-10 flex items-center justify-center text-xl rounded-lg hover:bg-[var(--card)]"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <input
             type="text"
             value={input}

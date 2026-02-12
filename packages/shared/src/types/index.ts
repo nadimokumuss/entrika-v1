@@ -9,6 +9,11 @@ export interface Profile {
   reputation_score: number;
   is_verified: boolean;
   bio: string | null;
+  full_name: string | null;
+  age: number | null;
+  height: number | null;
+  city: string | null;
+  occupation: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +26,7 @@ export interface Post {
   is_spoiler: boolean;
   image_url: string | null;
   author_id: string;
+  repost_of_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -66,6 +72,8 @@ export interface Message {
   match_id: string;
   sender_id: string;
   content: string;
+  message_type: "text" | "sticker" | "post_share" | "gif";
+  metadata: Record<string, unknown> | null;
   is_read: boolean;
   created_at: string;
 }

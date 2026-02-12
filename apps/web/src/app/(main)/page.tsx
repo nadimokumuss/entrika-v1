@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { RefreshCw, PenSquare, MessageCircle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { RefreshCw, PenSquare, MessageCircle, MoreHorizontal, Pencil, Trash2, Bookmark, BookmarkCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { bookmarksLib } from "@/lib/shared";
 import { CATEGORIES, REACTIONS } from "@entrika/shared";
 import { EditPostModal } from "@/components/EditPostModal";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type FeedTab = "all" | "known" | "unknown";
 
@@ -19,6 +21,15 @@ interface FeedPost {
   image_url: string | null;
   author_id: string;
   created_at: string;
+  repost_of_id?: string | null;
+  repost_of?: {
+    id: string;
+    content: string;
+    category: string;
+    is_anonymous: boolean;
+    author_id: string;
+    profiles: { username: string; avatar_url: string };
+  } | null;
   profiles: { username: string; avatar_url: string };
   reactions: Array<{ reaction_type: string; user_id: string }>;
   comments: Array<{ id: string }>;
@@ -66,11 +77,15 @@ function PostMenu({ post, onEdit, onDelete }: { post: FeedPost; onEdit: () => vo
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const categoryFilter = searchParams.get("category");
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FeedTab>("all");
   const [followingIds, setFollowingIds] = useState<string[]>([]);
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const [animatingReaction, setAnimatingReaction] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -92,14 +107,24 @@ export default function FeedPage() {
     setFollowingIds((data || []).map((f) => f.following_id));
   }, [user]);
 
+  const fetchBookmarks = useCallback(async () => {
+    if (!user) return;
+    const data = await bookmarksLib.getUserBookmarks(user.id);
+    setBookmarkedIds(new Set(data.map((b: { post_id: string }) => b.post_id)));
+  }, [user]);
+
   useEffect(() => {
     fetchPosts();
     fetchFollowingIds();
-  }, [fetchPosts, fetchFollowingIds]);
+    fetchBookmarks();
+  }, [fetchPosts, fetchFollowingIds, fetchBookmarks]);
 
   const filteredPosts = posts.filter((post) => {
     if (activeTab === "known") return followingIds.includes(post.author_id);
     if (activeTab === "unknown") return !followingIds.includes(post.author_id);
+    return true;
+  }).filter((post) => {
+    if (categoryFilter) return post.category === categoryFilter;
     return true;
   });
 
@@ -109,6 +134,30 @@ export default function FeedPage() {
     const existing = post?.reactions.find(
       (r) => r.user_id === user.id && r.reaction_type === reactionType
     );
+
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        if (existing) {
+          return {
+            ...p,
+            reactions: p.reactions.filter(
+              (r) => !(r.user_id === user.id && r.reaction_type === reactionType)
+            ),
+          };
+        } else {
+          return {
+            ...p,
+            reactions: [...p.reactions, { user_id: user.id, reaction_type: reactionType }],
+          };
+        }
+      })
+    );
+
+    // Animate
+    setAnimatingReaction(`${postId}-${reactionType}`);
+    setTimeout(() => setAnimatingReaction(null), 300);
 
     if (existing) {
       await supabase
@@ -122,7 +171,6 @@ export default function FeedPage() {
         .from("post_reactions")
         .upsert({ post_id: postId, user_id: user.id, reaction_type: reactionType });
     }
-    fetchPosts();
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -134,6 +182,22 @@ export default function FeedPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Post silinemedi.";
       alert(message);
+    }
+  };
+
+  const handleBookmark = async (postId: string) => {
+    if (!user) return;
+    const isBookmarked = bookmarkedIds.has(postId);
+    if (isBookmarked) {
+      await bookmarksLib.removeBookmark(user.id, postId);
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+    } else {
+      await bookmarksLib.addBookmark(user.id, postId);
+      setBookmarkedIds((prev) => new Set(prev).add(postId));
     }
   };
 
@@ -152,10 +216,21 @@ export default function FeedPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)]">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-bold text-[var(--text)]">Ana Sayfa</h1>
-          <button onClick={fetchPosts} className="p-2 rounded-lg hover:bg-[var(--card)]">
-            <RefreshCw size={18} className="text-[var(--text-muted)]" />
-          </button>
+          <h1 className="text-xl font-bold text-[var(--text)]">
+            {categoryFilter
+              ? `${CATEGORIES[categoryFilter as keyof typeof CATEGORIES]?.emoji || ""} ${CATEGORIES[categoryFilter as keyof typeof CATEGORIES]?.label || categoryFilter}`
+              : "Ana Sayfa"}
+          </h1>
+          <div className="flex items-center gap-2">
+            {categoryFilter && (
+              <Link href="/" className="text-sm text-[var(--primary)] hover:underline">
+                Tumu
+              </Link>
+            )}
+            <button onClick={fetchPosts} className="p-2 rounded-lg hover:bg-[var(--card)]">
+              <RefreshCw size={18} className="text-[var(--text-muted)]" />
+            </button>
+          </div>
         </div>
         <div className="flex border-b border-[var(--border-light)]">
           {([
@@ -195,7 +270,11 @@ export default function FeedPage() {
         </div>
       ) : filteredPosts.length === 0 ? (
         <div className="text-center py-12 text-[var(--text-muted)]">
-          {activeTab === "known" ? "Takip ettigin kisi yok veya henuz paylasim yapilmamis." : "Henuz paylasim yok."}
+          {categoryFilter
+            ? "Bu kategoride henuz paylasim yok."
+            : activeTab === "known"
+              ? "Takip ettigin kisi yok veya henuz paylasim yapilmamis."
+              : "Henuz paylasim yok."}
         </div>
       ) : (
         filteredPosts.map((post) => {
@@ -206,24 +285,36 @@ export default function FeedPage() {
           });
           const userReactions = post.reactions.filter((r) => r.user_id === user?.id).map((r) => r.reaction_type);
           const isOwner = post.author_id === user?.id;
+          const isBookmarked = bookmarkedIds.has(post.id);
 
           return (
             <article key={post.id} className="px-4 py-4 border-b border-[var(--border-light)] hover:bg-[var(--card)]/30">
               <div className="flex items-start gap-3">
-                <img
-                  src={
-                    post.is_anonymous
-                      ? `https://api.dicebear.com/7.x/lorelei/png?seed=anon-${post.id}`
-                      : post.profiles?.avatar_url || `https://api.dicebear.com/7.x/lorelei/png?seed=${post.author_id}`
-                  }
-                  alt=""
-                  className="w-10 h-10 rounded-full object-cover shrink-0"
-                />
+                {/* Avatar - clickable if not anonymous */}
+                {post.is_anonymous ? (
+                  <img
+                    src={`https://api.dicebear.com/7.x/lorelei/png?seed=anon-${post.id}`}
+                    alt=""
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <Link href={`/u/${post.profiles?.username}`}>
+                    <img
+                      src={post.profiles?.avatar_url || `https://api.dicebear.com/7.x/lorelei/png?seed=${post.author_id}`}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover shrink-0 hover:opacity-80 transition-opacity"
+                    />
+                  </Link>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-[var(--text)]">
-                      {post.is_anonymous ? "Anonim" : post.profiles?.username || "Kullanici"}
-                    </span>
+                    {post.is_anonymous ? (
+                      <span className="font-semibold text-[var(--text)]">Anonim</span>
+                    ) : (
+                      <Link href={`/u/${post.profiles?.username}`} className="font-semibold text-[var(--text)] hover:underline">
+                        {post.profiles?.username || "Kullanici"}
+                      </Link>
+                    )}
                     <span className="text-sm text-[var(--text-muted)]">{timeAgo(post.created_at)}</span>
                     {cat && (
                       <span
@@ -233,7 +324,18 @@ export default function FeedPage() {
                         {cat.emoji} {cat.label}
                       </span>
                     )}
-                    <div className="ml-auto">
+                    <div className="ml-auto flex items-center gap-1">
+                      <button
+                        onClick={() => handleBookmark(post.id)}
+                        className="p-1 rounded-lg hover:bg-[var(--card)] transition-colors"
+                        title={isBookmarked ? "Yer iminden kaldir" : "Yer imlerine ekle"}
+                      >
+                        {isBookmarked ? (
+                          <BookmarkCheck size={16} className="text-[var(--primary)]" />
+                        ) : (
+                          <Bookmark size={16} className="text-[var(--text-muted)]" />
+                        )}
+                      </button>
                       {isOwner && (
                         <PostMenu
                           post={post}
@@ -244,10 +346,34 @@ export default function FeedPage() {
                     </div>
                   </div>
 
-                  <p className="mt-2 text-[var(--text)] whitespace-pre-wrap">{post.content}</p>
+                  {/* Post content - clickable */}
+                  <Link href={`/post/${post.id}`} className="block mt-2">
+                    <p className="text-[var(--text)] whitespace-pre-wrap hover:text-[var(--text)]/80">{post.content}</p>
+                  </Link>
 
                   {post.image_url && (
-                    <img src={post.image_url} alt="" className="mt-3 rounded-xl max-h-96 w-full object-cover" />
+                    <Link href={`/post/${post.id}`}>
+                      <img src={post.image_url} alt="" className="mt-3 rounded-xl max-h-96 w-full object-cover" />
+                    </Link>
+                  )}
+
+                  {/* Repost embed */}
+                  {post.repost_of && (
+                    <Link href={`/post/${post.repost_of.id}`} className="block mt-3 p-3 rounded-xl border border-[var(--border-light)] bg-[var(--card)]/50 hover:bg-[var(--card)]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <img
+                          src={post.repost_of.is_anonymous
+                            ? `https://api.dicebear.com/7.x/lorelei/png?seed=anon-${post.repost_of.id}`
+                            : post.repost_of.profiles?.avatar_url || `https://api.dicebear.com/7.x/lorelei/png?seed=${post.repost_of.author_id}`}
+                          alt=""
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span className="text-xs font-medium text-[var(--text-muted)]">
+                          {post.repost_of.is_anonymous ? "Anonim" : post.repost_of.profiles?.username}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--text)] line-clamp-3">{post.repost_of.content}</p>
+                    </Link>
                   )}
 
                   {/* Reactions */}
@@ -261,7 +387,9 @@ export default function FeedPage() {
                         <button
                           key={key}
                           onClick={() => handleReaction(post.id, key)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-transform ${
+                            animatingReaction === `${post.id}-${key}` ? "scale-125" : "scale-100"
+                          } ${
                             isActive
                               ? "border-[var(--primary)] bg-[var(--primary)]/10"
                               : "border-[var(--border-light)] hover:bg-[var(--card)]"
@@ -269,6 +397,26 @@ export default function FeedPage() {
                         >
                           <span>{r.emoji}</span>
                           {count > 0 && <span className="text-[var(--text-muted)]">{count}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Emoji bar - show all emojis for adding */}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {Object.entries(REACTIONS).map(([key, r]) => {
+                      const count = reactionCounts[key] || 0;
+                      const isActive = userReactions.includes(key);
+                      if (count > 0 || isActive) return null;
+
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => handleReaction(post.id, key)}
+                          className="px-1.5 py-0.5 rounded-full text-xs hover:bg-[var(--card)] opacity-40 hover:opacity-100 transition-opacity"
+                          title={r.label}
+                        >
+                          {r.emoji}
                         </button>
                       );
                     })}
