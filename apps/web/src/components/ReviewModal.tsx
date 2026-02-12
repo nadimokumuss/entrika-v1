@@ -59,17 +59,13 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
     setError("");
 
     try {
-      const positiveTags = selectedTags.filter((t) => POSITIVE_TAGS.includes(t));
-      const negativeTags = selectedTags.filter((t) => NEGATIVE_TAGS.includes(t));
-
       const { error: upsertError } = await supabase
         .from("user_reviews")
         .upsert({
           target_user_id: targetUserId,
           reviewer_id: user.id,
           score,
-          positive_tags: positiveTags,
-          negative_tags: negativeTags,
+          tags: selectedTags,
           content: content.trim() || null,
           is_anonymous: isAnonymous,
         }, { onConflict: "target_user_id,reviewer_id" });

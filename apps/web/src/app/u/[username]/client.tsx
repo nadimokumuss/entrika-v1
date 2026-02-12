@@ -164,7 +164,24 @@ export default function UserProfileClient({ username }: { username: string }) {
             {showMenu && (
               <div className="absolute right-0 top-10 z-20 w-44 rounded-xl border border-[var(--border-light)] bg-[var(--background)] shadow-lg overflow-hidden">
                 <button
-                  onClick={() => { setShowMenu(false); }}
+                  onClick={async () => {
+                    setShowMenu(false);
+                    const reason = window.prompt("Bildirme sebebi:\n1. Sahte profil\n2. Taciz/Zorbalık\n3. Uygunsuz içerik\n4. Spam\n5. Diğer\n\nSebebi yazın:");
+                    if (!reason || !reason.trim()) return;
+                    const { error: reportError } = await supabase
+                      .from("reports")
+                      .insert({
+                        reporter_id: user.id,
+                        report_type: "user",
+                        target_id: profile.id,
+                        reason: reason.trim(),
+                      });
+                    if (reportError) {
+                      alert("Rapor gönderilemedi. Lütfen tekrar deneyin.");
+                    } else {
+                      alert("Rapor gönderildi. Teşekkürler!");
+                    }
+                  }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--card)]"
                 >
                   <Flag size={14} />

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { RefreshCw, PenSquare, MessageCircle, MoreHorizontal, Pencil, Trash2, Bookmark, BookmarkCheck } from "lucide-react";
+import { RefreshCw, PenSquare, MessageCircle, MoreHorizontal, Pencil, Trash2, Bookmark, BookmarkCheck, Repeat2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { bookmarksLib } from "@/lib/shared";
 import { CATEGORIES, REACTIONS } from "@entrika/shared";
 import { EditPostModal } from "@/components/EditPostModal";
+import { RepostModal } from "@/components/RepostModal";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -86,6 +87,7 @@ export default function FeedPage() {
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [animatingReaction, setAnimatingReaction] = useState<string | null>(null);
+  const [repostingPost, setRepostingPost] = useState<FeedPost | null>(null);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -326,6 +328,13 @@ export default function FeedPage() {
                     )}
                     <div className="ml-auto flex items-center gap-1">
                       <button
+                        onClick={() => setRepostingPost(post)}
+                        className="p-1 rounded-lg hover:bg-[var(--card)] transition-colors"
+                        title="Alıntıla"
+                      >
+                        <Repeat2 size={16} className="text-[var(--text-muted)]" />
+                      </button>
+                      <button
                         onClick={() => handleBookmark(post.id)}
                         className="p-1 rounded-lg hover:bg-[var(--card)] transition-colors"
                         title={isBookmarked ? "Yer iminden kaldır" : "Yer imlerine ekle"}
@@ -440,6 +449,22 @@ export default function FeedPage() {
         onSaved={fetchPosts}
         post={editingPost}
       />
+
+      {/* Repost Modal */}
+      {repostingPost && (
+        <RepostModal
+          open={!!repostingPost}
+          onClose={() => setRepostingPost(null)}
+          originalPost={{
+            id: repostingPost.id,
+            content: repostingPost.content,
+            category: repostingPost.category,
+            is_anonymous: repostingPost.is_anonymous,
+            profiles: repostingPost.profiles,
+          }}
+          onReposted={fetchPosts}
+        />
+      )}
     </div>
   );
 }
