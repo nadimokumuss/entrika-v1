@@ -36,7 +36,7 @@ export default function Sidebar() {
   const { profile } = useAuth();
 
   return (
-    <aside className="sticky top-0 h-screen flex flex-col justify-between py-4 px-3">
+    <aside className="sticky top-0 h-dvh flex flex-col justify-between py-4 px-3">
       {/* Logo */}
       <div>
         <Link href="/" className="flex items-center gap-3 px-3 py-2 mb-4">
@@ -92,6 +92,7 @@ export default function Sidebar() {
         <button
           onClick={toggleTheme}
           className="flex items-center gap-4 px-3 py-3 rounded-xl hover:bg-[var(--card)] text-[var(--text-muted)]"
+          aria-label={isDark ? "Açık temaya geç" : "Koyu temaya geç"}
         >
           {isDark ? <Sun size={24} /> : <Moon size={24} />}
           <span className="hidden xl:block text-sm">

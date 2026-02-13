@@ -127,7 +127,7 @@ export default function RightPanel() {
   };
 
   return (
-    <aside className="sticky top-0 h-screen py-4 px-4 overflow-y-auto">
+    <aside className="sticky top-0 h-dvh py-4 px-4 overflow-y-auto">
       {/* Search */}
       <div className="relative mb-6">
         <Search

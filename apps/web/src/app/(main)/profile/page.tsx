@@ -202,7 +202,7 @@ export default function ProfilePage() {
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold text-[var(--text)]">Profil</h1>
-        <Link href="/settings" className="p-2 rounded-lg hover:bg-[var(--card)]">
+        <Link href="/settings" className="p-2 rounded-lg hover:bg-[var(--card)]" aria-label="Ayarlar">
           <Settings size={20} className="text-[var(--text-muted)]" />
         </Link>
       </div>

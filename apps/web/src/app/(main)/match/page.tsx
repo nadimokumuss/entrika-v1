@@ -117,7 +117,7 @@ export default function MatchPage() {
           <Link href="/edit-dating-profile" className="text-sm text-[var(--primary)] hover:underline">
             Profilimi Düzenle
           </Link>
-          <button onClick={fetchCards} className="p-2 rounded-lg hover:bg-[var(--card)]">
+          <button onClick={fetchCards} className="p-2 rounded-lg hover:bg-[var(--card)]" aria-label="Yenile">
             <RefreshCw size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
@@ -188,6 +188,7 @@ export default function MatchPage() {
                           <button
                             onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => p - 1); }}
                             className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white"
+                            aria-label="Önceki fotoğraf"
                           >
                             <ChevronLeft size={18} />
                           </button>
@@ -196,6 +197,7 @@ export default function MatchPage() {
                           <button
                             onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => p + 1); }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white"
+                            aria-label="Sonraki fotoğraf"
                           >
                             <ChevronRight size={18} />
                           </button>
@@ -261,12 +263,14 @@ export default function MatchPage() {
               <button
                 onClick={() => handleSwipe("dislike")}
                 className="w-14 h-14 rounded-full border-2 border-[var(--danger)] flex items-center justify-center hover:bg-[var(--danger)]/10 transition-colors"
+                aria-label="Geç"
               >
                 <X size={28} className="text-[var(--danger)]" />
               </button>
               <button
                 onClick={() => handleSwipe("like")}
                 className="w-14 h-14 rounded-full border-2 border-[var(--success)] flex items-center justify-center hover:bg-[var(--success)]/10 transition-colors"
+                aria-label="Beğen"
               >
                 <Heart size={28} className="text-[var(--success)]" />
               </button>

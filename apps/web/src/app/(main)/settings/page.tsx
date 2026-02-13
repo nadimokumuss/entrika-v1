@@ -112,7 +112,7 @@ export default function SettingsPage() {
 
       <div className="p-4 space-y-1">
         {/* SECTION: Görünüm */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-2 pb-1">Görünüm</p>
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase px-4 pt-2 pb-1">Görünüm</p>
 
         <button
           onClick={toggleTheme}
@@ -126,7 +126,7 @@ export default function SettingsPage() {
         </button>
 
         {/* SECTION: Hesap */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Hesap</p>
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase px-4 pt-4 pb-1">Hesap</p>
 
         <Link
           href="/edit-profile"
@@ -210,7 +210,7 @@ export default function SettingsPage() {
         )}
 
         {/* SECTION: Bildirimler */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Bildirimler</p>
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase px-4 pt-4 pb-1">Bildirimler</p>
 
         <button
           onClick={handleNotifications}
@@ -226,7 +226,7 @@ export default function SettingsPage() {
         </button>
 
         {/* SECTION: Gizlilik */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Gizlilik</p>
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase px-4 pt-4 pb-1">Gizlilik</p>
 
         <Link
           href="/blocked-users"
@@ -240,7 +240,7 @@ export default function SettingsPage() {
         </Link>
 
         {/* SECTION: Diğer */}
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider px-4 pt-4 pb-1">Diğer</p>
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase px-4 pt-4 pb-1">Diğer</p>
 
         <button
           onClick={() => setShowShortcuts(!showShortcuts)}

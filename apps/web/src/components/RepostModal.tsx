@@ -64,7 +64,7 @@ export function RepostModal({ open, onClose, originalPost, onReposted }: RepostM
       >
         <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
           <h2 className="text-lg font-bold text-[var(--text)]">Alıntıla</h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Kapat">
             <X size={20} className="text-[var(--text-muted)]" />
           </button>
         </div>

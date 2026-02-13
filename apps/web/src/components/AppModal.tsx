@@ -54,7 +54,7 @@ export function AppModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={handleCancel}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={handleCancel}>
       <div
         className="w-full max-w-sm mx-4 rounded-2xl border border-[var(--border-light)] bg-[var(--background)] shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -62,7 +62,7 @@ export function AppModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
           <h2 className="text-base font-bold text-[var(--text)]">{title}</h2>
-          <button onClick={handleCancel} className="p-1 rounded-lg hover:bg-[var(--card)]">
+          <button onClick={handleCancel} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Kapat">
             <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>

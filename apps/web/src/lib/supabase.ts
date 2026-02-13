@@ -19,8 +19,9 @@ const webStorageAdapter: SupabaseStorageAdapter = {
   },
 };
 
+// Build sirasinda env var'lar olmayabilir - placeholder URL ile olustur
 export const supabase = createSupabaseClient(
-  supabaseUrl,
-  supabaseAnonKey,
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-key",
   webStorageAdapter
 );

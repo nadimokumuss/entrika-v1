@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Trash2, Save, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { CATEGORIES, type PostCategory } from "@entrika/shared";
+import { AppModal } from "@/components/AppModal";
 
 const CONTENT_MIN_LENGTH = 10;
 const CONTENT_MAX_LENGTH = 500;
@@ -27,6 +28,7 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (post && open) {
@@ -72,8 +74,12 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("Bu postu silmek istediginize emin misiniz? Bu islem geri alinamaz.")) return;
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setShowDeleteConfirm(false);
     try {
       const { error } = await supabase.from("posts").delete().eq("id", post.id);
       if (error) throw error;
@@ -93,11 +99,11 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Kapat">
             <X size={20} className="text-[var(--text-muted)]" />
           </button>
           <h2 className="text-lg font-bold text-[var(--text)]">Postu Duzenle</h2>
-          <button onClick={handleDelete} className="p-1 rounded-lg hover:bg-red-500/10">
+          <button onClick={handleDelete} className="p-1 rounded-lg hover:bg-red-500/10" aria-label="Postu sil">
             <Trash2 size={18} className="text-red-500" />
           </button>
         </div>
@@ -206,6 +212,17 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
           </button>
         </div>
       </div>
+
+      <AppModal
+        open={showDeleteConfirm}
+        type="confirm"
+        title="Postu Sil"
+        message="Bu postu silmek istediginize emin misiniz? Bu islem geri alinamaz."
+        confirmLabel="Sil"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

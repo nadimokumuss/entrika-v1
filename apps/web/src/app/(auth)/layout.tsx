@@ -20,7 +20,7 @@ export default function AuthLayout({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="w-8 h-8 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -29,7 +29,7 @@ export default function AuthLayout({
   if (user) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--background)]">
+    <div className="min-h-dvh flex items-center justify-center px-4 bg-[var(--background)]">
       <div className="w-full max-w-md">{children}</div>
     </div>
   );

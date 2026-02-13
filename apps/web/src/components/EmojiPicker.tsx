@@ -48,6 +48,7 @@ export function EmojiPicker({ onSelect, activeReactions = [], isOpen, onToggle }
       <button
         onClick={onToggle}
         className="flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-[var(--border-light)] hover:bg-[var(--card)] text-[var(--text-muted)]"
+        aria-label="Tepki ekle"
       >
         <SmilePlus size={14} />
       </button>

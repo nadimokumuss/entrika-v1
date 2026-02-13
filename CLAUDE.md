@@ -251,6 +251,7 @@ entrika/                              # Turborepo monorepo root
 - [x] **Web deploy** - https://entrika-web.vercel.app
 - [x] **Web ozellikleri**: Klavye kisayollari, Web Notifications, SSR SEO, drag-to-swipe
 - [x] **Web post silme/duzenleme** (EditPostModal + 3-nokta menu, feed + post detay)
+- [x] **Baseline UI duzeltmeleri** (2026-02-13): h-dvh, aria-label, prefers-reduced-motion, AppModal, z-index scale
 
 ---
 

@@ -90,10 +90,10 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-dvh">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center gap-3">
-        <Link href="/messages" className="p-1 rounded-lg hover:bg-[var(--card)]">
+        <Link href="/messages" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
         <h1 className="text-lg font-bold text-[var(--text)]">Sohbet</h1>
@@ -142,6 +142,7 @@ export default function ChatPage() {
             <button
               onClick={() => setShowEmoji(!showEmoji)}
               className="p-2 rounded-xl hover:bg-[var(--card)]"
+              aria-label="Emoji seç"
             >
               <Smile size={20} className="text-[var(--text-muted)]" />
             </button>
@@ -173,6 +174,7 @@ export default function ChatPage() {
             disabled={!input.trim()}
             className="p-2.5 rounded-xl text-white disabled:opacity-40"
             style={{ background: "var(--primary)" }}
+            aria-label="Mesaj gönder"
           >
             <Send size={18} />
           </button>

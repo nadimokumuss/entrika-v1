@@ -280,6 +280,15 @@ entrika/                          (Turborepo monorepo root)
   - Duzenle → EditPostModal acar
   - Sil → confirm → supabase delete → ana sayfaya yonlendirir
 
+### 2026-02-13 - Baseline UI Duzeltmeleri
+- **h-screen → h-dvh** (7 dosya, 11 instance) - Mobil tarayicilarda layout duzeltmesi
+- **aria-label eklendi** (15 dosya, 25+ icon-only buton) - Erisilebilirlik iyilestirmesi
+- **window.confirm → AppModal** (EditPostModal.tsx) - Yikici islemler icin erisilebilir dialog
+- **prefers-reduced-motion** (globals.css) - Hareket hassasiyeti destegi
+- **z-[100] → z-50** (AppModal.tsx) - Tailwind z-index scale kullanimi
+- **tracking-wider kaldirildi** (settings/page.tsx, 5 instance) - Gereksiz letter-spacing
+- **Build-safe supabase client** (lib/supabase.ts) - Env var olmadan build hatasi onlendi
+
 ---
 
 ## Bilinen Sorunlar ve Eksiklikler

@@ -53,7 +53,7 @@ function PostMenu({ post, onEdit, onDelete }: { post: FeedPost; onEdit: () => vo
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(!open)} className="p-1 rounded-lg hover:bg-[var(--card)]">
+      <button onClick={() => setOpen(!open)} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Post menüsü">
         <MoreHorizontal size={16} className="text-[var(--text-muted)]" />
       </button>
       {open && (
@@ -244,7 +244,7 @@ export default function FeedPage() {
                 Tümü
               </Link>
             )}
-            <button onClick={fetchPosts} className="p-2 rounded-lg hover:bg-[var(--card)]">
+            <button onClick={fetchPosts} className="p-2 rounded-lg hover:bg-[var(--card)]" aria-label="Yenile">
               <RefreshCw size={18} className="text-[var(--text-muted)]" />
             </button>
           </div>
@@ -275,9 +275,10 @@ export default function FeedPage() {
       <Link
         href="/new-post"
         className="fixed bottom-20 right-4 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg text-white md:hidden"
+        aria-label="Yeni paylaşım"
         style={{ background: "var(--primary)" }}
       >
-        <PenSquare size={22} />
+        <PenSquare size={22} aria-hidden="true" />
       </Link>
 
       {/* Posts */}

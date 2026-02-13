@@ -81,6 +81,7 @@ export default function BookmarksPage() {
                   onClick={() => removeBookmark(bm.posts.id)}
                   className="ml-auto p-1 rounded-lg hover:bg-[var(--danger)]/10 text-[var(--text-muted)] hover:text-[var(--danger)]"
                   title="Yer iminden kaldır"
+                  aria-label="Yer iminden kaldır"
                 >
                   <BookmarkX size={16} />
                 </button>

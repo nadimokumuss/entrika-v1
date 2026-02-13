@@ -93,7 +93,7 @@ export function ReviewModal({ open, onClose, targetUserId, targetUsername, onRev
           <h2 className="text-lg font-bold text-[var(--text)]">
             {targetUsername} Değerlendir
           </h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Kapat">
             <X size={20} className="text-[var(--text-muted)]" />
           </button>
         </div>

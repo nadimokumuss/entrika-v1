@@ -383,6 +383,7 @@ export default function PostDetailPage() {
                   <button
                     onClick={() => setCommentMenuId(commentMenuId === comment.id ? null : comment.id)}
                     className="p-0.5 rounded hover:bg-[var(--card)]"
+                    aria-label="Yorum menüsü"
                   >
                     <MoreHorizontal size={14} className="text-[var(--text-muted)]" />
                   </button>
@@ -490,23 +491,23 @@ export default function PostDetailPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-dvh">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center gap-3">
-        <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]">
+        <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
         <h1 className="text-lg font-bold text-[var(--text)] flex-1">Paylasim</h1>
         <div className="flex items-center gap-1">
-          <button onClick={handleBookmark} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title={isBookmarked ? "Yer iminden kaldir" : "Yer imlerine ekle"}>
+          <button onClick={handleBookmark} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title={isBookmarked ? "Yer iminden kaldir" : "Yer imlerine ekle"} aria-label={isBookmarked ? "Yer iminden kaldir" : "Yer imlerine ekle"}>
             {isBookmarked ? <BookmarkCheck size={18} className="text-[var(--primary)]" /> : <Bookmark size={18} className="text-[var(--text-muted)]" />}
           </button>
-          <button onClick={() => setRepostModalOpen(true)} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title="Alintila">
+          <button onClick={() => setRepostModalOpen(true)} className="p-1.5 rounded-lg hover:bg-[var(--card)]" title="Alintila" aria-label="Alintila">
             <Repeat2 size={18} className="text-[var(--text-muted)]" />
           </button>
           {isOwner && (
             <div ref={menuRef} className="relative">
-              <button onClick={() => setMenuOpen(!menuOpen)} className="p-1 rounded-lg hover:bg-[var(--card)]">
+              <button onClick={() => setMenuOpen(!menuOpen)} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Post menüsü">
                 <MoreHorizontal size={20} className="text-[var(--text-muted)]" />
               </button>
               {menuOpen && (
@@ -643,6 +644,7 @@ export default function PostDetailPage() {
             onClick={() => setIsAnonymousComment(!isAnonymousComment)}
             className={`p-2 rounded-lg transition-colors ${isAnonymousComment ? "bg-[var(--primary)]/10 text-[var(--primary)]" : "text-[var(--text-muted)] hover:bg-[var(--card)]"}`}
             title={isAnonymousComment ? "Anonim yorum (acik)" : "Anonim yorum (kapali)"}
+            aria-label={isAnonymousComment ? "Anonim yorum acik" : "Anonim yorum kapali"}
           >
             {isAnonymousComment ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -660,6 +662,7 @@ export default function PostDetailPage() {
             disabled={!newComment.trim() || sending}
             className="p-2.5 rounded-xl text-white disabled:opacity-40"
             style={{ background: "var(--primary)" }}
+            aria-label="Yorum gönder"
           >
             <Send size={18} />
           </button>

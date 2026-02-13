@@ -238,7 +238,7 @@ export default function UserProfileClient({ username }: { username: string }) {
     <div>
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center gap-3">
-        <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]">
+        <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
         <div className="flex-1">
@@ -247,7 +247,7 @@ export default function UserProfileClient({ username }: { username: string }) {
         </div>
         {!isOwnProfile && user && (
           <div className="relative">
-            <button onClick={() => setShowMenu(!showMenu)} className="p-1 rounded-lg hover:bg-[var(--card)]">
+            <button onClick={() => setShowMenu(!showMenu)} className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Daha fazla seçenek">
               <MoreHorizontal size={20} className="text-[var(--text-muted)]" />
             </button>
             {showMenu && (
