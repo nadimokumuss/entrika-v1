@@ -8,8 +8,10 @@ import { bookmarksLib } from "@/lib/shared";
 import { CATEGORIES, REACTIONS } from "@entrika/shared";
 import { EditPostModal } from "@/components/EditPostModal";
 import { RepostModal } from "@/components/RepostModal";
+import { AppModal } from "@/components/AppModal";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { EmojiPicker } from "@/components/EmojiPicker";
 
 type FeedTab = "all" | "known" | "unknown";
 
@@ -88,6 +90,9 @@ export default function FeedPage() {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [animatingReaction, setAnimatingReaction] = useState<string | null>(null);
   const [repostingPost, setRepostingPost] = useState<FeedPost | null>(null);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
+  const [openPickerId, setOpenPickerId] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -133,26 +138,23 @@ export default function FeedPage() {
   const handleReaction = async (postId: string, reactionType: string) => {
     if (!user) return;
     const post = posts.find((p) => p.id === postId);
-    const existing = post?.reactions.find(
-      (r) => r.user_id === user.id && r.reaction_type === reactionType
-    );
+    if (!post) return;
+
+    // UNIQUE(post_id, user_id) -> bir kullanici bir posta sadece 1 tepki verebilir
+    const currentReaction = post.reactions.find((r) => r.user_id === user.id);
+    const isSame = currentReaction?.reaction_type === reactionType;
 
     // Optimistic update
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
-        if (existing) {
-          return {
-            ...p,
-            reactions: p.reactions.filter(
-              (r) => !(r.user_id === user.id && r.reaction_type === reactionType)
-            ),
-          };
+        const withoutUser = p.reactions.filter((r) => r.user_id !== user.id);
+        if (isSame) {
+          // Ayni tepkiye tekrar tikladi -> kaldir
+          return { ...p, reactions: withoutUser };
         } else {
-          return {
-            ...p,
-            reactions: [...p.reactions, { user_id: user.id, reaction_type: reactionType }],
-          };
+          // Yeni tepki veya farkli tepki -> degistir
+          return { ...p, reactions: [...withoutUser, { user_id: user.id, reaction_type: reactionType }] };
         }
       })
     );
@@ -161,29 +163,42 @@ export default function FeedPage() {
     setAnimatingReaction(`${postId}-${reactionType}`);
     setTimeout(() => setAnimatingReaction(null), 300);
 
-    if (existing) {
-      await supabase
+    let result;
+    if (isSame) {
+      result = await supabase
         .from("post_reactions")
         .delete()
         .eq("post_id", postId)
-        .eq("user_id", user.id)
-        .eq("reaction_type", reactionType);
-    } else {
-      await supabase
+        .eq("user_id", user.id);
+    } else if (currentReaction) {
+      result = await supabase
         .from("post_reactions")
-        .upsert({ post_id: postId, user_id: user.id, reaction_type: reactionType });
+        .update({ reaction_type: reactionType })
+        .eq("post_id", postId)
+        .eq("user_id", user.id);
+    } else {
+      result = await supabase
+        .from("post_reactions")
+        .insert({ post_id: postId, user_id: user.id, reaction_type: reactionType });
     }
+    if (result.error) console.error("REACTION ERROR:", result.error);
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!window.confirm("Bu postu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) return;
+  const handleDeletePost = (postId: string) => {
+    setDeletePostId(postId);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!deletePostId) return;
+    const id = deletePostId;
+    setDeletePostId(null);
     try {
-      const { error } = await supabase.from("posts").delete().eq("id", postId);
+      const { error } = await supabase.from("posts").delete().eq("id", id);
       if (error) throw error;
       fetchPosts();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Post silinemedi.";
-      alert(message);
+      setAlertMsg(message);
     }
   };
 
@@ -386,7 +401,7 @@ export default function FeedPage() {
                   )}
 
                   {/* Reactions */}
-                  <div className="flex flex-wrap gap-1.5 mt-3">
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
                     {Object.entries(REACTIONS).map(([key, r]) => {
                       const count = reactionCounts[key] || 0;
                       const isActive = userReactions.includes(key);
@@ -409,26 +424,13 @@ export default function FeedPage() {
                         </button>
                       );
                     })}
-                  </div>
 
-                  {/* Emoji bar - show all emojis for adding */}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {Object.entries(REACTIONS).map(([key, r]) => {
-                      const count = reactionCounts[key] || 0;
-                      const isActive = userReactions.includes(key);
-                      if (count > 0 || isActive) return null;
-
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => handleReaction(post.id, key)}
-                          className="px-1.5 py-0.5 rounded-full text-xs hover:bg-[var(--card)] opacity-40 hover:opacity-100 transition-opacity"
-                          title={r.label}
-                        >
-                          {r.emoji}
-                        </button>
-                      );
-                    })}
+                    <EmojiPicker
+                      onSelect={(key) => handleReaction(post.id, key)}
+                      activeReactions={userReactions}
+                      isOpen={openPickerId === post.id}
+                      onToggle={() => setOpenPickerId(openPickerId === post.id ? null : post.id)}
+                    />
                   </div>
 
                   <Link href={`/post/${post.id}`} className="flex items-center gap-1 mt-2 text-sm text-[var(--text-muted)] hover:text-[var(--primary)]">
@@ -465,6 +467,28 @@ export default function FeedPage() {
           onReposted={fetchPosts}
         />
       )}
+
+      {/* Delete Confirm Modal */}
+      <AppModal
+        open={!!deletePostId}
+        type="confirm"
+        title="Postu Sil"
+        message="Bu postu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        confirmLabel="Sil"
+        danger
+        onConfirm={confirmDeletePost}
+        onCancel={() => setDeletePostId(null)}
+      />
+
+      {/* Alert Modal */}
+      <AppModal
+        open={!!alertMsg}
+        type="alert"
+        title="Hata"
+        message={alertMsg || ""}
+        onConfirm={() => setAlertMsg(null)}
+        onCancel={() => setAlertMsg(null)}
+      />
     </div>
   );
 }

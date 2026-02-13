@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFollow } from "@/contexts/FollowContext";
 import { supabase } from "@/lib/supabase";
 import { followingLib } from "@/lib/shared";
-import { CATEGORIES } from "@entrika/shared";
-import { ArrowLeft, UserPlus, UserMinus, Shield, Star, MoreHorizontal, Flag, Ban } from "lucide-react";
+import { CATEGORIES, REACTIONS } from "@entrika/shared";
+import { ArrowLeft, UserPlus, UserMinus, Shield, Star, MoreHorizontal, Flag, Ban, Heart } from "lucide-react";
 import Link from "next/link";
 import { ReviewModal } from "@/components/ReviewModal";
+import { AppModal } from "@/components/AppModal";
 
 interface UserProfile {
   id: string;
@@ -41,7 +42,31 @@ interface UserReview {
   reviewer: { username: string; avatar_url: string } | null;
 }
 
-type TabType = "posts" | "reviews_received" | "reviews_given";
+interface UserComment {
+  id: string;
+  content: string;
+  is_anonymous: boolean;
+  parent_id: string | null;
+  created_at: string;
+  post_id: string;
+  posts: { id: string; content: string } | null;
+}
+
+interface UserReaction {
+  id: string;
+  reaction_type: string;
+  created_at: string;
+  post_id: string;
+  posts: {
+    id: string;
+    content: string;
+    is_anonymous: boolean;
+    author_id: string;
+    profiles: { username: string };
+  } | null;
+}
+
+type TabType = "posts" | "comments" | "reactions" | "reviews_received" | "reviews_given";
 
 export default function UserProfileClient({ username }: { username: string }) {
   const { user } = useAuth();
@@ -50,12 +75,19 @@ export default function UserProfileClient({ username }: { username: string }) {
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [reviewsReceived, setReviewsReceived] = useState<UserReview[]>([]);
   const [reviewsGiven, setReviewsGiven] = useState<UserReview[]>([]);
+  const [userComments, setUserComments] = useState<UserComment[]>([]);
+  const [userReactions, setUserReactions] = useState<UserReaction[]>([]);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
+  const [relationshipStatus, setRelationshipStatus] = useState<string | null>(null);
+  const [partnerUsername, setPartnerUsername] = useState<string | null>(null);
 
   const loadData = async () => {
     const { data: profileData } = await supabase
@@ -99,6 +131,25 @@ export default function UserProfileClient({ username }: { username: string }) {
     setFollowingCount(countsResult.followingCount);
     setReviewsReceived((receivedResult.data as unknown as UserReview[]) || []);
     setReviewsGiven((givenResult.data as unknown as UserReview[]) || []);
+
+    // Dating profile (relationship status)
+    const { data: datingData } = await supabase
+      .from("dating_profiles")
+      .select("relationship_status, partner_id")
+      .eq("user_id", profileData.id)
+      .single();
+    if (datingData) {
+      setRelationshipStatus(datingData.relationship_status);
+      if (datingData.partner_id) {
+        const { data: partnerData } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", datingData.partner_id)
+          .single();
+        if (partnerData) setPartnerUsername(partnerData.username);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -106,10 +157,40 @@ export default function UserProfileClient({ username }: { username: string }) {
     loadData();
   }, [username]);
 
+  // Lazy load comments and reactions when tab is selected
+  useEffect(() => {
+    if (!profile) return;
+    if (activeTab === "comments" && userComments.length === 0) loadComments();
+    if (activeTab === "reactions" && userReactions.length === 0) loadReactions();
+  }, [activeTab, profile]);
+
+  const loadComments = async () => {
+    if (!profile) return;
+    const { data } = await supabase
+      .from("comments")
+      .select("id, content, is_anonymous, parent_id, created_at, post_id, posts(id, content)")
+      .eq("author_id", profile.id)
+      .eq("is_anonymous", false)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setUserComments((data as unknown as UserComment[]) || []);
+  };
+
+  const loadReactions = async () => {
+    if (!profile) return;
+    const { data } = await supabase
+      .from("post_reactions")
+      .select("id, reaction_type, created_at, post_id, posts(id, content, is_anonymous, author_id, profiles(username))")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setUserReactions((data as unknown as UserReaction[]) || []);
+  };
+
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az önce";
+    if (mins < 1) return "az once";
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
@@ -134,9 +215,9 @@ export default function UserProfileClient({ username }: { username: string }) {
   if (!profile) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--text-muted)]">Kullanıcı bulunamadı.</p>
+        <p className="text-[var(--text-muted)]">Kullanici bulunamadi.</p>
         <Link href="/" className="mt-4 text-[var(--primary)] hover:underline text-sm">
-          Ana sayfaya dön
+          Ana sayfaya don
         </Link>
       </div>
     );
@@ -144,6 +225,14 @@ export default function UserProfileClient({ username }: { username: string }) {
 
   const isOwnProfile = user?.id === profile.id;
   const following = isFollowing(profile.id);
+
+  const tabs: [TabType, string][] = [
+    ["posts", "Paylasimlar"],
+    ["comments", "Yorumlar"],
+    ["reactions", "Tepkiler"],
+    ["reviews_received", "Aldigi"],
+    ["reviews_given", "Verdigi"],
+  ];
 
   return (
     <div>
@@ -154,7 +243,7 @@ export default function UserProfileClient({ username }: { username: string }) {
         </Link>
         <div className="flex-1">
           <h1 className="text-lg font-bold text-[var(--text)]">{profile.username}</h1>
-          <p className="text-xs text-[var(--text-muted)]">{posts.length} paylaşım</p>
+          <p className="text-xs text-[var(--text-muted)]">{posts.length} paylasim</p>
         </div>
         {!isOwnProfile && user && (
           <div className="relative">
@@ -164,23 +253,9 @@ export default function UserProfileClient({ username }: { username: string }) {
             {showMenu && (
               <div className="absolute right-0 top-10 z-20 w-44 rounded-xl border border-[var(--border-light)] bg-[var(--background)] shadow-lg overflow-hidden">
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     setShowMenu(false);
-                    const reason = window.prompt("Bildirme sebebi:\n1. Sahte profil\n2. Taciz/Zorbalık\n3. Uygunsuz içerik\n4. Spam\n5. Diğer\n\nSebebi yazın:");
-                    if (!reason || !reason.trim()) return;
-                    const { error: reportError } = await supabase
-                      .from("reports")
-                      .insert({
-                        reporter_id: user.id,
-                        report_type: "user",
-                        target_id: profile.id,
-                        reason: reason.trim(),
-                      });
-                    if (reportError) {
-                      alert("Rapor gönderilemedi. Lütfen tekrar deneyin.");
-                    } else {
-                      alert("Rapor gönderildi. Teşekkürler!");
-                    }
+                    setShowReportModal(true);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--card)]"
                 >
@@ -188,12 +263,9 @@ export default function UserProfileClient({ username }: { username: string }) {
                   Bildir
                 </button>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     setShowMenu(false);
-                    if (window.confirm(`${profile.username} kullanıcısını engellemek istediğinize emin misiniz?`)) {
-                      await supabase.from("blocked_users").insert({ blocker_id: user.id, blocked_id: profile.id });
-                      alert("Kullanıcı engellendi");
-                    }
+                    setShowBlockConfirm(true);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--danger)] hover:bg-[var(--danger)]/5"
                 >
@@ -221,10 +293,17 @@ export default function UserProfileClient({ username }: { username: string }) {
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-[var(--card)] text-[var(--text)] border border-[var(--border)]"
               >
                 <Star size={16} />
-                Değerlendir
+                Degerlendir
               </button>
               <button
-                onClick={() => toggleFollow(profile.id)}
+                onClick={() => {
+                  toggleFollow(profile.id);
+                  if (following) {
+                    setFollowersCount(prev => Math.max(0, prev - 1));
+                  } else {
+                    setFollowersCount(prev => prev + 1);
+                  }
+                }}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium ${
                   following
                     ? "bg-[var(--card)] text-[var(--text)] border border-[var(--border)]"
@@ -252,23 +331,32 @@ export default function UserProfileClient({ username }: { username: string }) {
           <span className="text-sm"><strong className="text-[var(--text)]">{followingCount}</strong> <span className="text-[var(--text-muted)]">takip</span></span>
         </div>
 
-        <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ backgroundColor: getScoreColor(profile.reputation_score) + "15", color: getScoreColor(profile.reputation_score) }}>
-          <Shield size={14} />
-          {profile.reputation_score.toFixed(1)} puan
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ backgroundColor: getScoreColor(profile.reputation_score) + "15", color: getScoreColor(profile.reputation_score) }}>
+            <Shield size={14} />
+            {profile.reputation_score.toFixed(1)} puan
+          </div>
+
+          {relationshipStatus && relationshipStatus !== "single" && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--primary)]/10 text-[var(--primary)]">
+              {relationshipStatus === "in_relationship" && (partnerUsername ? `${partnerUsername} ile sevgili` : "Iliskide")}
+              {relationshipStatus === "married" && (partnerUsername ? `${partnerUsername} ile evli` : "Evli")}
+              {relationshipStatus === "open_relationship" && (partnerUsername ? `${partnerUsername} ile acik iliski` : "Acik Iliski")}
+              {relationshipStatus === "complicated" && "Karmasik"}
+              {relationshipStatus === "divorced" && "Bosanmis"}
+              {relationshipStatus === "widowed" && "Dul"}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[var(--border-light)]">
-        {([
-          ["posts", "Paylaşımlar"],
-          ["reviews_received", "Aldığı Değerlendirmeler"],
-          ["reviews_given", "Verdiği Değerlendirmeler"],
-        ] as const).map(([key, label]) => (
+      <div className="flex border-b border-[var(--border-light)] overflow-x-auto">
+        {tabs.map(([key, label]) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex-1 py-3 text-sm font-medium relative ${
+            className={`flex-1 py-3 text-sm font-medium relative whitespace-nowrap px-2 ${
               activeTab === key ? "text-[var(--primary)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"
             }`}
           >
@@ -284,7 +372,7 @@ export default function UserProfileClient({ username }: { username: string }) {
       <div>
         {activeTab === "posts" && (
           posts.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Henüz paylaşım yok.</div>
+            <div className="text-center py-12 text-[var(--text-muted)]">Henuz paylasim yok.</div>
           ) : (
             posts.map((post) => {
               const cat = CATEGORIES[post.category as keyof typeof CATEGORIES];
@@ -312,16 +400,69 @@ export default function UserProfileClient({ username }: { username: string }) {
           )
         )}
 
+        {activeTab === "comments" && (
+          userComments.length === 0 ? (
+            <div className="text-center py-12 text-[var(--text-muted)]">Henuz yorum yok.</div>
+          ) : (
+            userComments.map((comment) => (
+              <Link
+                key={comment.id}
+                href={`/post/${comment.post_id}`}
+                className="block px-4 py-4 border-b border-[var(--border-light)] hover:bg-[var(--card)]/30"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs text-[var(--text-muted)]">{timeAgo(comment.created_at)}</span>
+                  {comment.parent_id && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">Yanit</span>
+                  )}
+                </div>
+                <p className="text-[var(--text)] line-clamp-2">{comment.content}</p>
+                {comment.posts && (
+                  <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-1">
+                    Post: {comment.posts.content}
+                  </p>
+                )}
+              </Link>
+            ))
+          )
+        )}
+
+        {activeTab === "reactions" && (
+          userReactions.length === 0 ? (
+            <div className="text-center py-12 text-[var(--text-muted)]">Henuz tepki yok.</div>
+          ) : (
+            userReactions.map((reaction) => {
+              const r = REACTIONS[reaction.reaction_type as keyof typeof REACTIONS];
+              return (
+                <Link
+                  key={reaction.id}
+                  href={`/post/${reaction.post_id}`}
+                  className="block px-4 py-4 border-b border-[var(--border-light)] hover:bg-[var(--card)]/30"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{r?.emoji || reaction.reaction_type}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{r?.label}</span>
+                    <span className="text-xs text-[var(--text-muted)] ml-auto">{timeAgo(reaction.created_at)}</span>
+                  </div>
+                  {reaction.posts && (
+                    <p className="text-sm text-[var(--text)] line-clamp-2">{reaction.posts.content}</p>
+                  )}
+                </Link>
+              );
+            })
+          )
+        )}
+
         {activeTab === "reviews_received" && (
           reviewsReceived.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Henüz değerlendirme yok.</div>
+            <div className="text-center py-12 text-[var(--text-muted)]">Henuz degerlendirme yok.</div>
           ) : (
             reviewsReceived.map((review) => (
               <div key={review.id} className="px-4 py-4 border-b border-[var(--border-light)]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg font-bold" style={{ color: getScoreColor(review.score) }}>{review.score}/10</span>
                   <span className="text-sm text-[var(--text-muted)]">
-                    {review.is_anonymous ? "Anonim" : review.reviewer?.username || "Kullanıcı"}
+                    {review.is_anonymous ? "Anonim" : review.reviewer?.username || "Kullanici"}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{timeAgo(review.created_at)}</span>
                 </div>
@@ -340,14 +481,14 @@ export default function UserProfileClient({ username }: { username: string }) {
 
         {activeTab === "reviews_given" && (
           reviewsGiven.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Henüz değerlendirme yok.</div>
+            <div className="text-center py-12 text-[var(--text-muted)]">Henuz degerlendirme yok.</div>
           ) : (
             reviewsGiven.map((review) => (
               <div key={review.id} className="px-4 py-4 border-b border-[var(--border-light)]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg font-bold" style={{ color: getScoreColor(review.score) }}>{review.score}/10</span>
                   <span className="text-sm text-[var(--text-muted)]">
-                    {review.reviewer?.username || "Kullanıcı"}
+                    {review.reviewer?.username || "Kullanici"}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{timeAgo(review.created_at)}</span>
                 </div>
@@ -372,6 +513,61 @@ export default function UserProfileClient({ username }: { username: string }) {
         targetUserId={profile.id}
         targetUsername={profile.username}
         onReviewSubmitted={loadData}
+      />
+
+      {/* Report Modal */}
+      <AppModal
+        open={showReportModal}
+        type="prompt"
+        title="Kullaniciyi Bildir"
+        message="Bildirme sebebini secin:"
+        options={["Sahte profil", "Taciz/Zorbalik", "Uygunsuz icerik", "Spam", "Diger"]}
+        confirmLabel="Gonder"
+        onConfirm={async (reason) => {
+          setShowReportModal(false);
+          if (!reason || !user) return;
+          const { error: reportError } = await supabase
+            .from("reports")
+            .insert({
+              reporter_id: user.id,
+              report_type: "user",
+              target_id: profile.id,
+              reason: reason,
+            });
+          if (reportError) {
+            setAlertMsg("Rapor gonderilemedi. Lutfen tekrar deneyin.");
+          } else {
+            setAlertMsg("Rapor gonderildi. Tesekkurler!");
+          }
+        }}
+        onCancel={() => setShowReportModal(false)}
+      />
+
+      {/* Block Confirm Modal */}
+      <AppModal
+        open={showBlockConfirm}
+        type="confirm"
+        title="Kullaniciyi Engelle"
+        message={`${profile.username} kullanicisini engellemek istediginize emin misiniz?`}
+        confirmLabel="Engelle"
+        danger
+        onConfirm={async () => {
+          setShowBlockConfirm(false);
+          if (!user) return;
+          await supabase.from("blocked_users").insert({ blocker_id: user.id, blocked_id: profile.id });
+          setAlertMsg("Kullanici engellendi.");
+        }}
+        onCancel={() => setShowBlockConfirm(false)}
+      />
+
+      {/* Alert Modal */}
+      <AppModal
+        open={!!alertMsg}
+        type="alert"
+        title="Bilgi"
+        message={alertMsg || ""}
+        onConfirm={() => setAlertMsg(null)}
+        onCancel={() => setAlertMsg(null)}
       />
     </div>
   );
