@@ -240,7 +240,7 @@ export default function FeedPage() {
           </h1>
           <div className="flex items-center gap-2">
             {categoryFilter && (
-              <Link href="/" className="text-sm text-[var(--primary)] hover:underline">
+              <Link href="/feed" className="text-sm text-[var(--primary)] hover:underline">
                 Tümü
               </Link>
             )}

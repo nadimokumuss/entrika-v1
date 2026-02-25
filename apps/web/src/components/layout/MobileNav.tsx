@@ -6,7 +6,7 @@ import { Home, Compass, Heart, MessageCircle, Bell, User } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationContext";
 
 const MOBILE_NAV_ITEMS = [
-  { href: "/", label: "Ana Sayfa", icon: Home },
+  { href: "/feed", label: "Ana Sayfa", icon: Home },
   { href: "/explore", label: "Keşfet", icon: Compass },
   { href: "/match", label: "Eşleşme", icon: Heart },
   { href: "/messages", label: "Mesajlar", icon: MessageCircle },
@@ -23,7 +23,7 @@ export default function MobileNav() {
       {MOBILE_NAV_ITEMS.map((item) => {
         const isActive =
           pathname === item.href ||
-          (item.href !== "/" && pathname.startsWith(item.href));
+          (item.href !== "/feed" && pathname.startsWith(item.href));
         const Icon = item.icon;
 
         return (

@@ -38,14 +38,14 @@ export default function NewPostPage() {
       return;
     }
 
-    router.push("/");
+    router.push("/feed");
   };
 
   return (
     <div>
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]">
+          <Link href="/feed" className="p-1 rounded-lg hover:bg-[var(--card)]">
             <ArrowLeft size={20} className="text-[var(--text)]" />
           </Link>
           <h1 className="text-lg font-bold text-[var(--text)]">Yeni Paylasim</h1>

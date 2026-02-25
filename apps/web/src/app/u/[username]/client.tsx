@@ -208,7 +208,7 @@ export default function UserProfileClient({ username }: { username: string }) {
     return (
       <div className="text-center py-12">
         <p className="text-[var(--text-muted)]">Kullanici bulunamadi.</p>
-        <Link href="/" className="mt-4 text-[var(--primary)] hover:underline text-sm">
+        <Link href="/feed" className="mt-4 text-[var(--primary)] hover:underline text-sm">
           Ana sayfaya don
         </Link>
       </div>
@@ -230,7 +230,7 @@ export default function UserProfileClient({ username }: { username: string }) {
     <div>
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center gap-3">
-        <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
+        <Link href="/feed" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
         <div className="flex-1">

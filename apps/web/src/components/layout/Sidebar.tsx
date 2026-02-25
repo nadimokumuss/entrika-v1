@@ -21,7 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Ana Sayfa", icon: Home },
+  { href: "/feed", label: "Ana Sayfa", icon: Home },
   { href: "/explore", label: "Keşfet", icon: Compass },
   { href: "/match", label: "Eşleşme", icon: Heart },
   { href: "/messages", label: "Mesajlar", icon: MessageCircle },
@@ -41,7 +41,7 @@ export default function Sidebar() {
     <aside className="sticky top-0 h-dvh flex flex-col justify-between py-4 px-3">
       {/* Logo */}
       <div>
-        <Link href="/" className="flex items-center gap-3 px-3 py-2 mb-4">
+        <Link href="/feed" className="flex items-center gap-3 px-3 py-2 mb-4">
           <Logo size={28} />
           <span className="text-xl font-bold text-[var(--text)] hidden xl:block">
             Entrika
@@ -53,7 +53,7 @@ export default function Sidebar() {
           {NAV_ITEMS.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href));
+              (item.href !== "/feed" && pathname.startsWith(item.href));
             const Icon = item.icon;
 
             return (

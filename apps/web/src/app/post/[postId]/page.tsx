@@ -249,7 +249,7 @@ export default function PostDetailPage() {
     try {
       const { error } = await supabase.from("posts").delete().eq("id", postId);
       if (error) throw error;
-      router.push("/");
+      router.push("/feed");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Post silinemedi.";
       setAlertMsg(message);
@@ -485,7 +485,7 @@ export default function PostDetailPage() {
     <div className="flex flex-col h-dvh">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-light)] px-4 py-3 flex items-center gap-3">
-        <Link href="/" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
+        <Link href="/feed" className="p-1 rounded-lg hover:bg-[var(--card)]" aria-label="Geri dön">
           <ArrowLeft size={20} className="text-[var(--text)]" />
         </Link>
         <h1 className="text-lg font-bold text-[var(--text)] flex-1">Paylasim</h1>
@@ -673,7 +673,7 @@ export default function PostDetailPage() {
         open={repostModalOpen}
         onClose={() => setRepostModalOpen(false)}
         originalPost={post}
-        onReposted={() => router.push("/")}
+        onReposted={() => router.push("/feed")}
       />
 
       {/* Delete Post Confirm */}

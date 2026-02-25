@@ -141,7 +141,7 @@ export default function RightPanel() {
 
   const handleCategoryClick = (categoryKey: string) => {
     if (activeCategory === categoryKey) {
-      router.push("/");
+      router.push("/feed");
     } else {
       router.push(`/?category=${categoryKey}`);
     }
