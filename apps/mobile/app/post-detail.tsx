@@ -27,6 +27,12 @@ import {
   User,
   Flame,
   Trash2,
+  Reply,
+  X,
+  Bookmark,
+  BookmarkCheck,
+  Edit3,
+  Repeat2,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import {
@@ -44,9 +50,13 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { blockUser } from "@/lib/blocking";
+import { isPostBookmarked, toggleBookmark } from "@/lib/bookmarks";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Logo from "@/components/Logo";
 import GlassCard from "@/components/ui/GlassCard";
+import { EditPostModal } from "@/components/ui/EditPostModal";
+import { RepostModal } from "@/components/ui/RepostModal";
+import EmojiPicker from "@/components/EmojiPicker";
 
 interface PostDetail {
   id: string;
@@ -67,6 +77,7 @@ interface CommentItem {
   content: string;
   is_anonymous: boolean;
   created_at: string;
+  parent_id: string | null;
   profiles: { username: string; avatar_url: string } | null;
   reactions?: { type: ReactionType; count: number }[];
   userReaction?: ReactionType | null;
@@ -104,7 +115,15 @@ export default function PostDetailScreen() {
   const [revealed, setRevealed] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<CommentItem | null>(null);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [emojiPickerCommentId, setEmojiPickerCommentId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
 
   const fetchPost = useCallback(async () => {
     if (!postId) return;
@@ -159,7 +178,7 @@ export default function PostDetailScreen() {
 
     const { data, error } = await supabase
       .from("comments")
-      .select("*, profiles(username, avatar_url)")
+      .select("*, profiles(username, avatar_url), parent_id")
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
 
@@ -219,6 +238,13 @@ export default function PostDetailScreen() {
       }))
     );
   }, [postId, user?.id]);
+
+  // Check bookmark status
+  useEffect(() => {
+    if (user && postId) {
+      isPostBookmarked(user.id, postId).then(setBookmarked);
+    }
+  }, [user, postId]);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -292,7 +318,9 @@ export default function PostDetailScreen() {
     if (!inputText.trim() || !user || !postId || sending) return;
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const text = inputText.trim();
+    const parentId = replyingTo?.id || null;
     setInputText("");
+    setReplyingTo(null);
     setSending(true);
 
     // OPTIMISTIC: Add comment immediately to UI
@@ -303,6 +331,7 @@ export default function PostDetailScreen() {
       content: text,
       is_anonymous: isAnonymous,
       created_at: new Date().toISOString(),
+      parent_id: parentId,
       profiles: isAnonymous ? null : {
         username: profile?.username || user.email?.split('@')[0] || "Sen",
         avatar_url: profile?.avatar_url || "",
@@ -317,6 +346,7 @@ export default function PostDetailScreen() {
         author_id: user.id,
         content: text,
         is_anonymous: isAnonymous,
+        parent_id: parentId,
       });
 
       if (error) {
@@ -334,6 +364,46 @@ export default function PostDetailScreen() {
       setInputText(text);
     }
     setSending(false);
+  };
+
+  const handleReply = (comment: CommentItem) => {
+    setReplyingTo(comment);
+    const username = comment.is_anonymous ? "Anonim" : `@${comment.profiles?.username || "?"}`;
+    setInputText("");
+    inputRef.current?.focus();
+  };
+
+  const handleBookmarkToggle = async () => {
+    if (!user || !postId) return;
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
+    const prev = bookmarked;
+    setBookmarked(!prev);
+    const result = await toggleBookmark(user.id, postId);
+    if (!result.success) {
+      setBookmarked(prev);
+    }
+  };
+
+  const handleEditComment = async (commentId: string, newContent: string) => {
+    if (!user || !newContent.trim()) return;
+    try {
+      const { error } = await supabase
+        .from("comments")
+        .update({ content: newContent.trim() })
+        .eq("id", commentId)
+        .eq("author_id", user.id);
+
+      if (error) throw error;
+
+      setComments(prev => prev.map(c =>
+        c.id === commentId ? { ...c, content: newContent.trim() } : c
+      ));
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+    } catch (e) {
+      console.error("Edit comment error:", e);
+      Alert.alert("Hata", "Yorum guncellenemedi.");
+    }
   };
 
   const handleCommentReaction = async (commentId: string, type: ReactionType) => {
@@ -831,6 +901,84 @@ export default function PostDetailScreen() {
       borderRadius: borderRadius.full,
       marginLeft: spacing.xs,
     },
+    commentReplyButton: {
+      padding: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    commentActionsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.sm,
+      gap: spacing.xs,
+    },
+    replyIndicator: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: `${colors.primary}10`,
+      borderRadius: borderRadius.lg,
+      marginBottom: spacing.xs,
+    },
+    replyIndicatorText: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: "500",
+      flex: 1,
+    },
+    replyIndicatorClose: {
+      padding: spacing.xs,
+    },
+    replyBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: spacing.xs,
+      gap: spacing.xs,
+    },
+    replyBadgeText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
+    commentItemReply: {
+      marginLeft: 40,
+    },
+    commentEditInput: {
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontSize: fontSize.base,
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    commentEditActions: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      gap: spacing.sm,
+    },
+    commentEditButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.sm,
+    },
+    commentEditButtonText: {
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginLeft: "auto",
+    },
+    bookmarkButton: {
+      padding: spacing.sm,
+    },
+    commentMenuButton: {
+      padding: spacing.xs,
+      marginLeft: spacing.xs,
+    },
     emptyComments: {
       alignItems: "center",
       paddingVertical: spacing.xxxl,
@@ -942,8 +1090,25 @@ export default function PostDetailScreen() {
     },
   }), [colors, glass]);
 
-  const renderComment = ({ item }: { item: CommentItem }) => {
+  // Group comments: top-level + replies
+  const topLevelComments = useMemo(() =>
+    comments.filter(c => !c.parent_id),
+    [comments]
+  );
+
+  const getReplies = useCallback((parentId: string) =>
+    comments.filter(c => c.parent_id === parentId),
+    [comments]
+  );
+
+  const renderSingleComment = (item: CommentItem, isReply: boolean = false) => {
     const authorTappable = !item.is_anonymous && item.profiles;
+    const isEditing = editingCommentId === item.id;
+
+    // Find parent comment for reply badge
+    const parentComment = item.parent_id
+      ? comments.find(c => c.id === item.parent_id)
+      : null;
 
     const avatarContent = !item.is_anonymous && item.profiles?.avatar_url ? (
       <Image
@@ -965,7 +1130,7 @@ export default function PostDetailScreen() {
     );
 
     return (
-      <View style={styles.commentItem}>
+      <View key={item.id} style={[styles.commentItem, isReply && styles.commentItemReply]}>
         {authorTappable ? (
           <TouchableOpacity
             style={styles.commentAvatar}
@@ -978,6 +1143,17 @@ export default function PostDetailScreen() {
           <View style={styles.commentAvatar}>{avatarContent}</View>
         )}
         <View style={styles.commentBody}>
+          {/* Reply badge */}
+          {isReply && parentComment && (
+            <View style={styles.replyBadge}>
+              <Reply size={12} color={colors.textMuted} />
+              <Text style={styles.replyBadgeText}>
+                {parentComment.is_anonymous
+                  ? "Anonim"
+                  : `@${parentComment.profiles?.username || "?"}`}'e yanit
+              </Text>
+            </View>
+          )}
           <View style={styles.commentHeader}>
             <View style={styles.commentHeaderLeft}>
               {authorTappable ? (
@@ -995,19 +1171,61 @@ export default function PostDetailScreen() {
               </Text>
             </View>
             {item.author_id === user?.id && (
-              <TouchableOpacity
-                onPress={() => handleDeleteComment(item.id)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                style={styles.deleteCommentButton}
-              >
-                <Trash2 size={14} color={colors.textMuted} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditingCommentId(item.id);
+                    setEditingCommentContent(item.content);
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={styles.commentMenuButton}
+                >
+                  <Edit3 size={14} color={colors.textMuted} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDeleteComment(item.id)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={styles.deleteCommentButton}
+                >
+                  <Trash2 size={14} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
-          <Text style={styles.commentContent}>{item.content}</Text>
 
-          {/* Comment Reactions */}
-          <View style={styles.commentReactionsRow}>
+          {isEditing ? (
+            <>
+              <TextInput
+                style={styles.commentEditInput}
+                value={editingCommentContent}
+                onChangeText={setEditingCommentContent}
+                multiline
+                autoFocus
+              />
+              <View style={styles.commentEditActions}>
+                <TouchableOpacity
+                  style={styles.commentEditButton}
+                  onPress={() => {
+                    setEditingCommentId(null);
+                    setEditingCommentContent("");
+                  }}
+                >
+                  <Text style={[styles.commentEditButtonText, { color: colors.textMuted }]}>Iptal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.commentEditButton, { backgroundColor: colors.primary, borderRadius: borderRadius.sm }]}
+                  onPress={() => handleEditComment(item.id, editingCommentContent)}
+                >
+                  <Text style={[styles.commentEditButtonText, { color: colors.white }]}>Kaydet</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.commentContent}>{item.content}</Text>
+          )}
+
+          {/* Comment Reactions + Reply */}
+          <View style={styles.commentActionsRow}>
             {(item.reactions || []).slice(0, 3).map((reaction) => {
               const isUserReaction = item.userReaction === reaction.type;
               return (
@@ -1032,18 +1250,37 @@ export default function PostDetailScreen() {
                 </TouchableOpacity>
               );
             })}
-            {/* Add reaction button */}
+            {/* Add reaction button with EmojiPicker */}
+            <EmojiPicker
+              visible={emojiPickerCommentId === item.id}
+              onSelect={(type) => handleCommentReaction(item.id, type)}
+              onClose={() => setEmojiPickerCommentId(null)}
+              activeReaction={item.userReaction}
+              triggerSize={14}
+              onTriggerPress={() => setEmojiPickerCommentId(
+                emojiPickerCommentId === item.id ? null : item.id
+              )}
+            />
+            {/* Reply button */}
             <TouchableOpacity
-              style={styles.commentAddReactionButton}
-              onPress={() => {
-                handleCommentReaction(item.id, "alev");
-              }}
+              style={styles.commentReplyButton}
+              onPress={() => handleReply(item)}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
-              <Flame size={14} color={item.userReaction ? colors.primary : colors.textMuted} />
+              <Reply size={14} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+    );
+  };
+
+  const renderComment = ({ item }: { item: CommentItem }) => {
+    const replies = getReplies(item.id);
+    return (
+      <View>
+        {renderSingleComment(item, false)}
+        {replies.map(reply => renderSingleComment(reply, true))}
       </View>
     );
   };
@@ -1234,6 +1471,26 @@ export default function PostDetailScreen() {
           </TouchableOpacity>
           <Logo size={24} />
           <Text style={styles.headerTitle}>Paylasim</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.bookmarkButton}
+              onPress={() => setShowRepostModal(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Repeat2 size={22} color={colors.textLight} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.bookmarkButton}
+              onPress={handleBookmarkToggle}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              {bookmarked ? (
+                <BookmarkCheck size={22} color={colors.primary} />
+              ) : (
+                <Bookmark size={22} color={colors.textLight} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <KeyboardAvoidingView
@@ -1244,7 +1501,7 @@ export default function PostDetailScreen() {
           {/* Comments List with Post Header */}
           <FlatList
             ref={flatListRef}
-            data={comments}
+            data={topLevelComments}
             renderItem={renderComment}
             keyExtractor={(item) => item.id}
             ListHeaderComponent={renderHeader}
@@ -1260,10 +1517,25 @@ export default function PostDetailScreen() {
 
           {/* Input Bar */}
           <View style={styles.inputBar}>
+            {replyingTo && (
+              <View style={styles.replyIndicator}>
+                <Reply size={14} color={colors.primary} />
+                <Text style={styles.replyIndicatorText}>
+                  {" "}{replyingTo.is_anonymous ? "Anonim" : `@${replyingTo.profiles?.username || "?"}`}'e yanit yaziyorsun
+                </Text>
+                <TouchableOpacity
+                  style={styles.replyIndicatorClose}
+                  onPress={() => setReplyingTo(null)}
+                >
+                  <X size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={styles.inputRow}>
               <TextInput
+                ref={inputRef}
                 style={styles.textInput}
-                placeholder="Yorum yaz..."
+                placeholder={replyingTo ? "Yanit yaz..." : "Yorum yaz..."}
                 placeholderTextColor={colors.textMuted}
                 value={inputText}
                 onChangeText={(text) => {
@@ -1322,35 +1594,88 @@ export default function PostDetailScreen() {
             onPress={() => setShowMenu(false)}
           >
             <View style={styles.menuContainer}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={handleReport}
-              >
-                <Flag size={20} color={colors.warning} />
-                <Text style={styles.menuItemText}>Raporla</Text>
-              </TouchableOpacity>
-              {post &&
-                !post.is_anonymous &&
-                post.author_id !== user?.id && (
-                  <>
-                    <View style={styles.menuDivider} />
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={handleBlockUser}
-                    >
-                      <ShieldBan size={20} color={colors.danger} />
-                      <Text
-                        style={[
-                          styles.menuItemText,
-                          { color: colors.danger },
-                        ]}
+              {/* Own post: Edit + Delete */}
+              {post && post.author_id === user?.id && (
+                <>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMenu(false);
+                      setShowEditModal(true);
+                    }}
+                  >
+                    <Edit3 size={20} color={colors.primary} />
+                    <Text style={styles.menuItemText}>Duzenle</Text>
+                  </TouchableOpacity>
+                  <View style={styles.menuDivider} />
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMenu(false);
+                      Alert.alert(
+                        "Postu Sil",
+                        "Bu postu silmek istediginize emin misiniz?",
+                        [
+                          { text: "Iptal", style: "cancel" },
+                          {
+                            text: "Sil",
+                            style: "destructive",
+                            onPress: async () => {
+                              try {
+                                const { error } = await supabase
+                                  .from("posts")
+                                  .delete()
+                                  .eq("id", post.id)
+                                  .eq("author_id", user?.id);
+                                if (error) throw error;
+                                router.back();
+                              } catch (e) {
+                                Alert.alert("Hata", "Post silinemedi.");
+                              }
+                            },
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    <Trash2 size={20} color={colors.danger} />
+                    <Text style={[styles.menuItemText, { color: colors.danger }]}>Sil</Text>
+                  </TouchableOpacity>
+                  <View style={styles.menuDivider} />
+                </>
+              )}
+              {/* Other's post: Report + Block */}
+              {post && post.author_id !== user?.id && (
+                <>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={handleReport}
+                  >
+                    <Flag size={20} color={colors.warning} />
+                    <Text style={styles.menuItemText}>Raporla</Text>
+                  </TouchableOpacity>
+                  {!post.is_anonymous && (
+                    <>
+                      <View style={styles.menuDivider} />
+                      <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={handleBlockUser}
                       >
-                        Kullaniciyi Engelle
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              <View style={styles.menuDivider} />
+                        <ShieldBan size={20} color={colors.danger} />
+                        <Text
+                          style={[
+                            styles.menuItemText,
+                            { color: colors.danger },
+                          ]}
+                        >
+                          Kullaniciyi Engelle
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                  <View style={styles.menuDivider} />
+                </>
+              )}
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => setShowMenu(false)}
@@ -1367,6 +1692,33 @@ export default function PostDetailScreen() {
             </View>
           </Pressable>
         </Modal>
+
+        {/* Edit Post Modal */}
+        {post && (
+          <EditPostModal
+            visible={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              fetchPost();
+            }}
+            post={post}
+          />
+        )}
+
+        {/* Repost Modal */}
+        {post && (
+          <RepostModal
+            visible={showRepostModal}
+            onClose={() => setShowRepostModal(false)}
+            originalPost={{
+              id: post.id,
+              content: post.content,
+              category: post.category,
+              is_anonymous: post.is_anonymous,
+              profiles: post.profiles,
+            }}
+          />
+        )}
       </SafeAreaView>
     </GradientBackground>
   );

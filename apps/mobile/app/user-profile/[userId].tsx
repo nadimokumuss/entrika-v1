@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,11 @@ import {
   Star,
   Flag,
   ShieldBan,
+  MapPin,
+  Briefcase,
+  MessageCircle,
+  Flame,
+  Heart,
 } from "lucide-react-native";
 import {
   borderRadius,
@@ -31,12 +36,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { supabase, UserReview } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { blockUser } from "@/lib/blocking";
-import { CATEGORIES, type PostCategory } from "@/constants/categories";
+import { CATEGORIES, REACTIONS, type PostCategory, type ReactionType } from "@/constants/categories";
 import GradientBackground from "@/components/ui/GradientBackground";
 import { useFollow } from "@/contexts/FollowContext";
 import { UserPlus, UserMinus } from "lucide-react-native";
 
-type TabType = "paylaSimlar" | "degerlendirmeler";
+type TabType = "paylaSimlar" | "yorumlar" | "tepkiler" | "aldigi" | "verdigi";
 
 interface ReviewWithReviewer extends UserReview {
   reviewer?: { username: string } | null;
@@ -55,6 +60,11 @@ interface PublicProfile {
   avatar_url: string;
   reputation_score: number;
   created_at: string;
+  bio: string | null;
+  full_name: string | null;
+  city: string | null;
+  occupation: string | null;
+  relationship_status?: string | null;
 }
 
 const POSITIVE_TAGS = [
@@ -98,6 +108,12 @@ export default function UserProfileScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [userComments, setUserComments] = useState<any[]>([]);
+  const [userReactions, setUserReactions] = useState<any[]>([]);
+  const [reviewsGiven, setReviewsGiven] = useState<any[]>([]);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [reactionsLoaded, setReactionsLoaded] = useState(false);
+  const [reviewsGivenLoaded, setReviewsGivenLoaded] = useState(false);
 
   const isOwnProfile = user?.id === userId;
   const isFollowing = userId ? checkIsFollowing(userId) : false;
@@ -108,12 +124,23 @@ export default function UserProfileScreen() {
       // Fetch profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id, username, avatar_url, reputation_score, created_at")
+        .select("id, username, avatar_url, reputation_score, created_at, bio, full_name, city, occupation")
         .eq("id", userId)
         .single();
 
       if (profileError) throw profileError;
-      setProfile(profileData);
+
+      // Fetch relationship status from dating_profiles
+      const { data: datingProfile } = await supabase
+        .from("dating_profiles")
+        .select("relationship_status")
+        .eq("user_id", userId)
+        .single();
+
+      setProfile({
+        ...profileData,
+        relationship_status: datingProfile?.relationship_status || null,
+      });
 
       // Fetch non-anonymous posts
       const { data: postsData, error: postsError } = await supabase
@@ -170,9 +197,68 @@ export default function UserProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
+      setCommentsLoaded(false);
+      setReactionsLoaded(false);
+      setReviewsGivenLoaded(false);
       fetchUserData();
     }, [fetchUserData])
   );
+
+  const fetchUserComments = useCallback(async () => {
+    if (!userId || commentsLoaded) return;
+    try {
+      const { data } = await supabase
+        .from("comments")
+        .select("id, content, created_at, post_id, posts(id, content)")
+        .eq("author_id", userId)
+        .eq("is_anonymous", false)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setUserComments(data || []);
+      setCommentsLoaded(true);
+    } catch (e) {
+      console.error("Error fetching user comments:", e);
+    }
+  }, [userId, commentsLoaded]);
+
+  const fetchUserReactions = useCallback(async () => {
+    if (!userId || reactionsLoaded) return;
+    try {
+      const { data } = await supabase
+        .from("post_reactions")
+        .select("id, reaction_type, created_at, post_id, posts(id, content)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setUserReactions(data || []);
+      setReactionsLoaded(true);
+    } catch (e) {
+      console.error("Error fetching user reactions:", e);
+    }
+  }, [userId, reactionsLoaded]);
+
+  const fetchReviewsGiven = useCallback(async () => {
+    if (!userId || reviewsGivenLoaded) return;
+    try {
+      const { data } = await supabase
+        .from("user_reviews")
+        .select("*, target:profiles!user_reviews_target_user_id_fkey(username)")
+        .eq("reviewer_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setReviewsGiven(data || []);
+      setReviewsGivenLoaded(true);
+    } catch (e) {
+      console.error("Error fetching reviews given:", e);
+    }
+  }, [userId, reviewsGivenLoaded]);
+
+  // Lazy load tabs
+  useEffect(() => {
+    if (activeTab === "yorumlar") fetchUserComments();
+    if (activeTab === "tepkiler") fetchUserReactions();
+    if (activeTab === "verdigi") fetchReviewsGiven();
+  }, [activeTab, fetchUserComments, fetchUserReactions, fetchReviewsGiven]);
 
   const handleReport = () => {
     setShowMenu(false);
@@ -345,11 +431,60 @@ export default function UserProfileScreen() {
       fontWeight: "bold",
       fontSize: fontSize.sm,
     },
+    fullName: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
     username: {
       color: colors.text,
       fontSize: fontSize.xl,
       fontWeight: "bold",
       marginTop: spacing.lg,
+    },
+    usernameSmall: {
+      fontSize: fontSize.md,
+      fontWeight: "600",
+      color: colors.textLight,
+      marginTop: spacing.xs,
+    },
+    relationshipBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      backgroundColor: `${colors.accent}15`,
+      borderRadius: borderRadius.full,
+    },
+    relationshipText: {
+      color: colors.accent,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+    },
+    bio: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      textAlign: "center",
+      marginTop: spacing.sm,
+      lineHeight: 20,
+    },
+    infoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.sm,
+      gap: spacing.lg,
+    },
+    infoItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    infoText: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
     },
     reputationRow: {
       flexDirection: "row",
@@ -470,6 +605,7 @@ export default function UserProfileScreen() {
     tabText: {
       fontWeight: "500",
       color: colors.textMuted,
+      fontSize: fontSize.xs,
     },
     tabTextActive: {
       color: colors.primary,
@@ -707,8 +843,50 @@ export default function UserProfileScreen() {
               </View>
             </View>
 
+            {/* Full Name */}
+            {profile.full_name && (
+              <Text style={styles.fullName}>{profile.full_name}</Text>
+            )}
+
             {/* Username */}
-            <Text style={styles.username}>@{profile.username}</Text>
+            <Text style={[styles.username, profile.full_name ? styles.usernameSmall : null]}>@{profile.username}</Text>
+
+            {/* Bio */}
+            {profile.bio && (
+              <Text style={styles.bio}>{profile.bio}</Text>
+            )}
+
+            {/* Relationship Status Badge */}
+            {profile.relationship_status && profile.relationship_status !== "single" && (
+              <View style={styles.relationshipBadge}>
+                <Heart size={12} color={colors.accent} />
+                <Text style={styles.relationshipText}>
+                  {profile.relationship_status === "in_relationship" ? "Iliskide"
+                    : profile.relationship_status === "engaged" ? "Nisanli"
+                    : profile.relationship_status === "married" ? "Evli"
+                    : profile.relationship_status === "complicated" ? "Karmasik"
+                    : profile.relationship_status}
+                </Text>
+              </View>
+            )}
+
+            {/* Location & Occupation */}
+            {(profile.city || profile.occupation) && (
+              <View style={styles.infoRow}>
+                {profile.city && (
+                  <View style={styles.infoItem}>
+                    <MapPin size={14} color={colors.textMuted} />
+                    <Text style={styles.infoText}>{profile.city}</Text>
+                  </View>
+                )}
+                {profile.occupation && (
+                  <View style={styles.infoItem}>
+                    <Briefcase size={14} color={colors.textMuted} />
+                    <Text style={styles.infoText}>{profile.occupation}</Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Reputation Description */}
             <View style={styles.reputationRow}>
@@ -783,38 +961,31 @@ export default function UserProfileScreen() {
 
           {/* Tabs */}
           <View style={styles.tabsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === "paylaSimlar" && styles.tabActive,
-              ]}
-              onPress={() => setActiveTab("paylaSimlar")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "paylaSimlar" && styles.tabTextActive,
-                ]}
-              >
-                Paylasimlar
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === "degerlendirmeler" && styles.tabActive,
-              ]}
-              onPress={() => setActiveTab("degerlendirmeler")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "degerlendirmeler" && styles.tabTextActive,
-                ]}
-              >
-                Degerlendirmeler
-              </Text>
-            </TouchableOpacity>
+            {(["paylaSimlar", "yorumlar", "tepkiler", "aldigi", "verdigi"] as TabType[]).map((tab) => {
+              const labels: Record<TabType, string> = {
+                "paylaSimlar": "Paylasimlar",
+                "yorumlar": "Yorumlar",
+                "tepkiler": "Tepkiler",
+                "aldigi": "Aldigi",
+                "verdigi": "Verdigi",
+              };
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  style={[styles.tab, activeTab === tab && styles.tabActive]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === tab && styles.tabTextActive,
+                    ]}
+                  >
+                    {labels[tab]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* Content */}
@@ -822,7 +993,12 @@ export default function UserProfileScreen() {
             {activeTab === "paylaSimlar" ? (
               userPosts.length > 0 ? (
                 userPosts.map((post) => (
-                  <View key={post.id} style={styles.postCard}>
+                  <TouchableOpacity
+                    key={post.id}
+                    style={styles.postCard}
+                    onPress={() => router.push({ pathname: "/post-detail", params: { postId: post.id } })}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.postCategoryRow}>
                       <Text
                         style={[
@@ -844,7 +1020,7 @@ export default function UserProfileScreen() {
                     <Text style={styles.postTime}>
                       {formatTimeAgo(post.created_at)}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <View style={styles.emptyState}>
@@ -856,79 +1032,233 @@ export default function UserProfileScreen() {
                   </Text>
                 </View>
               )
-            ) : reviews.length > 0 ? (
-              reviews.map((review) => (
-                <View key={review.id} style={styles.reviewCard}>
-                  <View style={styles.reviewHeader}>
-                    <View
-                      style={[
-                        styles.reviewScoreBadge,
-                        {
-                          backgroundColor:
-                            review.score >= 7
-                              ? colors.success
-                              : review.score >= 4
-                              ? "#EAB308"
-                              : colors.danger,
-                        },
-                      ]}
-                    >
-                      <Text style={styles.reviewScoreText}>
-                        {review.score}/10
+            ) : activeTab === "aldigi" ? (
+              reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <View key={review.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <View
+                        style={[
+                          styles.reviewScoreBadge,
+                          {
+                            backgroundColor:
+                              review.score >= 7
+                                ? colors.success
+                                : review.score >= 4
+                                ? "#EAB308"
+                                : colors.danger,
+                          },
+                        ]}
+                      >
+                        <Text style={styles.reviewScoreText}>
+                          {review.score}/10
+                        </Text>
+                      </View>
+                      <Text style={styles.reviewAuthor}>
+                        {review.is_anonymous
+                          ? "Anonim Kullanici"
+                          : review.reviewer?.username
+                          ? `@${review.reviewer.username}`
+                          : "Bilinmeyen"}
+                      </Text>
+                      <Text style={styles.reviewDate}>
+                        {formatTimeAgo(review.created_at)}
                       </Text>
                     </View>
-                    <Text style={styles.reviewAuthor}>
-                      {review.is_anonymous
-                        ? "Anonim Kullanici"
-                        : review.reviewer?.username
-                        ? `@${review.reviewer.username}`
-                        : "Bilinmeyen"}
-                    </Text>
-                    <Text style={styles.reviewDate}>
-                      {formatTimeAgo(review.created_at)}
-                    </Text>
-                  </View>
-                  {review.tags.length > 0 && (
-                    <View style={styles.reviewTagsRow}>
-                      {review.tags.map((tag) => (
-                        <View
-                          key={tag}
-                          style={[
-                            styles.reviewTag,
-                            POSITIVE_TAGS.includes(tag)
-                              ? styles.reviewTagPositive
-                              : styles.reviewTagNegative,
-                          ]}
-                        >
-                          <Text
+                    {review.tags.length > 0 && (
+                      <View style={styles.reviewTagsRow}>
+                        {review.tags.map((tag) => (
+                          <View
+                            key={tag}
                             style={[
-                              styles.reviewTagText,
+                              styles.reviewTag,
                               POSITIVE_TAGS.includes(tag)
-                                ? styles.reviewTagTextPositive
-                                : styles.reviewTagTextNegative,
+                                ? styles.reviewTagPositive
+                                : styles.reviewTagNegative,
                             ]}
                           >
-                            {tag}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                  {review.content && (
-                    <Text style={styles.reviewContent}>
-                      {review.content}
-                    </Text>
-                  )}
+                            <Text
+                              style={[
+                                styles.reviewTagText,
+                                POSITIVE_TAGS.includes(tag)
+                                  ? styles.reviewTagTextPositive
+                                  : styles.reviewTagTextNegative,
+                              ]}
+                            >
+                              {tag}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.reviewContent}>
+                        {review.content}
+                      </Text>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Star size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>
+                    Henuz degerlendirme yok.
+                  </Text>
                 </View>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <Star size={48} color={colors.border} />
-                <Text style={styles.emptyStateText}>
-                  Henuz degerlendirme yok.
-                </Text>
-              </View>
-            )}
+              )
+            ) : activeTab === "yorumlar" ? (
+              !commentsLoaded ? (
+                <View style={{ alignItems: "center", paddingVertical: 32 }}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : userComments.length > 0 ? (
+                userComments.map((comment: any) => (
+                  <TouchableOpacity
+                    key={comment.id}
+                    style={styles.postCard}
+                    onPress={() => router.push({ pathname: "/post-detail", params: { postId: comment.post_id } })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing.sm }}>
+                      <MessageCircle size={14} color={colors.textMuted} />
+                      <Text style={{ color: colors.textMuted, fontSize: fontSize.xs, marginLeft: 4 }}>Yorum</Text>
+                      <Text style={styles.postTime}> · {formatTimeAgo(comment.created_at)}</Text>
+                    </View>
+                    <Text style={styles.postContent} numberOfLines={2}>
+                      {comment.content}
+                    </Text>
+                    {comment.posts && (
+                      <View style={{ marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: glass.border }}>
+                        <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }} numberOfLines={1}>
+                          Post: {(comment.posts as any).content}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <MessageCircle size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>Henuz yorum yok.</Text>
+                </View>
+              )
+            ) : activeTab === "tepkiler" ? (
+              !reactionsLoaded ? (
+                <View style={{ alignItems: "center", paddingVertical: 32 }}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : userReactions.length > 0 ? (
+                userReactions.map((reaction: any) => (
+                  <TouchableOpacity
+                    key={reaction.id}
+                    style={styles.postCard}
+                    onPress={() => router.push({ pathname: "/post-detail", params: { postId: reaction.post_id } })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing.sm }}>
+                      <Text style={{ fontSize: fontSize.md }}>
+                        {REACTIONS[reaction.reaction_type as ReactionType]?.emoji ?? "?"}
+                      </Text>
+                      <Text style={{ color: colors.textMuted, fontSize: fontSize.xs, marginLeft: 4 }}>
+                        {REACTIONS[reaction.reaction_type as ReactionType]?.label ?? "Tepki"}
+                      </Text>
+                      <Text style={styles.postTime}> · {formatTimeAgo(reaction.created_at)}</Text>
+                    </View>
+                    {reaction.posts && (
+                      <Text style={styles.postContent} numberOfLines={2}>
+                        {(reaction.posts as any).content}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Flame size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>Henuz tepki yok.</Text>
+                </View>
+              )
+            ) : activeTab === "verdigi" ? (
+              !reviewsGivenLoaded ? (
+                <View style={{ alignItems: "center", paddingVertical: 32 }}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : reviewsGiven.length > 0 ? (
+                reviewsGiven.map((review: any) => (
+                  <TouchableOpacity
+                    key={review.id}
+                    style={styles.reviewCard}
+                    onPress={() => review.target?.username && router.push(`/user-profile/${review.target_user_id}`)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.reviewHeader}>
+                      <View
+                        style={[
+                          styles.reviewScoreBadge,
+                          {
+                            backgroundColor:
+                              review.score >= 7
+                                ? colors.success
+                                : review.score >= 4
+                                ? "#EAB308"
+                                : colors.danger,
+                          },
+                        ]}
+                      >
+                        <Text style={styles.reviewScoreText}>
+                          {review.score}/10
+                        </Text>
+                      </View>
+                      <Text style={styles.reviewAuthor}>
+                        {review.target?.username
+                          ? `@${review.target.username}`
+                          : "Bilinmeyen"}
+                      </Text>
+                      <Text style={styles.reviewDate}>
+                        {formatTimeAgo(review.created_at)}
+                      </Text>
+                    </View>
+                    {review.tags && review.tags.length > 0 && (
+                      <View style={styles.reviewTagsRow}>
+                        {review.tags.map((tag: string) => (
+                          <View
+                            key={tag}
+                            style={[
+                              styles.reviewTag,
+                              POSITIVE_TAGS.includes(tag)
+                                ? styles.reviewTagPositive
+                                : styles.reviewTagNegative,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.reviewTagText,
+                                POSITIVE_TAGS.includes(tag)
+                                  ? styles.reviewTagTextPositive
+                                  : styles.reviewTagTextNegative,
+                              ]}
+                            >
+                              {tag}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.reviewContent}>
+                        {review.content}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Star size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>
+                    Henuz degerlendirme vermemis.
+                  </Text>
+                </View>
+              )
+            ) : null}
           </View>
 
           <View style={styles.bottomSpacer} />

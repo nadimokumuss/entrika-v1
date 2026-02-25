@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark, Flame, Trash2 } from "lucide-react-native";
+import { Sparkles, MessageCircle, MoreHorizontal, Flag, ShieldBan, Bell, Bookmark, Flame, Trash2, Repeat2, PenSquare } from "lucide-react-native";
 import {
   CATEGORIES,
   REACTIONS,
@@ -24,6 +24,7 @@ import {
   type ReactionType,
 } from "@/constants/categories";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
 import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
@@ -38,10 +39,20 @@ import { PostCardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EditPostModal } from "@/components/ui/EditPostModal";
+import { RepostModal } from "@/components/ui/RepostModal";
 import { isPostBookmarked, toggleBookmark } from "@/lib/bookmarks";
 import Logo from "@/components/Logo";
 import { useFollow } from "@/contexts/FollowContext";
 import { Users, Globe } from "lucide-react-native";
+
+interface RepostData {
+  id: string;
+  content: string;
+  category: PostCategory;
+  is_anonymous: boolean;
+  author_id: string;
+  profiles: { username: string; avatar_url: string } | null;
+}
 
 interface FeedPost {
   id: string;
@@ -52,6 +63,8 @@ interface FeedPost {
   image_url: string | null;
   author_id: string;
   created_at: string;
+  repost_of_id: string | null;
+  repost_of: RepostData | null;
   profiles: {
     username: string;
     avatar_url: string;
@@ -84,11 +97,13 @@ const PostCard = memo(function PostCard({
   onRefresh,
   onEdit,
   onDelete,
+  onRepost,
 }: {
   post: FeedPost;
   onRefresh: () => void;
   onEdit: (post: FeedPost) => void;
   onDelete?: (postId: string) => void;
+  onRepost?: (post: FeedPost) => void;
 }) {
   const { colors, glass } = useTheme();
   const [revealed, setRevealed] = useState(false);
@@ -323,6 +338,35 @@ const PostCard = memo(function PostCard({
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
     },
+    repostButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: glass.background,
+      borderWidth: 1,
+      borderColor: glass.border,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+    },
+    quoteContainer: {
+      marginTop: spacing.md,
+      backgroundColor: `${colors.primary}08`,
+      borderWidth: 1,
+      borderColor: `${colors.primary}20`,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+    },
+    quoteAuthor: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
+      marginBottom: spacing.xs,
+    },
+    quoteText: {
+      color: colors.textLight,
+      fontSize: fontSize.sm,
+      lineHeight: 18,
+    },
     commentsContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -505,6 +549,27 @@ const PostCard = memo(function PostCard({
             )}
           </View>
 
+          {/* Quoted/Repost Content */}
+          {post.repost_of && (
+            <TouchableOpacity
+              style={styles.quoteContainer}
+              onPress={() => router.push({
+                pathname: "/post-detail",
+                params: { postId: post.repost_of!.id },
+              })}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.quoteAuthor}>
+                {post.repost_of.is_anonymous
+                  ? "Anonim"
+                  : `@${post.repost_of.profiles?.username || "?"}`}
+              </Text>
+              <Text style={styles.quoteText} numberOfLines={3}>
+                {post.repost_of.content}
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {/* Author */}
           {!post.is_anonymous && post.profiles && (
             <TouchableOpacity
@@ -536,6 +601,14 @@ const PostCard = memo(function PostCard({
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Flame size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+              {/* Repost Button */}
+              <TouchableOpacity
+                style={styles.repostButton}
+                onPress={() => onRepost?.(post)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Repeat2 size={16} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
             <TouchableOpacity
@@ -673,7 +746,7 @@ export default function FeedScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { followingIds } = useFollow();
-  const { colors, glass } = useTheme();
+  const { colors, glass, gradients } = useTheme();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -682,6 +755,8 @@ export default function FeedScreen() {
   const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
+  const [repostModalVisible, setRepostModalVisible] = useState(false);
+  const [repostTarget, setRepostTarget] = useState<FeedPost | null>(null);
   const [feedFilter, setFeedFilter] = useState<'all' | 'following' | 'discover'>('all');
 
   const fetchUnreadCount = useCallback(async () => {
@@ -709,7 +784,7 @@ export default function FeedScreen() {
 
       let query = supabase
         .from("posts")
-        .select("*, profiles(username, avatar_url)")
+        .select("*, profiles(username, avatar_url), repost_of:repost_of_id(id, content, category, is_anonymous, author_id, profiles(username, avatar_url))")
         .gte("created_at", thirtyDaysAgo.toISOString())
         .order("created_at", { ascending: false })
         .limit(100); // Get more posts to apply algorithmic sorting
@@ -740,7 +815,7 @@ export default function FeedScreen() {
           query = query.not("author_id", "in", `(${excludeIds.join(",")})`);
         } else if (user) {
           // Just exclude self
-          query = query.not("author_id", `(${user.id})`);
+          query = query.not("author_id", "in", `(${user.id})`);
         }
       }
 
@@ -857,6 +932,8 @@ export default function FeedScreen() {
           image_url: p.image_url,
           author_id: p.author_id,
           created_at: p.created_at,
+          repost_of_id: (p as any).repost_of_id || null,
+          repost_of: (p as any).repost_of || null,
           profiles: p.profiles as any,
           reactions,
           commentCount: commentsMap[p.id] || 0,
@@ -925,6 +1002,8 @@ export default function FeedScreen() {
               image_url: newRecord.image_url,
               author_id: newRecord.author_id,
               created_at: newRecord.created_at,
+              repost_of_id: newRecord.repost_of_id || null,
+              repost_of: null,
               profiles: profileData as any,
               reactions: [],
               commentCount: 0,
@@ -1219,6 +1298,26 @@ export default function FeedScreen() {
     bottomSpacer: {
       height: 80,
     },
+    fab: {
+      position: "absolute",
+      bottom: 90,
+      right: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      elevation: 8,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+    },
+    fabGradient: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+    },
   }), [colors, glass]);
 
   if (loading) {
@@ -1394,7 +1493,7 @@ export default function FeedScreen() {
         >
           {filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} onDelete={handleDeletePost} />
+              <PostCard key={post.id} post={post} onRefresh={fetchPosts} onEdit={handleEditPost} onDelete={handleDeletePost} onRepost={(p) => { setRepostTarget(p); setRepostModalVisible(true); }} />
             ))
           ) : (
             <EmptyState type={feedFilter === 'following' ? 'following' : 'feed'} />
@@ -1415,6 +1514,40 @@ export default function FeedScreen() {
             image_url: selectedPost.image_url,
           } : null}
         />
+
+        {repostTarget && (
+          <RepostModal
+            visible={repostModalVisible}
+            onClose={() => {
+              setRepostModalVisible(false);
+              setRepostTarget(null);
+              fetchPosts();
+            }}
+            originalPost={{
+              id: repostTarget.id,
+              content: repostTarget.content,
+              category: repostTarget.category,
+              is_anonymous: repostTarget.is_anonymous,
+              profiles: repostTarget.profiles,
+            }}
+          />
+        )}
+
+        {/* FAB - Yeni Paylasim */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push("/new-post")}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.fabGradient}
+          >
+            <PenSquare size={24} color={colors.white} />
+          </LinearGradient>
+        </TouchableOpacity>
       </SafeAreaView>
     </GradientBackground>
   );

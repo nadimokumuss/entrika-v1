@@ -31,6 +31,11 @@ export default function EditProfileScreen() {
   const { colors, gradients, glass } = useTheme();
   const [username, setUsername] = useState(profile?.username || "");
   const [bio, setBio] = useState(profile?.bio || "");
+  const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [age, setAge] = useState(profile?.age ? String(profile.age) : "");
+  const [height, setHeight] = useState(profile?.height ? String(profile.height) : "");
+  const [city, setCity] = useState(profile?.city || "");
+  const [occupation, setOccupation] = useState(profile?.occupation || "");
   const [saving, setSaving] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
 
@@ -79,11 +84,30 @@ export default function EditProfileScreen() {
         }
       }
 
+      const parsedAge = age ? parseInt(age, 10) : null;
+      const parsedHeight = height ? parseInt(height, 10) : null;
+
+      if (parsedAge !== null && (parsedAge < 18 || parsedAge > 99)) {
+        Alert.alert("Hata", "Yas 18-99 arasinda olmali.");
+        setSaving(false);
+        return;
+      }
+      if (parsedHeight !== null && (parsedHeight < 140 || parsedHeight > 220)) {
+        Alert.alert("Hata", "Boy 140-220 cm arasinda olmali.");
+        setSaving(false);
+        return;
+      }
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
           username: trimmedUsername,
           bio: bio.trim() || null,
+          full_name: fullName.trim() || null,
+          age: parsedAge,
+          height: parsedHeight,
+          city: city.trim() || null,
+          occupation: occupation.trim() || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user?.id);
@@ -186,6 +210,13 @@ export default function EditProfileScreen() {
       fontSize: fontSize.xs,
       marginTop: spacing.md,
       textAlign: "center",
+    },
+    rowContainer: {
+      flexDirection: "row",
+      gap: spacing.md,
+    },
+    halfInput: {
+      flex: 1,
     },
     inputSection: {
       marginBottom: spacing.xl,
@@ -347,6 +378,22 @@ export default function EditProfileScreen() {
               </Text>
             </View>
 
+            {/* Full Name Input */}
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Ad Soyad</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={fullName}
+                  onChangeText={setFullName}
+                  placeholder="Ad Soyad"
+                  placeholderTextColor={colors.textMuted}
+                  maxLength={50}
+                  editable={!saving}
+                />
+              </View>
+            </View>
+
             {/* Username Input */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Kullanici Adi</Text>
@@ -396,6 +443,72 @@ export default function EditProfileScreen() {
               <Text style={styles.hintText}>
                 Ilgilerini, hobilerini veya ne aradigini yazabilirsin.
               </Text>
+            </View>
+
+            {/* Age & Height Row */}
+            <View style={styles.rowContainer}>
+              <View style={[styles.inputSection, styles.halfInput]}>
+                <Text style={styles.inputLabel}>Yas</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={age}
+                    onChangeText={setAge}
+                    placeholder="25"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    editable={!saving}
+                  />
+                </View>
+              </View>
+              <View style={[styles.inputSection, styles.halfInput]}>
+                <Text style={styles.inputLabel}>Boy (cm)</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={height}
+                    onChangeText={setHeight}
+                    placeholder="175"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={3}
+                    editable={!saving}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* City Input */}
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Sehir</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="Istanbul"
+                  placeholderTextColor={colors.textMuted}
+                  maxLength={50}
+                  editable={!saving}
+                />
+              </View>
+            </View>
+
+            {/* Occupation Input */}
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Meslek</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={occupation}
+                  onChangeText={setOccupation}
+                  placeholder="Yazilimci"
+                  placeholderTextColor={colors.textMuted}
+                  maxLength={50}
+                  editable={!saving}
+                />
+              </View>
             </View>
 
             {/* Bilgi Karti */}

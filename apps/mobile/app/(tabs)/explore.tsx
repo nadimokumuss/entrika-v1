@@ -10,7 +10,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Search, MapPin, UserPlus, Crown, Sparkles } from "lucide-react-native";
+import { Search, MapPin, UserPlus, Crown, Sparkles, Shield, TrendingUp, Briefcase } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { borderRadius, spacing, fontSize } from "@/constants/theme";
@@ -26,7 +26,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 
-type ExploreTab = "suggested" | "new" | "nearby";
+type ExploreTab = "suggested" | "new" | "trusted" | "nearby";
 
 interface UserProfile {
   id: string;
@@ -35,6 +35,8 @@ interface UserProfile {
   reputation_score: number;
   created_at: string;
   is_verified?: boolean;
+  bio: string | null;
+  city: string | null;
 }
 
 function UserProfileCard({
@@ -119,6 +121,22 @@ function UserProfileCard({
     verifiedIcon: {
       marginLeft: spacing.xs,
     },
+    bioText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+      lineHeight: 16,
+      marginTop: spacing.xs,
+    },
+    cityRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: spacing.xs,
+    },
+    cityText: {
+      color: colors.textMuted,
+      fontSize: fontSize.xs,
+    },
     statsRow: {
       flexDirection: "row",
       marginTop: spacing.xs,
@@ -197,15 +215,24 @@ function UserProfileCard({
               )}
             </View>
 
+            {profile.bio && (
+              <Text style={styles.bioText} numberOfLines={2}>
+                {profile.bio}
+              </Text>
+            )}
+
+            {profile.city && (
+              <View style={styles.cityRow}>
+                <MapPin size={12} color={colors.textMuted} />
+                <Text style={styles.cityText}>{profile.city}</Text>
+              </View>
+            )}
+
             <View style={styles.statsRow}>
               <Text style={styles.statText}>
                 Puan: <Text style={[styles.statValue, { color: scoreColor }]}>{profile.reputation_score.toFixed(1)}</Text>
               </Text>
             </View>
-
-            <Text style={styles.joinDate}>
-              Katılma: {new Date(profile.created_at).toLocaleDateString("tr-TR", { month: "short", year: "numeric" })}
-            </Text>
           </View>
 
           {/* Follow Button */}
@@ -262,7 +289,7 @@ export default function ExploreScreen() {
 
       let queryBuilder = supabase
         .from("profiles")
-        .select("id, username, avatar_url, reputation_score, created_at")
+        .select("id, username, avatar_url, reputation_score, created_at, bio, city")
         .not("id", "in", `(${Array.from(followingIds).join(",")})`)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -285,6 +312,12 @@ export default function ExploreScreen() {
       } else if (tab === "suggested") {
         // Sort by reputation score (highest first)
         filteredProfiles = [...filteredProfiles].sort((a, b) => b.reputation_score - a.reputation_score).slice(0, 20);
+      } else if (tab === "trusted") {
+        // Filter by reputation >= 7, sort highest first
+        filteredProfiles = [...filteredProfiles]
+          .filter((p) => p.reputation_score >= 7)
+          .sort((a, b) => b.reputation_score - a.reputation_score)
+          .slice(0, 20);
       }
       // "nearby" would require location data - for now showing newest
 
@@ -434,27 +467,36 @@ export default function ExploreScreen() {
               style={[styles.tab, activeTab === "suggested" && styles.tabActive]}
               onPress={() => setActiveTab("suggested")}
             >
-              <Crown size={16} color={activeTab === "suggested" ? colors.primary : colors.textMuted} />
+              <TrendingUp size={14} color={activeTab === "suggested" ? colors.primary : colors.textMuted} />
               <Text style={[styles.tabText, activeTab === "suggested" && styles.tabTextActive]}>
-                Önerilen
+                Populer
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, activeTab === "new" && styles.tabActive]}
               onPress={() => setActiveTab("new")}
             >
-              <Sparkles size={16} color={activeTab === "new" ? colors.primary : colors.textMuted} />
+              <Sparkles size={14} color={activeTab === "new" ? colors.primary : colors.textMuted} />
               <Text style={[styles.tabText, activeTab === "new" && styles.tabTextActive]}>
-                Yeni Üyeler
+                Yeni
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "trusted" && styles.tabActive]}
+              onPress={() => setActiveTab("trusted")}
+            >
+              <Shield size={14} color={activeTab === "trusted" ? colors.primary : colors.textMuted} />
+              <Text style={[styles.tabText, activeTab === "trusted" && styles.tabTextActive]}>
+                Guvenilir
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, activeTab === "nearby" && styles.tabActive]}
               onPress={() => setActiveTab("nearby")}
             >
-              <MapPin size={16} color={activeTab === "nearby" ? colors.primary : colors.textMuted} />
+              <MapPin size={14} color={activeTab === "nearby" ? colors.primary : colors.textMuted} />
               <Text style={[styles.tabText, activeTab === "nearby" && styles.tabTextActive]}>
-                Yakınım
+                Yakinim
               </Text>
             </TouchableOpacity>
           </View>

@@ -24,6 +24,7 @@ import {
   Flag,
   ShieldBan,
   Unlink,
+  Smile,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { borderRadius, spacing, fontSize } from "@/constants/theme";
@@ -50,6 +51,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [otherUser, setOtherUser] = useState<{
     username: string;
     avatar_url: string;
@@ -232,6 +234,13 @@ export default function ChatScreen() {
     );
   };
 
+  const CHAT_EMOJIS = ["😀","😂","😍","🥰","😎","🤗","😢","😡","🔥","❤️","👏","💯","🎉","👀","🤔","😱","🙏","💪","✨","🫂"];
+
+  const handleEmojiSelect = (emoji: string) => {
+    setInputText((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
   const renderMessage = ({ item }: { item: Message }) => (
     <MessageBubble message={item} isOwn={item.sender_id === user?.id} />
   );
@@ -324,6 +333,31 @@ export default function ChatScreen() {
     },
     sendButtonActive: {
       backgroundColor: colors.primary,
+    },
+    // Emoji picker styles
+    emojiToggle: {
+      padding: spacing.sm,
+      marginRight: spacing.xs,
+    },
+    emojiPicker: {
+      backgroundColor: glass.background,
+      borderTopWidth: 1,
+      borderTopColor: glass.border,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    emojiGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+    },
+    emojiButton: {
+      width: "20%",
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+    },
+    emojiText: {
+      fontSize: 24,
     },
     // Menu modal styles
     modalOverlay: {
@@ -421,8 +455,31 @@ export default function ChatScreen() {
             />
           )}
 
+          {/* Emoji Picker */}
+          {showEmojiPicker && (
+            <View style={styles.emojiPicker}>
+              <View style={styles.emojiGrid}>
+                {CHAT_EMOJIS.map((emoji) => (
+                  <TouchableOpacity
+                    key={emoji}
+                    style={styles.emojiButton}
+                    onPress={() => handleEmojiSelect(emoji)}
+                  >
+                    <Text style={styles.emojiText}>{emoji}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* Input Bar */}
           <View style={styles.inputBar}>
+            <TouchableOpacity
+              style={styles.emojiToggle}
+              onPress={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              <Smile size={22} color={showEmojiPicker ? colors.primary : colors.textMuted} />
+            </TouchableOpacity>
             <TextInput
               style={styles.textInput}
               placeholder="Mesaj yaz..."
@@ -431,6 +488,7 @@ export default function ChatScreen() {
               onChangeText={setInputText}
               multiline
               maxLength={1000}
+              onFocus={() => setShowEmojiPicker(false)}
             />
             <TouchableOpacity
               style={[

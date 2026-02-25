@@ -66,6 +66,7 @@ Kullanıcı her değişiklik sonrası bu listeyi kontrol etmelidir:
 
 **Feed Ekranı (app/(tabs)/index.tsx):**
 - [ ] Logo üst kısımda görünüyor
+- [ ] FAB butonu (sag alt, PenSquare ikonu) gorunuyor ve new-post'a yonlendiriyor
 - [ ] Tab'ler çalışıyor: Tümü / Tanıdıklar / Tanımadıklar
 - [ ] "Tanıdıklar" boşsa özel empty state gösteriliyor
 - [ ] Post paylaşımı çalışıyor (anonim/isimli)
@@ -85,14 +86,33 @@ Kullanıcı her değişiklik sonrası bu listeyi kontrol etmelidir:
 - [ ] Profile card swipe edilebiliyor
 
 **Explore (app/(tabs)/explore.tsx):**
+- [ ] 4 tab gorunuyor: Populer / Yeni / Guvenilir / Yakinim
+- [ ] Kullanici kartlarinda bio + city gorunuyor
+- [ ] "Guvenilir" tabinda sadece 7+ puan gorunuyor
 - [ ] Takip butonu tıklanınca anında güncelleniyor
 - [ ] Follow/Unfollow gerçek zamanlı çalışıyor
 - [ ] Hata durumunda ErrorState + Retry görünüyor
 
 **Profil (app/(tabs)/profile.tsx):**
+- [ ] full_name varsa buyuk fontla gorunuyor
+- [ ] City + occupation satiri (MapPin + Briefcase) gorunuyor
+- [ ] Relationship status badge gorunuyor (bekar degilse)
+- [ ] Tab sirasi: Paylasimlar / Yorumlar / Tepkiler / Degerlendirmeler
+- [ ] Edit profile'da 7 alan var (full_name, username, bio, age, height, city, occupation)
 - [ ] Avatar yükleme başarılı olunca güncelleniyor
 - [ ] Avatar yükleme hata olursa Alert gösteriliyor
 - [ ] Dating profil'de ilişki durumu seçilebiliyor
+
+**Baska Kullanici Profili (app/user-profile/[userId].tsx):**
+- [ ] full_name varsa username uzerinde gorunuyor
+- [ ] Relationship status badge gorunuyor
+- [ ] 5 tab var: Paylasimlar / Yorumlar / Tepkiler / Aldigi / Verdigi
+- [ ] "Verdigi" tabinda kullanicinin verdigi degerlendirmeler gorunuyor
+
+**Chat (app/chat/[matchId].tsx):**
+- [ ] Emoji picker (Smile ikonu) calisiyor
+- [ ] 20 emoji secenegi gorunuyor
+- [ ] Secilen emoji input'a ekleniyor
 
 **Notifications (app/notifications.tsx):**
 - [ ] Bildirimler listeleniyor
@@ -233,9 +253,9 @@ entrika/                              # Turborepo monorepo root
 
 ### Siradaki Ozellikler
 1. [x] Post silme / duzenleme (Web - 2026-02-11)
-2. [ ] Gelismis filtreleme (match'te yas, lokasyon)
-3. [ ] Premium ozellikler
-4. [ ] Profil detay sayfasında ilişki durumu gösterimi
+2. [x] Mobile-Web parite Faz 2 (2026-02-25): profil duzenleme, tab paritesi, explore, emoji, FAB
+3. [ ] Gelismis filtreleme (match'te yas, lokasyon)
+4. [ ] Premium ozellikler
 5. [ ] Feed'de algorithm optimization
 
 ### Tamamlanan Ek Ozellikler
@@ -252,6 +272,7 @@ entrika/                              # Turborepo monorepo root
 - [x] **Web ozellikleri**: Klavye kisayollari, Web Notifications, SSR SEO, drag-to-swipe
 - [x] **Web post silme/duzenleme** (EditPostModal + 3-nokta menu, feed + post detay)
 - [x] **Baseline UI duzeltmeleri** (2026-02-13): h-dvh, aria-label, prefers-reduced-motion, AppModal, z-index scale
+- [x] **Mobile-Web Parite Faz 2** (2026-02-25): Edit profile 7 alan (full_name, age, height, city, occupation), profillerde full_name + city/occupation + relationship_status badge, user-profile 5 tab (Paylasimlar/Yorumlar/Tepkiler/Aldigi/Verdigi), kendi profil tab sirasi web ile esit, explore 4 tab (Populer/Yeni/Guvenilir/Yakinim) + bio/city kartlarda, chat emoji picker (20 emoji grid), feed FAB butonu
 
 ---
 

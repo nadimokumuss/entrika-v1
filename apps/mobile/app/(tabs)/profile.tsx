@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Settings, Share2, Heart, Star, Camera, Edit3, Bookmark, Award, ChevronRight } from "lucide-react-native";
+import { Settings, Share2, Heart, Star, Camera, Edit3, Bookmark, Award, ChevronRight, MessageCircle, Flame, MapPin, Briefcase } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { borderRadius, spacing, fontSize, shadows } from "@/constants/theme";
@@ -20,13 +20,13 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { supabase, UserReview } from "@/lib/supabase";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { CATEGORIES, type PostCategory } from "@/constants/categories";
+import { CATEGORIES, REACTIONS, type PostCategory, type ReactionType } from "@/constants/categories";
 import { pickImage, uploadImage, showImageSourcePicker, extractPathFromUrl, deleteImage } from "@/lib/storage";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Logo from "@/components/Logo";
 import { ErrorState } from "@/components/ui/ErrorState";
 
-type TabType = "paylaşımlar" | "degerlendirmeler";
+type TabType = "paylaşımlar" | "degerlendirmeler" | "yorumlar" | "tepkiler";
 
 interface Badge {
   id: string;
@@ -73,6 +73,13 @@ export default function ProfileScreen() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [userComments, setUserComments] = useState<any[]>([]);
+  const [userReactions, setUserReactions] = useState<any[]>([]);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [reactionsLoaded, setReactionsLoaded] = useState(false);
+  const [relationshipStatus, setRelationshipStatus] = useState<string | null>(null);
   const [error, setError] = useState<{ type: "network" | "server" | "general"; message?: string } | null>(null);
 
   const fetchUserData = useCallback(async () => {
@@ -117,6 +124,28 @@ export default function ProfileScreen() {
       if (badgesData) {
         setBadges(badgesData.map((ub: any) => ub.badges).filter(Boolean));
       }
+
+      // Fetch relationship status from dating_profiles
+      const { data: datingProfile } = await supabase
+        .from("dating_profiles")
+        .select("relationship_status")
+        .eq("user_id", user.id)
+        .single();
+      setRelationshipStatus(datingProfile?.relationship_status || null);
+
+      // Fetch follow counts
+      const [followersResult, followingResult] = await Promise.all([
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", user.id),
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", user.id),
+      ]);
+      setFollowersCount(followersResult.count || 0);
+      setFollowingCount(followingResult.count || 0);
     } catch (error: any) {
       console.error("Error fetching user data:", error);
       if (error?.message?.includes("fetch") || error?.message?.includes("network")) {
@@ -131,9 +160,50 @@ export default function ProfileScreen() {
     }
   }, [user]);
 
+  const fetchUserComments = useCallback(async () => {
+    if (!user || commentsLoaded) return;
+    try {
+      const { data } = await supabase
+        .from("comments")
+        .select("id, content, created_at, post_id, posts(id, content)")
+        .eq("author_id", user.id)
+        .eq("is_anonymous", false)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setUserComments(data || []);
+      setCommentsLoaded(true);
+    } catch (e) {
+      console.error("Error fetching user comments:", e);
+    }
+  }, [user, commentsLoaded]);
+
+  const fetchUserReactions = useCallback(async () => {
+    if (!user || reactionsLoaded) return;
+    try {
+      const { data } = await supabase
+        .from("post_reactions")
+        .select("id, reaction_type, created_at, post_id, posts(id, content)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setUserReactions(data || []);
+      setReactionsLoaded(true);
+    } catch (e) {
+      console.error("Error fetching user reactions:", e);
+    }
+  }, [user, reactionsLoaded]);
+
+  // Lazy load tabs
+  useEffect(() => {
+    if (activeTab === "yorumlar") fetchUserComments();
+    if (activeTab === "tepkiler") fetchUserReactions();
+  }, [activeTab, fetchUserComments, fetchUserReactions]);
+
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
+      setCommentsLoaded(false);
+      setReactionsLoaded(false);
       fetchUserData();
     }, [fetchUserData])
   );
@@ -311,15 +381,51 @@ export default function ProfileScreen() {
       fontWeight: "bold",
       fontSize: fontSize.sm,
     },
-    username: {
+    fullName: {
       color: colors.text,
       fontSize: fontSize.xl,
       fontWeight: "bold",
+      marginTop: spacing.lg,
+    },
+    username: {
+      color: colors.textLight,
+      fontSize: fontSize.md,
+      fontWeight: "600",
     },
     usernameRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: spacing.lg,
+      marginTop: spacing.xs,
+    },
+    infoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.sm,
+      gap: spacing.lg,
+    },
+    infoItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    infoText: {
+      color: colors.textMuted,
+      fontSize: fontSize.sm,
+    },
+    relationshipBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      backgroundColor: `${colors.accent}15`,
+      borderRadius: borderRadius.full,
+    },
+    relationshipText: {
+      color: colors.accent,
+      fontSize: fontSize.xs,
+      fontWeight: "600",
     },
     editButton: {
       marginLeft: spacing.sm,
@@ -651,6 +757,11 @@ export default function ProfileScreen() {
               </View>
             </TouchableOpacity>
 
+            {/* Full Name */}
+            {profile.full_name && (
+              <Text style={styles.fullName}>{profile.full_name}</Text>
+            )}
+
             {/* Kullanici Adi ve Düzenle Butonu */}
             <View style={styles.usernameRow}>
               <Text style={styles.username}>@{profile.username}</Text>
@@ -666,6 +777,38 @@ export default function ProfileScreen() {
             {/* Bio */}
             {profile.bio && (
               <Text style={styles.bio}>{profile.bio}</Text>
+            )}
+
+            {/* City & Occupation */}
+            {(profile.city || profile.occupation) && (
+              <View style={styles.infoRow}>
+                {profile.city && (
+                  <View style={styles.infoItem}>
+                    <MapPin size={14} color={colors.textMuted} />
+                    <Text style={styles.infoText}>{profile.city}</Text>
+                  </View>
+                )}
+                {profile.occupation && (
+                  <View style={styles.infoItem}>
+                    <Briefcase size={14} color={colors.textMuted} />
+                    <Text style={styles.infoText}>{profile.occupation}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Relationship Status Badge */}
+            {relationshipStatus && relationshipStatus !== "single" && (
+              <View style={styles.relationshipBadge}>
+                <Heart size={12} color={colors.accent} />
+                <Text style={styles.relationshipText}>
+                  {relationshipStatus === "in_relationship" ? "Iliskide"
+                    : relationshipStatus === "engaged" ? "Nisanli"
+                    : relationshipStatus === "married" ? "Evli"
+                    : relationshipStatus === "complicated" ? "Karmasik"
+                    : relationshipStatus}
+                </Text>
+              </View>
             )}
 
             {/* Itibar Aciklamasi */}
@@ -692,6 +835,16 @@ export default function ProfileScreen() {
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{loading ? "-" : reviews.length}</Text>
                 <Text style={styles.statLabel}>Değerlendirme</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{loading ? "-" : followersCount}</Text>
+                <Text style={styles.statLabel}>Takipçi</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{loading ? "-" : followingCount}</Text>
+                <Text style={styles.statLabel}>Takip</Text>
               </View>
             </View>
 
@@ -729,32 +882,30 @@ export default function ProfileScreen() {
 
           {/* Sekmeler */}
           <View style={styles.tabsContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "paylaşımlar" && styles.tabActive]}
-              onPress={() => setActiveTab("paylaşımlar")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "paylaşımlar" && styles.tabTextActive,
-                ]}
-              >
-                Paylaşımlarım
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "degerlendirmeler" && styles.tabActive]}
-              onPress={() => setActiveTab("degerlendirmeler")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "degerlendirmeler" && styles.tabTextActive,
-                ]}
-              >
-                Değerlendirmeler
-              </Text>
-            </TouchableOpacity>
+            {(["paylaşımlar", "yorumlar", "tepkiler", "degerlendirmeler"] as TabType[]).map((tab) => {
+              const labels: Record<TabType, string> = {
+                "paylaşımlar": "Paylaşımlar",
+                "yorumlar": "Yorumlar",
+                "tepkiler": "Tepkiler",
+                "degerlendirmeler": "Değerlendirmeler",
+              };
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  style={[styles.tab, activeTab === tab && styles.tabActive]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === tab && styles.tabTextActive,
+                    ]}
+                  >
+                    {labels[tab]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* Icerik */}
@@ -772,7 +923,12 @@ export default function ProfileScreen() {
                 </View>
               ) : userPosts.length > 0 ? (
                 userPosts.map((post) => (
-                  <View key={post.id} style={styles.postCard}>
+                  <TouchableOpacity
+                    key={post.id}
+                    style={styles.postCard}
+                    onPress={() => router.push({ pathname: "/post-detail", params: { postId: post.id } })}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.postCategoryRow}>
                       <Text style={[styles.postCategoryText, { color: CATEGORIES[post.category]?.color || colors.textMuted }]}>
                         {CATEGORIES[post.category]?.emoji} {CATEGORIES[post.category]?.label}
@@ -782,79 +938,158 @@ export default function ProfileScreen() {
                       {post.content}
                     </Text>
                     <Text style={styles.postTime}>{formatTimeAgo(post.created_at)}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>Henuz paylasimin yok.</Text>
+                  <Text style={styles.emptyStateSubtext}>
+                    Anonim paylasimlar burada gorunmez.
+                  </Text>
+                </View>
+              )
+            ) : activeTab === "degerlendirmeler" ? (
+              loading ? (
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <View key={review.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <View style={[styles.reviewScoreBadge, {
+                        backgroundColor: review.score >= 7 ? colors.success
+                          : review.score >= 4 ? "#EAB308"
+                          : colors.danger,
+                      }]}>
+                        <Text style={styles.reviewScoreText}>{review.score}/10</Text>
+                      </View>
+                      <Text style={styles.reviewAuthor}>
+                        {review.is_anonymous
+                          ? "Anonim Kullanici"
+                          : review.reviewer?.username
+                            ? `@${review.reviewer.username}`
+                            : "Bilinmeyen"}
+                      </Text>
+                      <Text style={styles.reviewDate}>{formatTimeAgo(review.created_at)}</Text>
+                    </View>
+                    {review.tags.length > 0 && (
+                      <View style={styles.reviewTagsRow}>
+                        {review.tags.map((tag) => (
+                          <View
+                            key={tag}
+                            style={[
+                              styles.reviewTag,
+                              POSITIVE_TAGS.includes(tag)
+                                ? styles.reviewTagPositive
+                                : styles.reviewTagNegative,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.reviewTagText,
+                                POSITIVE_TAGS.includes(tag)
+                                  ? styles.reviewTagTextPositive
+                                  : styles.reviewTagTextNegative,
+                              ]}
+                            >
+                              {tag}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.reviewContent}>{review.content}</Text>
+                    )}
                   </View>
                 ))
               ) : (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Henüz paylaşımın yok.</Text>
-                  <Text style={styles.emptyStateSubtext}>
-                    Anonim paylaşımlar burada görünmez.
+                  <Star size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>
+                    Henuz degerlendirme almadin.
                   </Text>
                 </View>
               )
-            ) : loading ? (
-              <View style={styles.loadingContent}>
-                <ActivityIndicator size="small" color={colors.primary} />
-              </View>
-            ) : reviews.length > 0 ? (
-              reviews.map((review) => (
-                <View key={review.id} style={styles.reviewCard}>
-                  <View style={styles.reviewHeader}>
-                    <View style={[styles.reviewScoreBadge, {
-                      backgroundColor: review.score >= 7 ? colors.success
-                        : review.score >= 4 ? "#EAB308"
-                        : colors.danger,
-                    }]}>
-                      <Text style={styles.reviewScoreText}>{review.score}/10</Text>
-                    </View>
-                    <Text style={styles.reviewAuthor}>
-                      {review.is_anonymous
-                        ? "Anonim Kullanıcı"
-                        : review.reviewer?.username
-                          ? `@${review.reviewer.username}`
-                          : "Bilinmeyen"}
-                    </Text>
-                    <Text style={styles.reviewDate}>{formatTimeAgo(review.created_at)}</Text>
-                  </View>
-                  {review.tags.length > 0 && (
-                    <View style={styles.reviewTagsRow}>
-                      {review.tags.map((tag) => (
-                        <View
-                          key={tag}
-                          style={[
-                            styles.reviewTag,
-                            POSITIVE_TAGS.includes(tag)
-                              ? styles.reviewTagPositive
-                              : styles.reviewTagNegative,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.reviewTagText,
-                              POSITIVE_TAGS.includes(tag)
-                                ? styles.reviewTagTextPositive
-                                : styles.reviewTagTextNegative,
-                            ]}
-                          >
-                            {tag}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                  {review.content && (
-                    <Text style={styles.reviewContent}>{review.content}</Text>
-                  )}
+            ) : activeTab === "yorumlar" ? (
+              !commentsLoaded ? (
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.primary} />
                 </View>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <Star size={48} color={colors.border} />
-                <Text style={styles.emptyStateText}>
-                  Henüz değerlendirme almadın.
-                </Text>
-              </View>
-            )}
+              ) : userComments.length > 0 ? (
+                userComments.map((comment: any) => (
+                  <TouchableOpacity
+                    key={comment.id}
+                    style={styles.postCard}
+                    onPress={() => router.push({ pathname: "/post-detail", params: { postId: comment.post_id } })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing.sm }}>
+                      <MessageCircle size={14} color={colors.textMuted} />
+                      <Text style={{ color: colors.textMuted, fontSize: fontSize.xs, marginLeft: spacing.xs }}>
+                        Yorumun
+                      </Text>
+                      <Text style={styles.postTime}> · {formatTimeAgo(comment.created_at)}</Text>
+                    </View>
+                    <Text style={styles.postContent} numberOfLines={2}>
+                      {comment.content}
+                    </Text>
+                    {comment.posts && (
+                      <View style={{ marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: glass.border }}>
+                        <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }} numberOfLines={1}>
+                          Post: {(comment.posts as any).content}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <MessageCircle size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>
+                    Henuz yorum yapilmamis.
+                  </Text>
+                </View>
+              )
+            ) : activeTab === "tepkiler" ? (
+              !reactionsLoaded ? (
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : userReactions.length > 0 ? (
+                userReactions.map((reaction: any) => (
+                  <TouchableOpacity
+                    key={reaction.id}
+                    style={styles.postCard}
+                    onPress={() => router.push({ pathname: "/post-detail", params: { postId: reaction.post_id } })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing.sm }}>
+                      <Text style={{ fontSize: fontSize.md }}>
+                        {REACTIONS[reaction.reaction_type as ReactionType]?.emoji ?? "?"}
+                      </Text>
+                      <Text style={{ color: colors.textMuted, fontSize: fontSize.xs, marginLeft: spacing.xs }}>
+                        {REACTIONS[reaction.reaction_type as ReactionType]?.label ?? "Tepki"}
+                      </Text>
+                      <Text style={styles.postTime}> · {formatTimeAgo(reaction.created_at)}</Text>
+                    </View>
+                    {reaction.posts && (
+                      <Text style={styles.postContent} numberOfLines={2}>
+                        {(reaction.posts as any).content}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Flame size={48} color={colors.border} />
+                  <Text style={styles.emptyStateText}>
+                    Henuz tepki verilmemis.
+                  </Text>
+                </View>
+              )
+            ) : null}
           </View>
 
           <View style={styles.bottomSpacer} />
