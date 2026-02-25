@@ -7,6 +7,7 @@ import { followingLib } from "@/lib/shared";
 import { CATEGORIES, REACTIONS } from "@entrika/shared";
 import { Settings, Edit3, Heart, Star, MapPin, Briefcase, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
+import { timeAgo } from "@/lib/utils";
 
 interface Review {
   id: string;
@@ -162,16 +163,6 @@ export default function ProfilePage() {
     setUserReactions((data as unknown as UserReaction[]) || []);
   };
 
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
-    if (mins < 60) return `${mins}dk`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}sa`;
-    return `${Math.floor(hours / 24)}g`;
-  };
-
   const getScoreColor = (score: number) => {
     if (score >= 8) return "var(--success)";
     if (score >= 6) return "var(--primary)";
@@ -180,11 +171,11 @@ export default function ProfilePage() {
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 9) return "Mukemmel";
-    if (score >= 7) return "Cok Iyi";
-    if (score >= 5) return "Iyi";
+    if (score >= 9) return "Mükemmel";
+    if (score >= 7) return "Çok İyi";
+    if (score >= 5) return "İyi";
     if (score >= 3) return "Orta";
-    return "Dusuk";
+    return "Düşük";
   };
 
   if (!profile) return null;

@@ -56,7 +56,7 @@ export default function BookmarksPage() {
           <p>Henüz yer imlerine eklenen paylaşım yok</p>
         </div>
       ) : (
-        bookmarks.map((bm) => {
+        bookmarks.filter((bm) => bm.posts).map((bm) => {
           const cat = CATEGORIES[bm.posts.category as keyof typeof CATEGORIES];
           return (
             <article key={bm.id} className="px-4 py-4 border-b border-[var(--border-light)] hover:bg-[var(--card)]/30">

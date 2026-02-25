@@ -91,7 +91,7 @@ export default function Sidebar() {
           style={{ background: "var(--primary)" }}
         >
           <PenSquare size={20} />
-          <span className="hidden xl:block">Paylas</span>
+          <span className="hidden xl:block">Paylaş</span>
         </Link>
       </div>
 

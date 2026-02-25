@@ -7,8 +7,8 @@ import { useNotifications } from "@/contexts/NotificationContext";
 
 const MOBILE_NAV_ITEMS = [
   { href: "/", label: "Ana Sayfa", icon: Home },
-  { href: "/explore", label: "Kesfet", icon: Compass },
-  { href: "/match", label: "Eslesme", icon: Heart },
+  { href: "/explore", label: "Keşfet", icon: Compass },
+  { href: "/match", label: "Eşleşme", icon: Heart },
   { href: "/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/notifications", label: "Bildirimler", icon: Bell },
   { href: "/profile", label: "Profil", icon: User },

@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { supabase } from "@/lib/supabase";
-import { Bell, MessageCircle, Heart, Star, Users } from "lucide-react";
+import { Bell, MessageCircle, Heart, Star, Users, AlertTriangle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { timeAgo } from "@/lib/utils";
 
 interface Notification {
   id: string;
@@ -30,6 +31,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [senderProfiles, setSenderProfiles] = useState<Record<string, SenderProfile>>({});
 
   const fetchSenderProfiles = useCallback(async (notifs: Notification[]) => {
@@ -52,25 +54,31 @@ export default function NotificationsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      if (!user) return;
-      const { data } = await supabase
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+    setError(false);
+    try {
+      const { data, error: err } = await supabase
         .from("notifications")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("recipient_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
+      if (err) throw err;
       const notifs = data || [];
       setNotifications(notifs);
-      setLoading(false);
       fetchSenderProfiles(notifs);
-
-      // Mark as read and reset badge
       resetUnreadCount();
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [user, resetUnreadCount, fetchSenderProfiles]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   // Realtime: prepend new notifications
   useEffect(() => {
@@ -84,7 +92,7 @@ export default function NotificationsPage() {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `recipient_id=eq.${user.id}`,
         },
         (payload) => {
           const newNotif = payload.new as Notification;
@@ -104,16 +112,6 @@ export default function NotificationsPage() {
       supabase.removeChannel(channel);
     };
   }, [user, fetchSenderProfiles]);
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
-    if (mins < 60) return `${mins}dk`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}sa`;
-    return `${Math.floor(hours / 24)}g`;
-  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -214,10 +212,22 @@ export default function NotificationsPage() {
         <div className="flex justify-center py-12">
           <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
         </div>
+      ) : error ? (
+        <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
+          <AlertTriangle size={48} className="mb-3 opacity-30" />
+          <p className="mb-3">Bildirimler yüklenirken hata oluştu</p>
+          <button
+            onClick={loadNotifications}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90"
+          >
+            <RefreshCw size={14} />
+            Tekrar dene
+          </button>
+        </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-[var(--text-muted)]">
           <Bell size={48} className="mb-3 opacity-30" />
-          <p>Henuz bildirim yok</p>
+          <p>Henüz bildirim yok</p>
         </div>
       ) : (
         notifications.map((n) => (

@@ -27,7 +27,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const { count } = await supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", user!.id)
+        .eq("recipient_id", user!.id)
         .eq("is_read", false);
       setUnreadCount(count || 0);
     }
@@ -50,7 +50,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `recipient_id=eq.${user.id}`,
         },
         (payload) => {
           const newNotification = payload.new as { title: string; body: string };
@@ -75,7 +75,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     await supabase
       .from("notifications")
       .update({ is_read: true })
-      .eq("user_id", user.id)
+      .eq("recipient_id", user.id)
       .eq("is_read", false);
   }, [user]);
 

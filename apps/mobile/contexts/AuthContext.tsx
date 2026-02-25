@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email,
           password,
         });
-        if (signInError) {
+        if (!signInError && signInData?.session) {
           await fetchProfile(authData.user.id);
           setUser(authData.user);
           setIsAuthenticated(true);

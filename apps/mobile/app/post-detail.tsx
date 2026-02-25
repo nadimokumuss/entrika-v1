@@ -77,12 +77,12 @@ function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "Az once";
-  if (diffMins < 60) return `${diffMins} dk once`;
+  if (diffMins < 1) return "Az önce";
+  if (diffMins < 60) return `${diffMins} dk önce`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} saat once`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} gun once`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
 
@@ -109,21 +109,27 @@ export default function PostDetailScreen() {
   const fetchPost = useCallback(async () => {
     if (!postId) return;
 
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*, profiles(username, avatar_url)")
-      .eq("id", postId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*, profiles(username, avatar_url)")
+        .eq("id", postId)
+        .single();
 
-    if (error) {
-      console.error("Error fetching post:", error);
-      return;
+      if (error) {
+        console.error("Error fetching post:", error);
+        return;
+      }
+      setPost({
+        ...data,
+        category: data.category as PostCategory,
+        profiles: data.profiles as any,
+      });
+    } catch (err) {
+      console.error("Error fetching post:", err);
+    } finally {
+      setLoading(false);
     }
-    setPost({
-      ...data,
-      category: data.category as PostCategory,
-      profiles: data.profiles as any,
-    });
   }, [postId]);
 
   const fetchReactions = useCallback(async () => {

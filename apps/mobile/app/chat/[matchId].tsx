@@ -60,35 +60,44 @@ export default function ChatScreen() {
   // Load other user info from match
   const loadOtherUser = useCallback(async () => {
     if (!user || !matchId) return;
-    const { data: match } = await supabase
-      .from("matches")
-      .select("user1_id, user2_id")
-      .eq("id", matchId)
-      .single();
+    try {
+      const { data: match } = await supabase
+        .from("matches")
+        .select("user1_id, user2_id")
+        .eq("id", matchId)
+        .single();
 
-    if (!match) return;
+      if (!match) return;
 
-    const otherId =
-      match.user1_id === user.id ? match.user2_id : match.user1_id;
-    setOtherUserId(otherId);
+      const otherId =
+        match.user1_id === user.id ? match.user2_id : match.user1_id;
+      setOtherUserId(otherId);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username, avatar_url")
-      .eq("id", otherId)
-      .single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", otherId)
+        .single();
 
-    if (profile) {
-      setOtherUser(profile);
+      if (profile) {
+        setOtherUser(profile);
+      }
+    } catch (err) {
+      console.error("Error loading other user:", err);
     }
   }, [user, matchId]);
 
   // Load messages
   const loadMessages = useCallback(async () => {
     if (!matchId) return;
-    const data = await fetchMessages(matchId);
-    setMessages(data);
-    setLoading(false);
+    try {
+      const data = await fetchMessages(matchId);
+      setMessages(data);
+    } catch (err) {
+      console.error("Error loading messages:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [matchId]);
 
   // Mark messages as read

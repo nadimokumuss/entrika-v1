@@ -10,6 +10,7 @@ import { ArrowLeft, UserPlus, UserMinus, Shield, Star, MoreHorizontal, Flag, Ban
 import Link from "next/link";
 import { ReviewModal } from "@/components/ReviewModal";
 import { AppModal } from "@/components/AppModal";
+import { timeAgo } from "@/lib/utils";
 
 interface UserProfile {
   id: string;
@@ -40,6 +41,7 @@ interface UserReview {
   is_anonymous: boolean;
   created_at: string;
   reviewer: { username: string; avatar_url: string } | null;
+  target: { username: string; avatar_url: string } | null;
 }
 
 interface UserComment {
@@ -120,7 +122,7 @@ export default function UserProfileClient({ username }: { username: string }) {
         .limit(20),
       supabase
         .from("user_reviews")
-        .select("id, score, content, tags, is_anonymous, created_at, reviewer:target_user_id(username, avatar_url)")
+        .select("id, score, content, tags, is_anonymous, created_at, target:target_user_id(username, avatar_url)")
         .eq("reviewer_id", profileData.id)
         .order("created_at", { ascending: false })
         .limit(20),
@@ -185,16 +187,6 @@ export default function UserProfileClient({ username }: { username: string }) {
       .order("created_at", { ascending: false })
       .limit(50);
     setUserReactions((data as unknown as UserReaction[]) || []);
-  };
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "az once";
-    if (mins < 60) return `${mins}dk`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}sa`;
-    return `${Math.floor(hours / 24)}g`;
   };
 
   const getScoreColor = (score: number) => {
@@ -488,7 +480,7 @@ export default function UserProfileClient({ username }: { username: string }) {
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg font-bold" style={{ color: getScoreColor(review.score) }}>{review.score}/10</span>
                   <span className="text-sm text-[var(--text-muted)]">
-                    {review.reviewer?.username || "Kullanici"}
+                    {review.target?.username || "Kullanici"}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{timeAgo(review.created_at)}</span>
                 </div>

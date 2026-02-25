@@ -38,7 +38,7 @@ function formatTime(dateStr: string | null): string {
       minute: "2-digit",
     });
   }
-  if (diffDays === 1) return "Dun";
+  if (diffDays === 1) return "Dün";
   if (diffDays < 7) {
     const days = ["Paz", "Pzt", "Sal", "Car", "Per", "Cum", "Cmt"];
     return days[date.getDay()];
