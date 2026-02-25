@@ -18,6 +18,7 @@ import {
 import Logo from "@/components/Logo";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const NAV_ITEMS = [
   { href: "/", label: "Ana Sayfa", icon: Home },
@@ -34,6 +35,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { isDark, toggleTheme } = useTheme();
   const { profile } = useAuth();
+  const { unreadCount } = useNotifications();
 
   return (
     <aside className="sticky top-0 h-dvh flex flex-col justify-between py-4 px-3">
@@ -64,11 +66,18 @@ export default function Sidebar() {
                     : "text-[var(--text)]"
                 }`}
               >
-                <Icon
-                  size={24}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  className={isActive ? "text-[var(--primary)]" : ""}
-                />
+                <div className="relative">
+                  <Icon
+                    size={24}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className={isActive ? "text-[var(--primary)]" : ""}
+                  />
+                  {item.href === "/notifications" && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="hidden xl:block text-lg">{item.label}</span>
               </Link>
             );
@@ -102,7 +111,7 @@ export default function Sidebar() {
 
         {/* User profile mini */}
         {profile && (
-          <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--card)] cursor-pointer">
+          <Link href="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--card)] cursor-pointer">
             <img
               src={
                 profile.avatar_url ||
@@ -119,7 +128,7 @@ export default function Sidebar() {
                 @{profile.username}
               </p>
             </div>
-          </div>
+          </Link>
         )}
       </div>
     </aside>

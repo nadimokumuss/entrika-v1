@@ -55,10 +55,13 @@ export default function EditProfilePage() {
           .from("avatars")
           .upload(path, photoFile, { upsert: true });
 
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-          avatarUrl = urlData.publicUrl;
+        if (uploadError) {
+          setError("Fotoğraf yüklenemedi: " + uploadError.message);
+          setSaving(false);
+          return;
         }
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        avatarUrl = urlData.publicUrl + "?t=" + Date.now();
       }
 
       const updateData: Record<string, unknown> = {

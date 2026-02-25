@@ -18,6 +18,8 @@ interface DatingCard {
   job: string | null;
   education: string | null;
   relationship_status: string | null;
+  partner_id: string | null;
+  partner?: { username: string } | null;
   profile: { username: string; avatar_url: string; reputation_score: number };
 }
 
@@ -31,16 +33,33 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
   open_relationship: "Açık İlişki",
 };
 
+const RESTRICTED_STATUSES = ["married", "in_relationship"];
+
 export default function MatchPage() {
   const { user } = useAuth();
   const [cards, setCards] = useState<DatingCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [userRestricted, setUserRestricted] = useState(false);
 
   const fetchCards = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Check user's own relationship status
+    const { data: myProfile } = await supabase
+      .from("dating_profiles")
+      .select("relationship_status")
+      .eq("user_id", user.id)
+      .single();
+
+    if (myProfile && RESTRICTED_STATUSES.includes(myProfile.relationship_status)) {
+      setUserRestricted(true);
+      setLoading(false);
+      return;
+    }
+    setUserRestricted(false);
 
     const { data: swipes } = await supabase
       .from("swipes")
@@ -58,8 +77,9 @@ export default function MatchPage() {
 
     let query = supabase
       .from("dating_profiles")
-      .select("*, profile:user_id (username, avatar_url, reputation_score)")
-      .eq("is_active", true);
+      .select("*, profile:user_id (username, avatar_url, reputation_score), partner:partner_id (username)")
+      .eq("is_active", true)
+      .not("relationship_status", "in", `(${RESTRICTED_STATUSES.join(",")})`);
 
     if (excludeIds.length > 0) {
       query = query.not("user_id", "in", `(${excludeIds.join(",")})`);
@@ -126,6 +146,21 @@ export default function MatchPage() {
       <div className="flex flex-col items-center px-4 py-8">
         {loading ? (
           <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+        ) : userRestricted ? (
+          <div className="text-center py-12 max-w-sm">
+            <Heart size={48} className="mx-auto mb-3 opacity-30 text-[var(--text-muted)]" />
+            <p className="text-[var(--text)] font-medium mb-2">Eşleşme özelliği devre dışı</p>
+            <p className="text-sm text-[var(--text-muted)] mb-4">
+              İlişki durumun nedeniyle eşleşme özelliği kullanılamıyor. Dating profilinden durumunu güncelleyebilirsin.
+            </p>
+            <Link
+              href="/edit-dating-profile"
+              className="inline-block px-4 py-2 rounded-xl text-sm text-white"
+              style={{ background: "var(--primary)" }}
+            >
+              Dating Profilimi Düzenle
+            </Link>
+          </div>
         ) : !currentCard ? (
           <div className="text-center text-[var(--text-muted)] py-12">
             <Heart size={48} className="mx-auto mb-3 opacity-30" />
@@ -236,7 +271,9 @@ export default function MatchPage() {
                       )}
                       {currentCard.relationship_status && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
-                          {RELATIONSHIP_LABELS[currentCard.relationship_status] || currentCard.relationship_status}
+                          {currentCard.partner?.username
+                            ? `${currentCard.partner.username} ile ${(RELATIONSHIP_LABELS[currentCard.relationship_status] || currentCard.relationship_status).toLowerCase()}`
+                            : RELATIONSHIP_LABELS[currentCard.relationship_status] || currentCard.relationship_status}
                         </span>
                       )}
                     </div>

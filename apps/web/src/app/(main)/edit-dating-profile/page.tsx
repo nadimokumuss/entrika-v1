@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +23,8 @@ const RELATIONSHIP_OPTIONS = [
   { value: "open_relationship", label: "Açık İlişki" },
 ];
 
+const RESTRICTED_STATUSES = ["married", "in_relationship"];
+
 export default function EditDatingProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -35,8 +37,13 @@ export default function EditDatingProfilePage() {
   const [lookingFor, setLookingFor] = useState("female");
   const [relationshipStatus, setRelationshipStatus] = useState("single");
   const [isActive, setIsActive] = useState(true);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerUsername, setPartnerUsername] = useState<string | null>(null);
+  const [partnerSearch, setPartnerSearch] = useState("");
+  const [partnerResults, setPartnerResults] = useState<Array<{ id: string; username: string; avatar_url: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -57,11 +64,40 @@ export default function EditDatingProfilePage() {
         setLookingFor(data.looking_for || "female");
         setRelationshipStatus(data.relationship_status || "single");
         setIsActive(data.is_active);
+        if (data.partner_id) {
+          setPartnerId(data.partner_id);
+          const { data: partnerData } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", data.partner_id)
+            .single();
+          if (partnerData) setPartnerUsername(partnerData.username);
+        }
       }
       setLoading(false);
     }
     load();
   }, [user]);
+
+  const needsPartner = ["in_relationship", "married", "open_relationship"].includes(relationshipStatus);
+
+  // Partner search debounce
+  useEffect(() => {
+    if (!partnerSearch.trim()) {
+      setPartnerResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .ilike("username", `%${partnerSearch.trim()}%`)
+        .neq("id", user?.id || "")
+        .limit(5);
+      setPartnerResults(data || []);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [partnerSearch, user]);
 
   const toggleInterest = (interest: string) => {
     setInterests((prev) =>
@@ -72,34 +108,46 @@ export default function EditDatingProfilePage() {
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
+    setError("");
 
-    const profileData = {
-      user_id: user.id,
-      bio: bio.trim(),
-      city: city.trim(),
-      age: age ? parseInt(age) : null,
-      job: job.trim() || null,
-      education: education.trim() || null,
-      interests,
-      looking_for: lookingFor,
-      relationship_status: relationshipStatus,
-      is_active: isActive,
-    };
+    try {
+      const effectiveIsActive = RESTRICTED_STATUSES.includes(relationshipStatus) ? false : isActive;
 
-    const { data: existing } = await supabase
-      .from("dating_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
+      const profileData: Record<string, unknown> = {
+        user_id: user.id,
+        bio: bio.trim(),
+        city: city.trim(),
+        age: age ? parseInt(age) : null,
+        job: job.trim() || null,
+        education: education.trim() || null,
+        interests,
+        looking_for: lookingFor,
+        relationship_status: relationshipStatus,
+        is_active: effectiveIsActive,
+        partner_id: needsPartner ? partnerId : null,
+      };
 
-    if (existing) {
-      await supabase.from("dating_profiles").update(profileData).eq("user_id", user.id);
-    } else {
-      await supabase.from("dating_profiles").insert({ ...profileData, photos: [] });
+      const { data: existing } = await supabase
+        .from("dating_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (existing) {
+        const { error } = await supabase.from("dating_profiles").update(profileData).eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("dating_profiles").insert({ ...profileData, photos: [] });
+        if (error) throw error;
+      }
+
+      router.push("/match");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Profil kaydedilemedi.";
+      setError(message);
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
-    router.push("/match");
   };
 
   if (loading) {
@@ -124,12 +172,21 @@ export default function EditDatingProfilePage() {
         <label className="flex items-center justify-between">
           <span className="text-sm font-medium text-[var(--text)]">Profil Aktif</span>
           <div
-            className={`w-10 h-6 rounded-full relative transition-colors cursor-pointer ${isActive ? "bg-[var(--success)]" : "bg-[var(--border)]"}`}
-            onClick={() => setIsActive(!isActive)}
+            className={`w-10 h-6 rounded-full relative transition-colors ${RESTRICTED_STATUSES.includes(relationshipStatus) ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${isActive ? "bg-[var(--success)]" : "bg-[var(--border)]"}`}
+            onClick={() => {
+              if (!RESTRICTED_STATUSES.includes(relationshipStatus)) {
+                setIsActive(!isActive);
+              }
+            }}
           >
             <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isActive ? "left-5" : "left-1"}`} />
           </div>
         </label>
+        {RESTRICTED_STATUSES.includes(relationshipStatus) && (
+          <div className="px-4 py-3 rounded-xl bg-[var(--warning)]/10 border border-[var(--warning)]/20 text-sm text-[var(--warning)]">
+            İlişkide veya evli kullanıcılar eşleşme özelliğini kullanamazlar.
+          </div>
+        )}
 
         <div>
           <label className="text-sm font-medium text-[var(--text)]">Biyografi</label>
@@ -219,7 +276,16 @@ export default function EditDatingProfilePage() {
             {RELATIONSHIP_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
-                onClick={() => setRelationshipStatus(opt.value)}
+                onClick={() => {
+                  setRelationshipStatus(opt.value);
+                  if (RESTRICTED_STATUSES.includes(opt.value)) {
+                    setIsActive(false);
+                  }
+                  if (!["in_relationship", "married", "open_relationship"].includes(opt.value)) {
+                    setPartnerId(null);
+                    setPartnerUsername(null);
+                  }
+                }}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
                   relationshipStatus === opt.value
                     ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]"
@@ -231,6 +297,64 @@ export default function EditDatingProfilePage() {
             ))}
           </div>
         </div>
+
+        {/* Partner selection */}
+        {needsPartner && (
+          <div>
+            <label className="text-sm font-medium text-[var(--text)]">Partner</label>
+            {partnerId && partnerUsername ? (
+              <div className="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--card)] border border-[var(--border-light)]">
+                <span className="text-sm text-[var(--text)] flex-1">@{partnerUsername}</span>
+                <button
+                  onClick={() => { setPartnerId(null); setPartnerUsername(null); }}
+                  className="p-1 rounded-lg hover:bg-[var(--card-elevated)]"
+                >
+                  <X size={16} className="text-[var(--text-muted)]" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative mt-2">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                <input
+                  type="text"
+                  placeholder="Kullanıcı adı ara..."
+                  value={partnerSearch}
+                  onChange={(e) => setPartnerSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] placeholder:text-[var(--text-muted)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none text-sm"
+                />
+                {partnerSearch.trim() && partnerResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-[var(--border-light)] bg-[var(--background)] shadow-lg overflow-hidden z-20">
+                    {partnerResults.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          setPartnerId(p.id);
+                          setPartnerUsername(p.username);
+                          setPartnerSearch("");
+                          setPartnerResults([]);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 hover:bg-[var(--card)] transition-colors text-left"
+                      >
+                        <img
+                          src={p.avatar_url || `https://api.dicebear.com/7.x/lorelei/png?seed=${p.id}`}
+                          alt={p.username}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <span className="text-sm font-medium text-[var(--text)]">@{p.username}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-500">
+            {error}
+          </div>
+        )}
 
         <button
           onClick={handleSave}

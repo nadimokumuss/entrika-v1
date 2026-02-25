@@ -31,6 +31,8 @@ export default function RightPanel() {
   const [popularUsers, setPopularUsers] = useState<PopularUser[]>([]);
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; username: string; avatar_url: string }>>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     async function loadPopularUsers() {
@@ -118,6 +120,25 @@ export default function RightPanel() {
     loadTrends();
   }, [user]);
 
+  // Search debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .ilike("username", `%${searchQuery.trim()}%`)
+        .limit(5);
+      setSearchResults(data || []);
+      setSearchLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleCategoryClick = (categoryKey: string) => {
     if (activeCategory === categoryKey) {
       router.push("/");
@@ -141,6 +162,33 @@ export default function RightPanel() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] placeholder:text-[var(--text-muted)] border border-[var(--border-light)] focus:border-[var(--primary)] focus:outline-none"
         />
+        {searchQuery.trim() && (
+          <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-[var(--border-light)] bg-[var(--background)] shadow-lg overflow-hidden z-30">
+            {searchLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-4 h-4 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-[var(--text-muted)]">Sonuç bulunamadı</div>
+            ) : (
+              searchResults.map((u) => (
+                <Link
+                  key={u.id}
+                  href={`/u/${u.username}`}
+                  onClick={() => setSearchQuery("")}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--card)] transition-colors"
+                >
+                  <img
+                    src={u.avatar_url || `https://api.dicebear.com/7.x/lorelei/png?seed=${u.id}`}
+                    alt={u.username}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span className="text-sm font-medium text-[var(--text)]">@{u.username}</span>
+                </Link>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Trends */}

@@ -28,6 +28,7 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
 
   const handleSave = async () => {
     if (content.trim().length < CONTENT_MIN_LENGTH) {
-      alert(`En az ${CONTENT_MIN_LENGTH} karakter olmali.`);
+      setAlertMsg(`En az ${CONTENT_MIN_LENGTH} karakter olmalı.`);
       return;
     }
     setSaving(true);
@@ -67,8 +68,8 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
       onSaved();
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Post guncellenemedi.";
-      alert(message);
+      const message = err instanceof Error ? err.message : "Post güncellenemedi.";
+      setAlertMsg(message);
     } finally {
       setSaving(false);
     }
@@ -87,7 +88,7 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
       onClose();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Post silinemedi.";
-      alert(message);
+      setAlertMsg(message);
     }
   };
 
@@ -213,11 +214,22 @@ export function EditPostModal({ open, onClose, onSaved, post }: EditPostModalPro
         </div>
       </div>
 
+      {/* Alert Modal */}
+      <AppModal
+        open={!!alertMsg}
+        type="alert"
+        title="Bilgi"
+        message={alertMsg || ""}
+        onConfirm={() => setAlertMsg(null)}
+        onCancel={() => setAlertMsg(null)}
+      />
+
+      {/* Delete Confirm Modal */}
       <AppModal
         open={showDeleteConfirm}
         type="confirm"
         title="Postu Sil"
-        message="Bu postu silmek istediginize emin misiniz? Bu islem geri alinamaz."
+        message="Bu postu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
         confirmLabel="Sil"
         danger
         onConfirm={confirmDelete}
