@@ -21,7 +21,15 @@ export type {
 } from "@entrika/shared";
 
 // ─── Mobile-specific: Backward Compatibility (defaults to dark for static imports) ───
-import { darkColors, darkGradients, darkGlass } from "@entrika/shared";
+import {
+  darkColors,
+  darkGradients,
+  darkGlass,
+  shadows as _shadows,
+  spacing as _spacing,
+  borderRadius as _borderRadius,
+  fontSize as _fontSize,
+} from "@entrika/shared";
 
 export const colors = darkColors;
 export const gradients = darkGradients;
@@ -58,8 +66,8 @@ export default {
   colors,
   gradients,
   glass,
-  shadows,
-  spacing,
-  borderRadius,
-  fontSize,
+  shadows: _shadows,
+  spacing: _spacing,
+  borderRadius: _borderRadius,
+  fontSize: _fontSize,
 };
